@@ -6,6 +6,7 @@ import Login from './pages/Login.jsx'
 import Workouts from './pages/Workouts.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Games from './pages/Games.jsx'
+import ImportRecipes from './pages/ImportRecipes.jsx'
 
 export default function App() {
   return (
@@ -35,6 +36,13 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Recipes />
+              </ProtectedRoute>
+            }
+          <Route
+            path="/import"
+            element={
+              <ProtectedRoute>
+                <ImportRecipes />
               </ProtectedRoute>
             }
           />

@@ -38,6 +38,7 @@ export default function App() {
                 <Recipes />
               </ProtectedRoute>
             }
+          />
           <Route
             path="/import"
             element={

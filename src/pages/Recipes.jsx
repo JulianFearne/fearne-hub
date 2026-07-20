@@ -5,6 +5,8 @@ import RecipeModal from '../components/RecipeModal.jsx'
 import RecipeForm from '../components/RecipeForm.jsx'
 import CookMode from '../components/CookMode.jsx'
 import './Recipes.css'
+import { Link } from 'react-router-dom'   // add to the imports at the top
+
 
 export default function Recipes() {
   const { user } = useAuth()
@@ -87,9 +89,12 @@ export default function Recipes() {
             }}
           />
         </div>
-        <button className="rb-add-btn" onClick={() => setShowForm(true)}>
+       <button className="rb-add-btn" onClick={() => setShowForm(true)}>
           + Add recipe
         </button>
+        <Link to="/import" className="rb-add-btn" style={{ textDecoration: 'none' }}>
+          ⬆ Import
+        </Link>
       </div>
 
       <div className="rb-layout">

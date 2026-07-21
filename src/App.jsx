@@ -3,6 +3,8 @@ import Nav from './components/Nav.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
+import PendingApproval from './pages/PendingApproval.jsx'
+import Admin from './pages/Admin.jsx'
 import Workouts from './pages/Workouts.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Games from './pages/Games.jsx'
@@ -15,6 +17,7 @@ export default function App() {
       <div className="main-content">
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/pending" element={<PendingApproval />} />
           <Route
             path="/"
             element={
@@ -52,6 +55,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Games />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireRole="admin">
+                <Admin />
               </ProtectedRoute>
             }
           />

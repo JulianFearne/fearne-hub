@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchRecipes } from './recipesData'
+import { fetchRecipes } from '../pages/recipesData'
 
 export default function RecipePickerModal({ onClose, onPick }) {
   const [recipes, setRecipes] = useState([])

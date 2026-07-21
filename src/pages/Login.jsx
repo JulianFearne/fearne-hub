@@ -45,7 +45,8 @@ export default function Login() {
       {error && <div className="auth-error">{error}</div>}
       {checkEmail && (
         <div className="auth-error" style={{ background: '#eaf2ea', color: '#22402f' }}>
-          Check your email to confirm your account, then sign in.
+          Check your email to confirm your account. After that, a family admin will need to
+          approve you before you can get into the hub.
         </div>
       )}
 

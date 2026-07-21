@@ -9,6 +9,8 @@ import Workouts from './pages/Workouts.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Games from './pages/Games.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
+import MealPlanner from './pages/MealPlanner.jsx'
+import ShoppingLists from './pages/ShoppingLists.jsx'
 
 export default function App() {
   return (
@@ -47,6 +49,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ImportRecipes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/planner"
+            element={
+              <ProtectedRoute>
+                <MealPlanner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shopping"
+            element={
+              <ProtectedRoute>
+                <ShoppingLists />
               </ProtectedRoute>
             }
           />

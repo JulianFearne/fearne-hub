@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Nav() {
-  const { session, signOut } = useAuth()
+  const { session, isApproved, isAdmin, signOut } = useAuth()
 
   return (
     <nav className="nav">
@@ -10,7 +10,7 @@ export default function Nav() {
         <NavLink to="/" className="nav-brand">
           Fearne Hub
         </NavLink>
-        {session && (
+        {session && isApproved && (
           <ul className="nav-links">
             <li>
               <NavLink to="/" end>
@@ -26,12 +26,22 @@ export default function Nav() {
             <li>
               <NavLink to="/games">Games</NavLink>
             </li>
+            {isAdmin && (
+              <li>
+                <NavLink to="/admin">Admin</NavLink>
+              </li>
+            )}
             <li>
               <button className="nav-signout" onClick={() => signOut()}>
                 Sign out
               </button>
             </li>
           </ul>
+        )}
+        {session && !isApproved && (
+          <button className="nav-signout" onClick={() => signOut()}>
+            Sign out
+          </button>
         )}
       </div>
     </nav>

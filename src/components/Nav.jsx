@@ -24,6 +24,12 @@ export default function Nav() {
               <NavLink to="/recipes">Recipes</NavLink>
             </li>
             <li>
+              <NavLink to="/planner">Planner</NavLink>
+            </li>
+            <li>
+              <NavLink to="/shopping">Shopping</NavLink>
+            </li>
+            <li>
               <NavLink to="/games">Games</NavLink>
             </li>
             {isAdmin && (

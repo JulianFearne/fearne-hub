@@ -1,0 +1,126 @@
+.mp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mp-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-nav-btn {
+  background: var(--cream-card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+.mp-nav-btn:hover { background: #fff; }
+
+.mp-week-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  min-width: 190px;
+  text-align: center;
+}
+
+.mp-shop-btn {
+  background: var(--forest);
+  color: var(--cream);
+  border: none;
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.mp-shop-btn:hover { background: var(--forest-dark); }
+
+.mp-grid {
+  display: grid;
+  grid-template-columns: 90px repeat(7, 1fr);
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.mp-corner { }
+
+.mp-day-header {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--forest-dark);
+  padding: 6px 2px;
+}
+.mp-day-header .mp-day-date {
+  display: block;
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+.mp-day-header.mp-today { color: var(--gold); }
+
+.mp-meal-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  padding: 6px 4px;
+}
+
+.mp-cell {
+  min-height: 68px;
+  background: var(--cream-card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-cell-empty {
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--ink-soft);
+  font-size: 1.3rem;
+}
+.mp-cell-empty:hover { background: rgba(214, 164, 25, 0.08); border-color: var(--gold); }
+
+.mp-cell-filled {
+  position: relative;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+.mp-cell-emoji { font-size: 1.3rem; }
+.mp-cell-title {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.mp-cell-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0,0,0,0.08);
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+  line-height: 1;
+  color: var(--ink);
+}
+.mp-cell-remove:hover { background: rgba(0,0,0,0.18); }
+
+@media (max-width: 700px) {
+  .mp-grid { grid-template-columns: 60px repeat(7, minmax(80px, 1fr)); }
+  .mp-cell-title { display: none; }
+}

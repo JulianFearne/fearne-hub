@@ -15,6 +15,18 @@ const sections = [
     tag: 'Kitchen',
   },
   {
+    to: '/planner',
+    title: 'Meal Planner',
+    blurb: 'Plan the week and build a shopping list from it.',
+    tag: 'Kitchen',
+  },
+  {
+    to: '/shopping',
+    title: 'Shopping Lists',
+    blurb: 'Separate lists, or combine them before you shop.',
+    tag: 'Kitchen',
+  },
+  {
     to: '/games',
     title: 'Games',
     blurb: 'A little something to play together.',

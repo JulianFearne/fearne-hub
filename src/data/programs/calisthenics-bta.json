@@ -1,1 +1,293 @@
+{
+  "schema_version": 1,
+  "name": "Calisthenics — Bodyweight Training Arena",
+  "description": "Beginner bodyweight routine built on independent progression chains. Warmup, skill work, conditioning and stretches are tick-lists. Everything else ladders up.",
+  "author": "Bodyweight Training Arena poster",
+  "sessions_per_week": 3,
+  "rest_seconds": 90,
+  "targets": { "sets": 3, "reps": 12, "streak": 3 },
 
+  "record_sections": [
+    {
+      "id": "warmup",
+      "label": "Warmup and Mobility",
+      "color": "#6abf69",
+      "select": "multi",
+      "options": [
+        "Jumping Jacks",
+        "Lunges",
+        "Huggers",
+        "Jumping Squats",
+        "Run",
+        "Sprints",
+        "Scapula Pushups",
+        "Easier version of your current exercise"
+      ]
+    },
+    {
+      "id": "skill",
+      "label": "Skill Work",
+      "color": "#7ab8f5",
+      "select": "multi",
+      "options": ["Handstand practice", "Levers practice"]
+    },
+    {
+      "id": "conditioning",
+      "label": "Conditioning",
+      "color": "#e85b8a",
+      "select": "multi",
+      "options": [
+        "Sprints",
+        "Jump Rope",
+        "Jumping Jacks",
+        "Burpees",
+        "Jumping Lunges",
+        "Bastards"
+      ]
+    },
+    {
+      "id": "stretches",
+      "label": "Stretches",
+      "color": "#f5a623",
+      "select": "multi",
+      "options": [
+        "Pectorals stretch",
+        "Chest stretch",
+        "Cobra and cat stretch",
+        "Pecs and rotator cuffs stretch",
+        "Wrist stretch",
+        "Quad stretch",
+        "Hamstring stretch",
+        "Abductors stretch"
+      ]
+    }
+  ],
+
+  "chains": [
+    {
+      "id": "pushups",
+      "section": "Push",
+      "label": "Pushups",
+      "sub": "Horizontal pushing",
+      "color": "#e8743b",
+      "exercises": [
+        "Wall pushups",
+        "Incline pushup",
+        "Kneeling pushup",
+        "Half way pushup",
+        "Normal pushup",
+        "Elbows in pushups",
+        "Diamond pushups",
+        "Wide grip pushup",
+        "Decline pushups",
+        "Decline diamond pushup",
+        "Uneven pushups",
+        "Uneven lever pushup",
+        "Wall one arm pushup",
+        "Incline one arm pushup",
+        "Straddle one arm pushups",
+        "Half one arm pushup",
+        "One arm pushups",
+        "Decline one arm pushup"
+      ]
+    },
+    {
+      "id": "handstand",
+      "section": "Push",
+      "label": "Handstands",
+      "sub": "Vertical pushing",
+      "color": "#f0a500",
+      "rest_seconds": 120,
+      "exercises": [
+        "Incline pike pushup",
+        "Incline pike diamond pushup",
+        "Pike pushup",
+        "Pike pushup diamond",
+        "Decline pike pushups",
+        "Decline pike diamond pushup",
+        "Decline pike pushup shoulder taps",
+        { "name": "Wall assisted head stand", "unit": "seconds", "reps": 30 },
+        { "name": "Free head stand", "unit": "seconds", "reps": 30 },
+        { "name": "Shoulder-stand headstand", "unit": "seconds", "reps": 30 },
+        { "name": "Handstand hold", "unit": "seconds", "reps": 30 },
+        "Handstand shrugs",
+        "Handstand balance left to right shuffle",
+        { "name": "Handstand stomach to wall straddle hold", "unit": "seconds", "reps": 30 },
+        "Handstand stomach to wall straddle shoulder taps",
+        "Switch, back to the wall shoulder taps",
+        "Half handstand pushup",
+        "Handstand pushup",
+        "Wall handstand diamond pushup",
+        "Uneven handstand",
+        { "name": "Lever handstand", "unit": "seconds", "reps": 15 },
+        "One arm half handstand pushup",
+        "One arm handstand pushup"
+      ]
+    },
+    {
+      "id": "dips",
+      "section": "Push",
+      "label": "Dips",
+      "sub": "Tricep and chest dips",
+      "color": "#d65ba0",
+      "exercises": [
+        "Bench dips, knees bent",
+        "Bench dips, legs straight",
+        "Foot-elevated bench dips",
+        "Between-chairs dips, assisted",
+        "Parallel bar dips, band assisted",
+        { "name": "Parallel bar support hold", "unit": "seconds", "reps": 45 },
+        "Parallel bar negative dips",
+        "Parallel bar dips, full",
+        "Wide grip dips",
+        "Weighted dips",
+        "Ring support hold",
+        "Ring dips, assisted",
+        "Ring dips, full",
+        "Bulgarian dips",
+        "Straight bar dips",
+        "Russian dips",
+        "Korean dips"
+      ]
+    },
+    {
+      "id": "rows",
+      "section": "Pull",
+      "label": "Front Lever and Rows",
+      "sub": "Horizontal pulling",
+      "color": "#3b9ee8",
+      "exercises": [
+        "Vertical pulls",
+        "Inverted rows, legs bent",
+        "Inverted rows, legs straight",
+        "Inverted rows, one leg extended",
+        "Inverted rows, legs elevated",
+        "Inverted rows, legs elevated one leg extended",
+        "Tuck knees front lever rows",
+        { "name": "Flat back front lever", "unit": "seconds", "reps": 15 },
+        "One tuck knee one leg extended rows",
+        "Straddle legs front rows",
+        "Front lever rows",
+        "Front lever pulls",
+        "Hanging V raise windshield wipers",
+        "One arm hanging knee raises",
+        "Horizontal front lever pull-up to rings",
+        "Ice cream maker",
+        { "name": "One-arm front lever", "unit": "seconds", "reps": 10 }
+      ]
+    },
+    {
+      "id": "pullups",
+      "section": "Pull",
+      "label": "Pullups",
+      "sub": "Vertical pulling",
+      "color": "#5bc8e8",
+      "exercises": [
+        "Wall pullups",
+        "Horizontal pulls, legs bent",
+        "Horizontal pulls",
+        { "name": "Dead hang", "unit": "seconds", "reps": 60 },
+        { "name": "Chin over the bar hold", "unit": "seconds", "reps": 30 },
+        "Negative chinup",
+        "Jacknife pullup, box assisted",
+        "Assisted pullup, leg or bands",
+        { "name": "Bent arm 90 degree hold", "unit": "seconds", "reps": 30 },
+        "Negative pullup",
+        "Half pullup",
+        "Pull up",
+        "Close grip pullup",
+        "Wide grip pullup",
+        "Uneven pullup",
+        "Assisted one arm pullup",
+        "Assisted one arm pullup negative",
+        "Half one arm pullup",
+        { "name": "One arm pullup", "reps": 3 },
+        { "name": "Back lever", "unit": "seconds", "reps": 10, "note": "Next milestone beyond the pullup ladder." }
+      ]
+    },
+    {
+      "id": "legs",
+      "section": "Legs",
+      "label": "Pistol Squat",
+      "sub": "Single leg strength",
+      "color": "#3bc97a",
+      "exercises": [
+        "Shoulderstand squat",
+        "Supported squat",
+        "Half squat",
+        "Full squat",
+        "Close squat",
+        "Bulgarian split squats",
+        "Beginner shrimp squat",
+        "Box squat",
+        "Single leg box squat, down from behind",
+        "Box squat hanging on a side",
+        "Uneven squat",
+        "Half one legged squat",
+        "Assisted one legged squat",
+        "Balance assisted one legged squats",
+        "Weighted one leg squat",
+        "Pistol squat",
+        "Renegade pistols",
+        "Intermediate shrimp squat",
+        "Advanced shrimp squat",
+        "Elevated shrimp squat"
+      ]
+    },
+    {
+      "id": "legraises",
+      "section": "Core",
+      "label": "Leg Raises",
+      "sub": "Hanging and floor",
+      "color": "#c9b53b",
+      "exercises": [
+        "Knee tucks",
+        "Flat knee raises",
+        "Flat bent leg raises",
+        "Flat frog raises",
+        "Flat straight leg raises",
+        "Hanging bent knee raises",
+        "Forearm straight leg raises",
+        "Hanging frog raises",
+        "Hanging straight leg raises",
+        "Hanging bent leg V raises",
+        "Hanging straight leg V raises",
+        "Hanging toes to bar"
+      ]
+    },
+    {
+      "id": "bridges",
+      "section": "Core",
+      "label": "Bridges",
+      "sub": "Back bridges",
+      "color": "#e88c3b",
+      "exercises": [
+        "Short bridges",
+        "Straight bridges",
+        "Angled bridges",
+        "Head bridges",
+        "Half bridges",
+        "Full bridges",
+        "Wall walking down",
+        "Wall walking up",
+        "Closing bridge",
+        "Stand to stand bridge"
+      ]
+    },
+    {
+      "id": "bodyline",
+      "section": "Core",
+      "label": "Bodyline",
+      "sub": "Static holds",
+      "color": "#a05bd6",
+      "rest_seconds": 60,
+      "exercises": [
+        { "name": "Hollow hold", "unit": "seconds", "reps": 45 },
+        { "name": "Arch hold", "unit": "seconds", "reps": 45 },
+        { "name": "Plank", "unit": "seconds", "reps": 60 },
+        { "name": "Reverse plank", "unit": "seconds", "reps": 45 },
+        { "name": "Side plank", "unit": "seconds", "reps": 45 }
+      ]
+    }
+  ]
+}

@@ -11,6 +11,9 @@ import Games from './pages/Games.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
 import ShoppingLists from './pages/ShoppingLists.jsx'
+import WorkoutHub from "./pages/WorkoutHub";
+import WorkoutTracker from "./pages/WorkoutTracker";
+import WorkoutHistory from "./pages/WorkoutHistory";
 
 export default function App() {
   return (
@@ -82,6 +85,21 @@ export default function App() {
               <ProtectedRoute requireRole="admin">
                 <Admin />
               </ProtectedRoute>
+            }
+          />
+            <Route
+              path="/workouts"
+              element={<WorkoutHub />
+            }
+          />
+          <Route
+            path="/workouts/tracker"
+            element={<WorkoutTracker />
+            } 
+          />
+          <Route
+            path="/workouts/history"
+            element={<WorkoutHistory />
             }
           />
         </Routes>

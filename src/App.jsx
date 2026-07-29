@@ -5,15 +5,14 @@ import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
-import Workouts from './pages/Workouts.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Games from './pages/Games.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
 import ShoppingLists from './pages/ShoppingLists.jsx'
-import WorkoutHub from "./pages/WorkoutHub";
-import WorkoutTracker from "./pages/WorkoutTracker";
-import WorkoutHistory from "./pages/WorkoutHistory";
+import WorkoutHub from './pages/WorkoutHub.jsx'
+import WorkoutTracker from './pages/WorkoutTracker.jsx'
+import WorkoutHistory from './pages/WorkoutHistory.jsx'
 
 export default function App() {
   return (
@@ -79,19 +78,28 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-            <Route
-              path="/workouts"
-              element={<WorkoutHub />
+          <Route
+            path="/workouts"
+            element={
+              <ProtectedRoute>
+                <WorkoutHub />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/workouts/tracker"
-            element={<WorkoutTracker />
-            } 
+            element={
+              <ProtectedRoute>
+                <WorkoutTracker />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/workouts/history"
-            element={<WorkoutHistory />
+            element={
+              <ProtectedRoute>
+                <WorkoutHistory />
+              </ProtectedRoute>
             }
           />
         </Routes>

@@ -32,14 +32,6 @@ export default function App() {
             }
           />
           <Route
-            path="/workouts"
-            element={
-              <ProtectedRoute>
-                <Workouts />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/recipes"
             element={
               <ProtectedRoute>

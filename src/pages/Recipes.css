@@ -197,13 +197,11 @@
 .recipe-book .rb-empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
 
 /* Category color accents */
-.recipe-book .acc-subs    { background: #fde8df; }
-.recipe-book .acc-pasta   { background: #fef3da; }
-.recipe-book .acc-salads  { background: #e4f0e4; }
-.recipe-book .acc-soups   { background: #deeaf7; }
-.recipe-book .acc-mains   { background: #f2e4f5; }
-.recipe-book .acc-baking  { background: #fde8e8; }
-.recipe-book .acc-snacks  { background: #fff2d9; }
+.recipe-book .acc-starter { background: #e4f0e4; }  /* sage green */
+.recipe-book .acc-main    { background: #fde8df; }  /* warm peach */
+.recipe-book .acc-dessert { background: #fde8e8; }  /* soft pink  */
+.recipe-book .acc-snack   { background: #fff2d9; }  /* gold       */
+.recipe-book .acc-drink   { background: #deeaf7; }  /* cool blue  */
 
 /* ---------- Modal ---------- */
 

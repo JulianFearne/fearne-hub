@@ -1,14 +1,12 @@
 import { supabase } from '../supabaseClient'
 
 export const CATEGORIES = [
-  { id: 'all', label: 'All Recipes', emoji: '📖' },
-  { id: 'subs', label: 'Subs & Sandwiches', emoji: '🥖' },
-  { id: 'pasta', label: 'Pasta & Noodles', emoji: '🍝' },
-  { id: 'mains', label: 'Mains', emoji: '🍽️' },
-  { id: 'soups', label: 'Soups & Stews', emoji: '🍲' },
-  { id: 'salads', label: 'Salads', emoji: '🥗' },
-  { id: 'baking', label: 'Baking', emoji: '🥐' },
-  { id: 'snacks', label: 'Snacks & Sides', emoji: '🧆' },
+  { id: 'all',     label: 'All',      emoji: '🍴' },
+  { id: 'starter', label: 'Starters', emoji: '🥗' },
+  { id: 'main',    label: 'Mains',    emoji: '🍽️' },
+  { id: 'dessert', label: 'Desserts', emoji: '🍰' },
+  { id: 'snack',   label: 'Snacks',   emoji: '🍿' },
+  { id: 'drink',   label: 'Drinks',   emoji: '🥤' },
 ]
 
 export async function fetchRecipes() {

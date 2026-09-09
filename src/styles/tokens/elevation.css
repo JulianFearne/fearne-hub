@@ -1,0 +1,32 @@
+/* Two-layer warm shadows. Cards get a tint-matched shadow, not grey. */
+:root {
+  --shadow-1: 0 1px 2px rgba(60, 40, 50, .05), 0 2px 6px -2px rgba(60, 40, 50, .10);
+  --shadow-2: 0 2px 4px rgba(60, 40, 50, .05), 0 10px 22px -12px rgba(60, 40, 50, .18);
+  --shadow-3: 0 6px 12px rgba(60, 40, 50, .08), 0 26px 50px -18px rgba(60, 40, 50, .28);
+  --shadow-sheet: 0 -8px 30px -12px rgba(36, 30, 34, .30);
+  --inset-well: inset 0 1px 2px rgba(60, 40, 50, .08);
+  --blur-veil: blur(14px);
+}
+[data-theme="dark"] {
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .40);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, .35), 0 12px 24px -12px rgba(0, 0, 0, .55);
+  --shadow-3: 0 8px 16px rgba(0, 0, 0, .40), 0 30px 56px -20px rgba(0, 0, 0, .65);
+  --shadow-sheet: 0 -8px 30px -12px rgba(0, 0, 0, .6);
+  --inset-well: inset 0 1px 2px rgba(0, 0, 0, .4);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, .40);
+    --shadow-2: 0 2px 4px rgba(0, 0, 0, .35), 0 12px 24px -12px rgba(0, 0, 0, .55);
+    --shadow-3: 0 8px 16px rgba(0, 0, 0, .40), 0 30px 56px -20px rgba(0, 0, 0, .65);
+    --shadow-sheet: 0 -8px 30px -12px rgba(0, 0, 0, .6);
+    --inset-well: inset 0 1px 2px rgba(0, 0, 0, .4);
+  }
+  [data-theme="light"] {
+    --shadow-1: 0 1px 2px rgba(60, 40, 50, .05), 0 2px 6px -2px rgba(60, 40, 50, .10);
+    --shadow-2: 0 2px 4px rgba(60, 40, 50, .05), 0 10px 22px -12px rgba(60, 40, 50, .18);
+    --shadow-3: 0 6px 12px rgba(60, 40, 50, .08), 0 26px 50px -18px rgba(60, 40, 50, .28);
+    --shadow-sheet: 0 -8px 30px -12px rgba(36, 30, 34, .30);
+    --inset-well: inset 0 1px 2px rgba(60, 40, 50, .08);
+  }
+}

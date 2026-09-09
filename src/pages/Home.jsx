@@ -1,37 +1,15 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
+import Button from '../components/ds/Button.jsx'
+import Icon from '../components/ds/Icon.jsx'
 
-const sections = [
-  {
-    to: '/workouts',
-    title: 'Workouts',
-    blurb: 'Log sessions and track progress over time.',
-    tag: 'Fitness',
-  },
-  {
-    to: '/recipes',
-    title: 'Recipe Book',
-    blurb: "The family's shared recipes, all in one place.",
-    tag: 'Kitchen',
-  },
-  {
-    to: '/planner',
-    title: 'Meal Planner',
-    blurb: 'Plan the week and build a shopping list from it.',
-    tag: 'Kitchen',
-  },
-  {
-    to: '/shopping',
-    title: 'Shopping Lists',
-    blurb: 'Separate lists, or combine them before you shop.',
-    tag: 'Kitchen',
-  },
-  {
-    to: '/games',
-    title: 'Games',
-    blurb: 'A little something to play together.',
-    tag: 'Fun',
-  },
+const shortcuts = [
+  { to: '/recipes', title: 'Recipes', blurb: 'Browse, cook, add your own', icon: 'soup' },
+  { to: '/planner', title: "This week's meals", blurb: '7 days, planned out', icon: 'calendar-days' },
+  { to: '/shopping', title: 'Shopping lists', blurb: 'Tick off, or combine a shop', icon: 'shopping-basket' },
+  { to: '/workouts', title: 'Workouts', blurb: 'Log a session, see your progress', icon: 'dumbbell' },
+  { to: '/games', title: 'Games', blurb: 'Animal Place Thing, and more to come', icon: 'gamepad-2' },
 ]
 
 export default function Home() {
@@ -40,19 +18,30 @@ export default function Home() {
 
   return (
     <div>
-      <div className="hub-intro">
-        <h1>Hey {firstName} 👋</h1>
-        <p>Everything the family's building lives here. Pick a board to open it up.</p>
-      </div>
+      <p className="fh-home__greet">Hey {firstName}.</p>
+      <p className="fh-home__sub">Everything the family's building lives here.</p>
 
-      <div className="pin-grid">
-        {sections.map((s) => (
-          <Link key={s.to} to={s.to} className="pin-card">
-            <span className="pin-dot" aria-hidden="true" />
-            <h3>{s.title}</h3>
-            <p>{s.blurb}</p>
-            <span className="pin-tag">{s.tag}</span>
-          </Link>
+      <Card variant="feature" className="fh-home__feature">
+        <p className="fh-home__eyebrow">This week</p>
+        <p className="fh-home__dish">What's for dinner tonight?</p>
+        <div className="fh-home__actions">
+          <Button as={Link} to="/planner" variant="onFeature" icon="calendar-days">
+            Open this week's meals
+          </Button>
+        </div>
+      </Card>
+
+      <div className="fh-home__grid">
+        {shortcuts.map((s) => (
+          <Card key={s.to} as={Link} to={s.to} tile>
+            <span className="fh-home__mark">
+              <Icon name={s.icon} size={20} />
+            </span>
+            <div>
+              <CardTitle>{s.title}</CardTitle>
+              <CardMeta>{s.blurb}</CardMeta>
+            </div>
+          </Card>
         ))}
       </div>
     </div>

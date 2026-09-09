@@ -1,0 +1,21 @@
+:root {
+  /* durations: 1 press, 2 hover/small state, 3 sheets & page changes, 4 rewards only */
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-4: 520ms;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-in-out: cubic-bezier(.5, 0, .2, 1);
+  /* --ease-snap is for the tick pop and the score bump, nothing else */
+  --ease-snap: cubic-bezier(.34, 1.4, .5, 1);
+  --press-scale: .985;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms;
+    --dur-2: 1ms;
+    --dur-3: 1ms;
+    --dur-4: 1ms;
+    --press-scale: 1;
+  }
+}

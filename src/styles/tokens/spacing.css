@@ -1,0 +1,15 @@
+:root {
+  --sp-0: 0px; --sp-1: 2px; --sp-2: 4px; --sp-3: 6px; --sp-4: 8px; --sp-5: 12px;
+  --sp-6: 16px; --sp-7: 20px; --sp-8: 24px; --sp-9: 32px; --sp-10: 40px;
+  --sp-11: 56px; --sp-12: 72px;
+
+  --gutter: 20px; /* phone page inset */
+  --gutter-lg: 32px; /* tablet+ */
+  --tap-min: 44px; /* never smaller */
+  --tap-thumb: 56px; /* primary thumb action */
+  --thumb-zone: 180px; /* lower band of a phone screen: keep actions here */
+  --content-max: 720px;
+  --bar-h: 82px; /* bottom tab bar */
+  --header-h: 60px;
+}
+@media (min-width: 900px) { :root { --gutter: var(--gutter-lg); } }

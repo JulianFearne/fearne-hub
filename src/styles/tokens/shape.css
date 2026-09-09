@@ -1,0 +1,8 @@
+/* Deliberately mixed: controls are gently rounded, panels are generously
+   rounded, and the two never share a radius. */
+:root {
+  --r-xs: 6px; --r-sm: 8px; --r-control: 14px; --r-field: 12px;
+  --r-panel: 22px; --r-panel-lg: 26px; --r-sheet: 28px; --r-pill: 999px;
+  --bw-hair: 1px; --bw-strong: 1.5px; --bw-focus: 2px;
+  --focus-offset: 2px;
+}

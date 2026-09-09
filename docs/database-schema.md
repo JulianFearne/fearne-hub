@@ -226,6 +226,25 @@ Scoring itself is never stored — it's recomputed on the fly from these rows
 by the pure functions in `src/pages/scoring.js`, so there's no `score`
 column anywhere.
 
+**These three tables are the one part of the schema deliberately reachable
+by people with no Fearne Hub account.** The game route
+(`/games/animal-place-thing`) isn't behind `ProtectedRoute`, and anyone who
+opens it with no session gets signed in via **Supabase anonymous sign-in**
+(`signInAsGuest()` in `src/pages/animalPlaceThingData.js`) the moment they
+create or join a game — a real `auth.users` row and `auth.uid()`, just with
+no email/password and no `profiles` row. Their `game_players.display_name`
+is whatever nickname they typed, not derived from a hub account. Two
+consequences for the schema:
+
+- **RLS on these three tables must key off `auth.uid() IS NOT NULL`, never
+  `is_approved()`** (or anything else that reads `profiles`) — an anonymous
+  guest has no profile row and would be blocked outright. Every other table
+  in this document *should* stay gated behind hub approval; these three are
+  the exception.
+- Requires **Authentication → Sign In / Providers → Anonymous Sign-Ins**
+  enabled in the Supabase project, or `signInAsGuest()` fails for anyone
+  without an existing session.
+
 ### `game_sessions`
 
 | Column | Type | Notes |
@@ -268,5 +287,10 @@ player per round, upserted on submit or on timer expiry.
 All three game tables need **Realtime** enabled in Supabase (Database →
 Replication), since `AnimalPlaceThing.jsx` subscribes to `postgres_changes`
 on all three, filtered by `session_id`. RLS should allow any authenticated
-user to read/write rows for a session they're a player in (session codes
-double as the shared secret for joining).
+user (hub member or anonymous guest alike) to read every row, and to
+insert/update/delete only rows that are theirs — `host_id = auth.uid()` on
+`game_sessions` insert, `user_id = auth.uid()` on `game_players` and
+`game_submissions` writes. Session codes double as the shared secret for
+joining a specific game; there's otherwise no per-game access control (any
+authenticated user can read any session's rows if they know or guess the
+code).

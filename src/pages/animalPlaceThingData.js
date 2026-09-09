@@ -5,6 +5,20 @@
 
 import { supabase } from '../supabaseClient'
 
+// ---------- identity ----------
+
+// AnimalPlaceThing is playable without a Fearne Hub account: anyone with a
+// game code can join. RLS still needs *some* authenticated identity to
+// attach rows to, so a person with no hub session gets a Supabase anonymous
+// session instead — a real (if account-less) auth.users row, good enough to
+// own a game_players row and survive a page refresh. Requires "Anonymous
+// Sign-Ins" to be enabled in the Supabase project (Authentication settings).
+export async function signInAsGuest() {
+  const { data, error } = await supabase.auth.signInAnonymously()
+  if (error) throw error
+  return data.user
+}
+
 // ---------- session snapshot + realtime ----------
 
 export async function loadSessionSnapshot(sessionId) {

@@ -71,14 +71,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/games/animal-place-thing"
-            element={
-              <ProtectedRoute>
-                <AnimalPlaceThing />
-              </ProtectedRoute>
-            }
-          />
+          {/* Not behind ProtectedRoute on purpose: this game is playable by
+              anyone with the code, hub account or not (see AnimalPlaceThing.jsx). */}
+          <Route path="/games/animal-place-thing" element={<AnimalPlaceThing />} />
           <Route
             path="/admin"
             element={

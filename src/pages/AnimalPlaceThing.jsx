@@ -61,6 +61,8 @@ export default function AnimalPlaceThing() {
 
   const [screen, setScreen] = useState("home"); // home|lobby|game|roundResult|final
   const [createCode, setCreateCode] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [joinError, setJoinError] = useState("");
 
@@ -185,42 +187,56 @@ export default function AnimalPlaceThing() {
 
   // ── Actions ───────────────────────────────────────────────────────────────
   async function createSession() {
+    if (!userId) {
+      setCreateError("You need to be signed in to create a game.");
+      return;
+    }
     const code = randCode();
-    let data;
+    setCreating(true);
+    setCreateError("");
     try {
-      data = await insertGameSession({
+      const data = await insertGameSession({
         id: code,
         hostId: userId,
         endCondition,
         pointGoal,
         rulesVersion: RULES_VERSION,
       });
+      await upsertPlayer(code, userId, displayName);
+      setCreateCode(code);
+      setSession(data);
+      await loadAll(code);
+      setScreen("lobby");
     } catch (err) {
-      return setJoinError("Couldn't create game. Try again.");
+      console.error("AnimalPlaceThing: createSession failed", err);
+      setCreateError(err?.message || "Couldn't create game. Try again.");
+    } finally {
+      setCreating(false);
     }
-    await upsertPlayer(code, userId, displayName);
-    setCreateCode(code);
-    setSession(data);
-    await loadAll(code);
-    setScreen("lobby");
   }
 
   async function joinSession() {
     const code = joinCode.trim().toUpperCase();
     if (!code) return;
-    const s = await getSessionByCode(code);
-    if (!s) return setJoinError("Session not found.");
-    if (s.phase !== "lobby") return setJoinError("That game has already started.");
-    // Version check the hub way: the session stamped its rules_version at
-    // creation; if this device's bundle differs, scoring could diverge.
-    if (s.rules_version != null && s.rules_version !== RULES_VERSION) {
-      return setJoinError("This game was made on a newer version. Refresh the page, then rejoin.");
+    if (!userId) return setJoinError("You need to be signed in to join a game.");
+    try {
+      const s = await getSessionByCode(code);
+      if (!s) return setJoinError("Session not found.");
+      if (s.phase !== "lobby") return setJoinError("That game has already started.");
+      // Version check the hub way: the session stamped its rules_version at
+      // creation; if this device's bundle differs, scoring could diverge.
+      if (s.rules_version != null && s.rules_version !== RULES_VERSION) {
+        return setJoinError("This game was made on a newer version. Refresh the page, then rejoin.");
+      }
+      await upsertPlayer(code, userId, displayName);
+      setSession(s);
+      await loadAll(code);
+      setScreen("lobby");
+      setJoinError("");
+    } catch (err) {
+      console.error("AnimalPlaceThing: joinSession failed", err);
+      setJoinError(err?.message || "Couldn't join that game. Try again.");
     }
-    await upsertPlayer(code, userId, displayName);
-    setSession(s);
-    await loadAll(code);
-    setScreen("lobby");
-    setJoinError("");
   }
 
   async function startRound() {
@@ -330,8 +346,9 @@ export default function AnimalPlaceThing() {
                   />
                 </label>
               )}
-              <button className="apt-btn apt-btn-primary" onClick={createSession}>
-                Create game
+              {createError && <p className="apt-error">{createError}</p>}
+              <button className="apt-btn apt-btn-primary" onClick={createSession} disabled={creating}>
+                {creating ? "Creating…" : "Create game"}
               </button>
             </div>
 

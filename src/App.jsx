@@ -7,6 +7,7 @@ import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Games from './pages/Games.jsx'
+import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
 import ShoppingLists from './pages/ShoppingLists.jsx'
@@ -67,6 +68,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Games />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/animal-place-thing"
+            element={
+              <ProtectedRoute>
+                <AnimalPlaceThing />
               </ProtectedRoute>
             }
           />

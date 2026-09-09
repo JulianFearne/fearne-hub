@@ -12,6 +12,7 @@
 // ============================================================================
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   CATEGORIES,
@@ -86,12 +87,17 @@ export default function AnimalPlaceThing() {
     }
   }
 
+  // A shared invite link looks like /games/animal-place-thing?code=ABC123 —
+  // pre-fill the join box so the recipient only has to type their name.
+  const [searchParams] = useSearchParams();
+
   const [screen, setScreen] = useState("home"); // home|lobby|game|roundResult|final
   const [createCode, setCreateCode] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [joinCode, setJoinCode] = useState("");
+  const [joinCode, setJoinCode] = useState(() => (searchParams.get("code") || "").toUpperCase());
   const [joinError, setJoinError] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const [session, setSession] = useState(null);
   const [players, setPlayers] = useState([]); // [{user_id, display_name, joined_at}]
@@ -338,6 +344,27 @@ export default function AnimalPlaceThing() {
     await updateSession(sessionId, { phase: "final" });
   }
 
+  // Uses the native share sheet on phones (nicer for texting/WhatsApp-ing
+  // the link); falls back to copying it to the clipboard everywhere else.
+  async function shareInviteLink(code) {
+    const url = `${window.location.origin}/games/animal-place-thing?code=${code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Animal Place Thing", text: `Join my game — code ${code}`, url });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return; // they closed the share sheet — not an error
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable — nothing more we can do here */
+    }
+  }
+
   async function leaveToHome() {
     if (sessionId) {
       await removePlayer(sessionId, userId);
@@ -447,6 +474,14 @@ export default function AnimalPlaceThing() {
                 Copy
               </button>
             </div>
+
+            <button
+              className="apt-btn apt-btn-ghost"
+              style={{ marginBottom: 20 }}
+              onClick={() => shareInviteLink(createCode || session.id)}
+            >
+              {linkCopied ? "Link copied!" : "🔗 Share invite link"}
+            </button>
 
             <div className="apt-players">
               <span className="apt-players-count">{players.length} in the lobby</span>

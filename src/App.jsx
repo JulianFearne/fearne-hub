@@ -6,7 +6,12 @@ import Login from './pages/Login.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
 import Recipes from './pages/Recipes.jsx'
-import Games from './pages/Games.jsx'
+import GamesHub from './pages/games/GamesHub.jsx'
+import ConnectFour from './pages/games/connect-four/ConnectFour.jsx'
+import Hangman from './pages/games/hangman/Hangman.jsx'
+import Sudoku from './pages/games/sudoku/Sudoku.jsx'
+import Freecell from './pages/games/freecell/Freecell.jsx'
+import GoFish from './pages/games/go-fish/GoFish.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -67,7 +72,47 @@ export default function App() {
             path="/games"
             element={
               <ProtectedRoute>
-                <Games />
+                <GamesHub />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/connect-four"
+            element={
+              <ProtectedRoute>
+                <ConnectFour />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/hangman"
+            element={
+              <ProtectedRoute>
+                <Hangman />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/sudoku"
+            element={
+              <ProtectedRoute>
+                <Sudoku />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/freecell"
+            element={
+              <ProtectedRoute>
+                <Freecell />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games/go-fish"
+            element={
+              <ProtectedRoute>
+                <GoFish />
               </ProtectedRoute>
             }
           />

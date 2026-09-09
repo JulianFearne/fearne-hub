@@ -1,0 +1,111 @@
+/* src/pages/games/games-hub.css
+   Scoped under .games-hub. Corkboard pinned-card look in the hub palette. */
+
+.games-hub {
+  --gh-green: #2f5d3a;
+  --gh-cream: #f6efe0;
+  --gh-cream-soft: #efe6d3;
+  --gh-gold: #d4a017;
+  --gh-ink: #2a2a26;
+  --gh-line: rgba(42, 42, 38, 0.16);
+
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+  color: var(--gh-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.games-hub-header {
+  margin-bottom: 1.25rem;
+}
+.games-hub-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+.games-hub-sub {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--gh-line);
+  background: var(--gh-cream);
+  box-shadow: 0 6px 16px rgba(39, 76, 48, 0.1);
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition: transform 0.09s ease, box-shadow 0.14s ease;
+}
+.game-card:hover:not(.is-disabled) {
+  transform: translateY(-3px) rotate(-0.4deg);
+  box-shadow: 0 12px 24px rgba(39, 76, 48, 0.18);
+}
+.game-card.is-disabled {
+  opacity: 0.62;
+  cursor: default;
+}
+
+/* the "pin" */
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--gh-gold);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.game-card-emoji {
+  font-size: 1.9rem;
+}
+.game-card-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.game-card-blurb {
+  font-size: 0.88rem;
+  opacity: 0.78;
+  line-height: 1.35;
+}
+.game-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+.game-tag {
+  font-size: 0.72rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  background: var(--gh-cream-soft);
+  border: 1px solid var(--gh-line);
+}
+.game-card-soon {
+  align-self: flex-start;
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: var(--gh-green);
+  color: var(--gh-cream);
+}

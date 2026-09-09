@@ -1,0 +1,179 @@
+/* src/pages/games/sudoku/sudoku.css
+   Scoped under .sudoku — never leaks into the hub shell. */
+
+.sudoku {
+  --su-forest: #22402f;
+  --su-forest-dark: #182e21;
+  --su-cream: #f5f0e1;
+  --su-card: #fdfbf5;
+  --su-gold: #d6a419;
+  --su-terracotta: #c85c3a;
+  --su-ink: #26231d;
+  --su-line-soft: rgba(38, 35, 29, 0.15);
+  --su-line-strong: rgba(38, 35, 29, 0.55);
+  max-width: 480px;
+  margin: 0 auto;
+  outline: none;
+}
+
+.su-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.su-back {
+  text-decoration: none;
+  color: var(--su-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.su-title {
+  font-family: 'Fraunces', Georgia, serif;
+  margin: 0;
+}
+
+.su-panel {
+  background: var(--su-card);
+  border: 1px solid var(--su-line-soft);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 10px rgba(38, 35, 29, 0.12);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.su-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.su-difficulty {
+  display: flex;
+  gap: 0.4rem;
+}
+.su-chip {
+  border: 1px solid var(--su-line-soft);
+  background: #fff;
+  color: var(--su-ink);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.su-chip.active {
+  background: var(--su-forest);
+  color: var(--su-cream);
+  border-color: var(--su-forest);
+}
+.su-timer {
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--su-forest-dark);
+}
+
+.su-grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--su-line-strong);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+.su-cell {
+  border: 1px solid var(--su-line-soft);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.9rem, 3.2vw, 1.2rem);
+  font-weight: 600;
+  color: var(--su-forest-dark);
+  cursor: pointer;
+  padding: 0;
+}
+.su-cell.box-left {
+  border-left: 2px solid var(--su-line-strong);
+}
+.su-cell.box-top {
+  border-top: 2px solid var(--su-line-strong);
+}
+.su-cell.given {
+  color: var(--su-ink);
+  cursor: default;
+  font-weight: 700;
+}
+.su-cell.entry {
+  color: var(--su-terracotta);
+}
+.su-cell.in-line {
+  background: rgba(34, 64, 47, 0.06);
+}
+.su-cell.same-value {
+  background: rgba(214, 164, 25, 0.18);
+}
+.su-cell.selected {
+  background: rgba(34, 64, 47, 0.18);
+}
+.su-cell.conflict {
+  color: #b3261e;
+  background: rgba(179, 38, 30, 0.12);
+}
+.su-grid.is-solved .su-cell {
+  color: var(--su-forest);
+}
+
+.su-numpad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+}
+.su-num {
+  border: 1px solid var(--su-line-soft);
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.55rem 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--su-forest-dark);
+  cursor: pointer;
+}
+.su-num:hover {
+  background: rgba(34, 64, 47, 0.08);
+}
+.su-erase {
+  color: var(--su-terracotta);
+}
+
+.su-solved-banner {
+  font-weight: 700;
+  font-family: 'Fraunces', Georgia, serif;
+  color: var(--su-forest-dark);
+  font-size: 1.1rem;
+}
+
+.su-actions {
+  display: flex;
+}
+.su-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--su-forest);
+  background: #fff;
+  color: var(--su-forest);
+  cursor: pointer;
+}
+.su-btn.primary {
+  background: var(--su-forest);
+  color: var(--su-cream);
+}
+.su-btn.primary:hover {
+  background: var(--su-forest-dark);
+}

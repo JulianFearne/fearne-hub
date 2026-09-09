@@ -21,6 +21,7 @@ import {
   shapeRounds,
 } from "./scoring";
 import {
+  signInAsGuest,
   loadSessionSnapshot,
   subscribeToSessionChanges,
   unsubscribeFromSession,
@@ -55,9 +56,35 @@ function pickLetter(used, endCondition) {
 export default function AnimalPlaceThing() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  // Hub profiles don't carry a display name column, so fall back to the
-  // part of the email before the @ (same pattern as Home.jsx's greeting).
-  const displayName = user?.email ? user.email.split("@")[0] : "Player";
+
+  // Nobody needs a Fearne Hub account to play — a hub member gets an
+  // editable nickname pre-filled from their email, a guest with no session
+  // just types one and gets signed in anonymously the moment they act (see
+  // createSession/joinSession). Remembered per-browser so it doesn't need
+  // retyping next time.
+  const [nickname, setNickname] = useState(() => {
+    try {
+      return localStorage.getItem("apt-nickname") || "";
+    } catch {
+      return "";
+    }
+  });
+  const nicknameEdited = useRef(false); // stops the email-prefill effect from clobbering a cleared field
+
+  useEffect(() => {
+    if (nicknameEdited.current || nickname || !user?.email) return;
+    setNickname(user.email.split("@")[0]);
+  }, [user, nickname]);
+
+  function handleNicknameChange(value) {
+    nicknameEdited.current = true;
+    setNickname(value);
+    try {
+      localStorage.setItem("apt-nickname", value);
+    } catch {
+      /* storage unavailable (private browsing etc.) — nickname still works this session */
+    }
+  }
 
   const [screen, setScreen] = useState("home"); // home|lobby|game|roundResult|final
   const [createCode, setCreateCode] = useState("");
@@ -186,23 +213,33 @@ export default function AnimalPlaceThing() {
   );
 
   // ── Actions ───────────────────────────────────────────────────────────────
+  // Anyone signed in to the hub already has an id (userId). Anyone else
+  // gets a Supabase anonymous session on the spot — no separate signup step.
+  async function resolveUserId() {
+    if (userId) return userId;
+    const guest = await signInAsGuest();
+    return guest.id;
+  }
+
   async function createSession() {
-    if (!userId) {
-      setCreateError("You need to be signed in to create a game.");
+    const name = nickname.trim();
+    if (!name) {
+      setCreateError("Enter a name first.");
       return;
     }
     const code = randCode();
     setCreating(true);
     setCreateError("");
     try {
+      const uid = await resolveUserId();
       const data = await insertGameSession({
         id: code,
-        hostId: userId,
+        hostId: uid,
         endCondition,
         pointGoal,
         rulesVersion: RULES_VERSION,
       });
-      await upsertPlayer(code, userId, displayName);
+      await upsertPlayer(code, uid, name);
       setCreateCode(code);
       setSession(data);
       await loadAll(code);
@@ -218,7 +255,11 @@ export default function AnimalPlaceThing() {
   async function joinSession() {
     const code = joinCode.trim().toUpperCase();
     if (!code) return;
-    if (!userId) return setJoinError("You need to be signed in to join a game.");
+    const name = nickname.trim();
+    if (!name) {
+      setJoinError("Enter a name first.");
+      return;
+    }
     try {
       const s = await getSessionByCode(code);
       if (!s) return setJoinError("Session not found.");
@@ -228,7 +269,8 @@ export default function AnimalPlaceThing() {
       if (s.rules_version != null && s.rules_version !== RULES_VERSION) {
         return setJoinError("This game was made on a newer version. Refresh the page, then rejoin.");
       }
-      await upsertPlayer(code, userId, displayName);
+      const uid = await resolveUserId();
+      await upsertPlayer(code, uid, name);
       setSession(s);
       await loadAll(code);
       setScreen("lobby");
@@ -325,6 +367,22 @@ export default function AnimalPlaceThing() {
           </div>
 
           <div className="apt-card">
+            <div className="apt-block">
+              <span className="apt-block-label">Your name</span>
+              <input
+                type="text"
+                className="apt-name-input"
+                placeholder="What should we call you?"
+                value={nickname}
+                onChange={(e) => handleNicknameChange(e.target.value)}
+                maxLength={24}
+                autoComplete="nickname"
+              />
+              <p className="apt-hint">Shown to everyone in the game — no account needed to play.</p>
+            </div>
+
+            <div className="apt-or"><span>then</span></div>
+
             <div className="apt-block">
               <span className="apt-block-label">Create a game</span>
               <label className="apt-field">

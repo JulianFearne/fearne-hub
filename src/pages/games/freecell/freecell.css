@@ -1,0 +1,194 @@
+/* src/pages/games/freecell/freecell.css
+   Scoped under .freecell — never leaks into the hub shell. */
+
+.freecell {
+  --fc-forest: #22402f;
+  --fc-forest-dark: #182e21;
+  --fc-cream: #f5f0e1;
+  --fc-card-bg: #fdfbf5;
+  --fc-gold: #d6a419;
+  --fc-terracotta: #c85c3a;
+  --fc-ink: #26231d;
+  --fc-line: rgba(38, 35, 29, 0.15);
+  --fc-red: #b3261e;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.fc-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.fc-back {
+  text-decoration: none;
+  color: var(--fc-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.fc-title {
+  font-family: 'Fraunces', Georgia, serif;
+  margin: 0;
+}
+
+.fc-panel {
+  background: var(--fc-card-bg);
+  border: 1px solid var(--fc-line);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 3px 10px rgba(38, 35, 29, 0.12);
+  display: grid;
+  gap: 1rem;
+}
+
+.fc-top-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.fc-frees,
+.fc-foundations {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fc-slot {
+  width: 3.4rem;
+  height: 4.7rem;
+  border: 2px dashed var(--fc-line);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(38, 35, 29, 0.02);
+}
+.fc-slot.target-selected {
+  border-color: var(--fc-gold);
+}
+.fc-foundation {
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: default;
+}
+.fc-foundation.red {
+  color: var(--fc-red);
+}
+.fc-foundation.black {
+  color: var(--fc-ink);
+}
+
+.fc-tableau {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.4rem;
+}
+.fc-column {
+  position: relative;
+  min-height: 7rem;
+  height: 16rem;
+  border-radius: 8px;
+  background: rgba(38, 35, 29, 0.03);
+}
+
+.fc-card-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.fc-card {
+  border: 1px solid var(--fc-line);
+  background: #fff;
+  border-radius: 6px;
+  height: 3.4rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0.25rem 0.35rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(38, 35, 29, 0.18);
+  cursor: pointer;
+  user-select: none;
+}
+.fc-card.red {
+  color: var(--fc-red);
+}
+.fc-card.black {
+  color: var(--fc-ink);
+}
+.fc-card.selected {
+  outline: 3px solid var(--fc-gold);
+  outline-offset: -1px;
+}
+.fc-card.dimmed {
+  opacity: 0.72;
+}
+
+.fc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.fc-stats {
+  font-size: 0.9rem;
+  color: var(--fc-ink);
+}
+.fc-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+.fc-btn {
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  border: 1px solid var(--fc-forest);
+  background: #fff;
+  color: var(--fc-forest);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.fc-btn.primary {
+  background: var(--fc-forest);
+  color: var(--fc-cream);
+}
+.fc-btn.primary:hover {
+  background: var(--fc-forest-dark);
+}
+
+.fc-error {
+  color: var(--fc-red);
+  font-size: 0.85rem;
+}
+.fc-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+
+.fc-won-banner {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--fc-forest-dark);
+}
+
+@media (max-width: 640px) {
+  .fc-tableau {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.2rem;
+  }
+  .fc-card {
+    font-size: 0.75rem;
+    padding: 0.2rem;
+  }
+  .fc-slot {
+    width: 2.5rem;
+    height: 3.6rem;
+  }
+}

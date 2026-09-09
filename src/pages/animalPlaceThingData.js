@@ -67,7 +67,15 @@ export function unsubscribeFromSession(channel) {
 
 // ---------- sessions ----------
 
-export async function insertGameSession({ id, hostId, endCondition, pointGoal, rulesVersion }) {
+export async function insertGameSession({
+  id,
+  hostId,
+  endCondition,
+  pointGoal,
+  rulesVersion,
+  categorySet,
+  roundSeconds,
+}) {
   const { data, error } = await supabase
     .from('game_sessions')
     .insert({
@@ -77,6 +85,8 @@ export async function insertGameSession({ id, hostId, endCondition, pointGoal, r
       end_condition: endCondition,
       point_goal: endCondition === 'points' ? pointGoal : null,
       rules_version: rulesVersion,
+      category_set: categorySet,
+      round_seconds: roundSeconds,
     })
     .select()
     .single()

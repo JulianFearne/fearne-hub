@@ -1,0 +1,187 @@
+/* src/pages/games/hangman/hangman.css
+   Scoped under .hangman — never leaks into the hub shell. */
+
+.hangman {
+  --hm-forest: #22402f;
+  --hm-forest-dark: #182e21;
+  --hm-cream: #f5f0e1;
+  --hm-card: #fdfbf5;
+  --hm-gold: #d6a419;
+  --hm-terracotta: #c85c3a;
+  --hm-ink: #26231d;
+  --hm-line: rgba(38, 35, 29, 0.12);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.hm-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.hm-back {
+  text-decoration: none;
+  color: var(--hm-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.hm-title {
+  font-family: 'Fraunces', Georgia, serif;
+  margin: 0;
+}
+
+.hm-panel {
+  background: var(--hm-card);
+  border: 1px solid var(--hm-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 10px rgba(38, 35, 29, 0.12);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.hm-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.hm-chip {
+  border: 1px solid var(--hm-line);
+  background: #fff;
+  color: var(--hm-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.hm-chip.active {
+  background: var(--hm-forest);
+  color: var(--hm-cream);
+  border-color: var(--hm-forest);
+}
+
+.hm-gallows {
+  width: 140px;
+  height: 160px;
+}
+.hm-line {
+  stroke: var(--hm-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0.35;
+}
+.hm-part {
+  stroke: var(--hm-terracotta);
+  stroke-width: 4;
+  stroke-linecap: round;
+  fill: none;
+}
+circle.hm-part {
+  fill: none;
+}
+
+.hm-word {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.hm-slot {
+  width: 1.6rem;
+  height: 2.1rem;
+  border-bottom: 3px solid var(--hm-forest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--hm-ink);
+}
+
+.hm-status {
+  font-weight: 600;
+  color: var(--hm-ink);
+  text-align: center;
+}
+.hm-status.is-over {
+  color: var(--hm-forest-dark);
+  font-size: 1.05rem;
+}
+
+.hm-keyboard {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+  width: 100%;
+}
+.hm-key {
+  border: 1px solid var(--hm-line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--hm-ink);
+}
+.hm-key:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.hm-key.right {
+  background: var(--hm-forest);
+  color: var(--hm-cream);
+  border-color: var(--hm-forest);
+  opacity: 1;
+}
+.hm-key.wrong {
+  background: var(--hm-terracotta);
+  color: #fff;
+  border-color: var(--hm-terracotta);
+  opacity: 1;
+}
+
+.hm-wrong-list {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.hm-scoreboard {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--hm-ink);
+}
+
+.hm-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.hm-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--hm-forest);
+  background: #fff;
+  color: var(--hm-forest);
+  cursor: pointer;
+}
+.hm-btn.primary {
+  background: var(--hm-forest);
+  color: var(--hm-cream);
+}
+.hm-btn.primary:hover {
+  background: var(--hm-forest-dark);
+}
+
+@media (max-width: 420px) {
+  .hm-keyboard {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}

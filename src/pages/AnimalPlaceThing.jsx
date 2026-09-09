@@ -2,14 +2,17 @@
 // AnimalPlaceThing.jsx — Fearne Hub game component
 // ----------------------------------------------------------------------------
 // Supabase-backed multiplayer. Imports scoring from ./scoring (single source
-// of truth). Styling scoped under .animal-place-thing (see AnimalPlaceThing.css)
-// so nothing leaks into the hub shell — mirrors the .recipe-book pattern.
+// of truth) and DB access from ./animalPlaceThingData (mirrors the
+// recipesData.js pattern — pages never touch the Supabase client directly).
+// Styling scoped under .animal-place-thing (see AnimalPlaceThing.css) so
+// nothing leaks into the hub shell — mirrors the .recipe-book pattern.
 //
-// Expects a configured Supabase client passed in as a prop (the hub already
-// has one). Expects the authenticated user's id + display name.
+// User identity comes from useAuth(), like every other page in the hub —
+// this component takes no props.
 // ============================================================================
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 import {
   CATEGORIES,
   RULES_VERSION,
@@ -17,6 +20,18 @@ import {
   totalScores,
   shapeRounds,
 } from "./scoring";
+import {
+  loadSessionSnapshot,
+  subscribeToSessionChanges,
+  unsubscribeFromSession,
+  insertGameSession,
+  getSessionByCode,
+  upsertPlayer,
+  removePlayer,
+  updateSession,
+  upsertSubmission,
+  getSubmittedUserCount,
+} from "./animalPlaceThingData";
 import "./AnimalPlaceThing.css";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -37,9 +52,17 @@ function pickLetter(used, endCondition) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export default function AnimalPlaceThing({ supabase, userId, displayName }) {
+export default function AnimalPlaceThing() {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  // Hub profiles don't carry a display name column, so fall back to the
+  // part of the email before the @ (same pattern as Home.jsx's greeting).
+  const displayName = user?.email ? user.email.split("@")[0] : "Player";
+
   const [screen, setScreen] = useState("home"); // home|lobby|game|roundResult|final
   const [createCode, setCreateCode] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [joinError, setJoinError] = useState("");
 
@@ -67,54 +90,31 @@ export default function AnimalPlaceThing({ supabase, userId, displayName }) {
   }, [myAnswers]);
 
   // ── Load a full session snapshot ──────────────────────────────────────────
-  const loadAll = useCallback(
-    async (sid) => {
-      const [{ data: s }, { data: p }, { data: subs }] = await Promise.all([
-        supabase.from("game_sessions").select("*").eq("id", sid).single(),
-        supabase.from("game_players").select("*").eq("session_id", sid).order("joined_at"),
-        supabase.from("game_submissions").select("*").eq("session_id", sid),
-      ]);
-      if (s) setSession(s);
-      if (p) setPlayers(p);
-      if (subs) setSubmissions(subs);
-    },
-    [supabase]
-  );
+  const loadAll = useCallback(async (sid) => {
+    const { session: s, players: p, submissions: subs } = await loadSessionSnapshot(sid);
+    if (s) setSession(s);
+    if (p) setPlayers(p);
+    if (subs) setSubmissions(subs);
+  }, []);
 
   // ── Realtime subscription (framework Phase 1: replaces polling) ───────────
   useEffect(() => {
     if (!sessionId) return;
-    const ch = supabase
-      .channel(`apt:${sessionId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "game_sessions", filter: `id=eq.${sessionId}` },
-        (payload) => {
-          if (payload.eventType === "DELETE") return;
-          setSession(payload.new);
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "game_players", filter: `session_id=eq.${sessionId}` },
-        () => loadAll(sessionId) // player set changed; re-pull (also handles host migration)
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "game_submissions", filter: `session_id=eq.${sessionId}` },
-        () => loadAll(sessionId)
-      )
-      .subscribe();
+    const ch = subscribeToSessionChanges(sessionId, {
+      onSessionUpdate: (row) => setSession(row),
+      onPlayersChange: () => loadAll(sessionId), // player set changed; re-pull (also handles host migration)
+      onSubmissionsChange: () => loadAll(sessionId),
+    });
     channelRef.current = ch;
 
     // Slow safety-net poll for reconnect gaps only (framework Phase 1 note).
     const safety = setInterval(() => loadAll(sessionId), 10000);
 
     return () => {
-      supabase.removeChannel(ch);
+      unsubscribeFromSession(ch);
       clearInterval(safety);
     };
-  }, [sessionId, supabase, loadAll]);
+  }, [sessionId, loadAll]);
 
   // ── React to phase changes ────────────────────────────────────────────────
   useEffect(() => {
@@ -187,69 +187,71 @@ export default function AnimalPlaceThing({ supabase, userId, displayName }) {
 
   // ── Actions ───────────────────────────────────────────────────────────────
   async function createSession() {
+    if (!userId) {
+      setCreateError("You need to be signed in to create a game.");
+      return;
+    }
     const code = randCode();
-    const { data, error } = await supabase
-      .from("game_sessions")
-      .insert({
+    setCreating(true);
+    setCreateError("");
+    try {
+      const data = await insertGameSession({
         id: code,
-        host_id: userId,
-        phase: "lobby",
-        end_condition: endCondition,
-        point_goal: endCondition === "points" ? pointGoal : null,
-        rules_version: RULES_VERSION,
-      })
-      .select()
-      .single();
-    if (error) return setJoinError("Couldn't create game. Try again.");
-    await supabase.from("game_players").upsert({
-      session_id: code,
-      user_id: userId,
-      display_name: displayName,
-    });
-    setCreateCode(code);
-    setSession(data);
-    await loadAll(code);
-    setScreen("lobby");
+        hostId: userId,
+        endCondition,
+        pointGoal,
+        rulesVersion: RULES_VERSION,
+      });
+      await upsertPlayer(code, userId, displayName);
+      setCreateCode(code);
+      setSession(data);
+      await loadAll(code);
+      setScreen("lobby");
+    } catch (err) {
+      console.error("AnimalPlaceThing: createSession failed", err);
+      setCreateError(err?.message || "Couldn't create game. Try again.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function joinSession() {
     const code = joinCode.trim().toUpperCase();
     if (!code) return;
-    const { data: s } = await supabase.from("game_sessions").select("*").eq("id", code).single();
-    if (!s) return setJoinError("Session not found.");
-    if (s.phase !== "lobby") return setJoinError("That game has already started.");
-    // Version check the hub way: the session stamped its rules_version at
-    // creation; if this device's bundle differs, scoring could diverge.
-    if (s.rules_version != null && s.rules_version !== RULES_VERSION) {
-      return setJoinError("This game was made on a newer version. Refresh the page, then rejoin.");
+    if (!userId) return setJoinError("You need to be signed in to join a game.");
+    try {
+      const s = await getSessionByCode(code);
+      if (!s) return setJoinError("Session not found.");
+      if (s.phase !== "lobby") return setJoinError("That game has already started.");
+      // Version check the hub way: the session stamped its rules_version at
+      // creation; if this device's bundle differs, scoring could diverge.
+      if (s.rules_version != null && s.rules_version !== RULES_VERSION) {
+        return setJoinError("This game was made on a newer version. Refresh the page, then rejoin.");
+      }
+      await upsertPlayer(code, userId, displayName);
+      setSession(s);
+      await loadAll(code);
+      setScreen("lobby");
+      setJoinError("");
+    } catch (err) {
+      console.error("AnimalPlaceThing: joinSession failed", err);
+      setJoinError(err?.message || "Couldn't join that game. Try again.");
     }
-    await supabase.from("game_players").upsert({
-      session_id: code,
-      user_id: userId,
-      display_name: displayName,
-    });
-    setSession(s);
-    await loadAll(code);
-    setScreen("lobby");
-    setJoinError("");
   }
 
   async function startRound() {
     const letter = pickLetter(session.used_letters || [], session.end_condition);
     if (!letter) {
-      await supabase.from("game_sessions").update({ phase: "final" }).eq("id", sessionId);
+      await updateSession(sessionId, { phase: "final" });
       return;
     }
-    await supabase
-      .from("game_sessions")
-      .update({
-        phase: "playing",
-        current_letter: letter,
-        used_letters: [...(session.used_letters || []), letter],
-        round: (session.round || 0) + 1,
-        deadline: new Date(Date.now() + ROUND_SECONDS * 1000).toISOString(),
-      })
-      .eq("id", sessionId);
+    await updateSession(sessionId, {
+      phase: "playing",
+      current_letter: letter,
+      used_letters: [...(session.used_letters || []), letter],
+      round: (session.round || 0) + 1,
+      deadline: new Date(Date.now() + ROUND_SECONDS * 1000).toISOString(),
+    });
   }
 
   // Single submission path for both manual submit and timer expiry
@@ -259,29 +261,19 @@ export default function AnimalPlaceThing({ supabase, userId, displayName }) {
       if (!session || session.phase !== "playing") return;
       if (submitted) return;
       setSubmitted(true);
-      await supabase.from("game_submissions").upsert({
-        session_id: session.id,
-        round: session.round,
-        user_id: userId,
-        answers: answers || {},
-      });
+      await upsertSubmission(session.id, session.round, userId, answers || {});
       // If everyone's in, whoever detects it flips the phase. Idempotent —
       // the update is a no-op if another client already flipped it.
-      const { data: fresh } = await supabase
-        .from("game_submissions")
-        .select("user_id")
-        .eq("session_id", session.id)
-        .eq("round", session.round);
-      const submittedCount = new Set((fresh || []).map((r) => r.user_id)).size;
+      const submittedCount = await getSubmittedUserCount(session.id, session.round);
       if (submittedCount >= players.length) {
         await revealRound();
       }
     },
-    [session, submitted, userId, players.length, supabase] // eslint-disable-line
+    [session, submitted, userId, players.length] // eslint-disable-line
   );
 
   async function revealRound() {
-    await supabase.from("game_sessions").update({ phase: "round_result" }).eq("id", sessionId);
+    await updateSession(sessionId, { phase: "round_result" });
   }
 
   async function nextRound() {
@@ -294,19 +286,19 @@ export default function AnimalPlaceThing({ supabase, userId, displayName }) {
       session.end_condition === "alphabet" && (session.used_letters || []).length >= 26;
 
     if (hitGoal || alphabetDone) {
-      await supabase.from("game_sessions").update({ phase: "final" }).eq("id", sessionId);
+      await updateSession(sessionId, { phase: "final" });
     } else {
       await startRound();
     }
   }
 
   async function endGame() {
-    await supabase.from("game_sessions").update({ phase: "final" }).eq("id", sessionId);
+    await updateSession(sessionId, { phase: "final" });
   }
 
   async function leaveToHome() {
     if (sessionId) {
-      await supabase.from("game_players").delete().match({ session_id: sessionId, user_id: userId });
+      await removePlayer(sessionId, userId);
     }
     setScreen("home");
     setSession(null);
@@ -354,8 +346,9 @@ export default function AnimalPlaceThing({ supabase, userId, displayName }) {
                   />
                 </label>
               )}
-              <button className="apt-btn apt-btn-primary" onClick={createSession}>
-                Create game
+              {createError && <p className="apt-error">{createError}</p>}
+              <button className="apt-btn apt-btn-primary" onClick={createSession} disabled={creating}>
+                {creating ? "Creating…" : "Create game"}
               </button>
             </div>
 

@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import HubHeader from './components/ds/HubHeader.jsx'
 import TabBar from './components/ds/TabBar.jsx'
 import IconButton from './components/ds/IconButton.jsx'
+import ThemeToggle from './components/ds/ThemeToggle.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
@@ -57,13 +58,17 @@ function HubShell({ children }) {
   const navigate = useNavigate()
   const meta = ROUTE_HEADERS[location.pathname] ?? { title: 'Fearne Hub', back: '/' }
 
-  const actions =
-    location.pathname === '/' ? (
-      <>
-        {isAdmin && <IconButton icon="shield" label="Admin" onClick={() => navigate('/admin')} />}
-        <IconButton icon="log-out" label="Sign out" onClick={() => signOut()} />
-      </>
-    ) : null
+  const actions = (
+    <>
+      <ThemeToggle />
+      {location.pathname === '/' && (
+        <>
+          {isAdmin && <IconButton icon="shield" label="Admin" onClick={() => navigate('/admin')} />}
+          <IconButton icon="log-out" label="Sign out" onClick={() => signOut()} />
+        </>
+      )}
+    </>
+  )
 
   return (
     <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}`}>

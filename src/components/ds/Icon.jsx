@@ -41,6 +41,9 @@ import {
   Type,
   Layers,
   Fish,
+  Sun,
+  Moon,
+  MonitorSmartphone,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -88,6 +91,9 @@ const ICONS = {
   type: Type,
   layers: Layers,
   fish: Fish,
+  sun: Sun,
+  moon: Moon,
+  'monitor-smartphone': MonitorSmartphone,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

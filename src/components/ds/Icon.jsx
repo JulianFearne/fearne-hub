@@ -37,6 +37,7 @@ import {
   Cookie,
   CupSoda,
   Grid3x3,
+  Grid2x2,
   Hash,
   Type,
   Layers,
@@ -48,6 +49,11 @@ import {
   Bell,
   Mail,
   Camera,
+  Dice5,
+  Dice6,
+  Anchor,
+  Dot,
+  Ticket,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -91,6 +97,7 @@ const ICONS = {
   cookie: Cookie,
   'cup-soda': CupSoda,
   'grid-3x3': Grid3x3,
+  'grid-2x2': Grid2x2,
   hash: Hash,
   type: Type,
   layers: Layers,
@@ -102,6 +109,11 @@ const ICONS = {
   bell: Bell,
   mail: Mail,
   camera: Camera,
+  'dice-5': Dice5,
+  'dice-6': Dice6,
+  anchor: Anchor,
+  dot: Dot,
+  ticket: Ticket,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

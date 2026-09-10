@@ -1,0 +1,56 @@
+{
+  "easy": {
+    "label": "Easy (little kids)",
+    "emoji": "🌟",
+    "words": [
+      "Sun", "Tree", "Fish", "House", "Ball", "Cat", "Dog", "Star",
+      "Boat", "Cake", "Flower", "Rainbow", "Apple", "Moon", "Cloud", "Bird",
+      "Car", "Hat", "Umbrella", "Snowman"
+    ]
+  },
+  "animals": {
+    "label": "Animals",
+    "emoji": "🐾",
+    "words": [
+      "Elephant", "Kangaroo", "Penguin", "Octopus", "Giraffe", "Crocodile",
+      "Hedgehog", "Flamingo", "Squirrel", "Dolphin", "Spider", "Owl",
+      "Butterfly", "Snail", "Camel", "Tortoise", "Peacock", "Bat"
+    ]
+  },
+  "actions": {
+    "label": "Actions",
+    "emoji": "🏃",
+    "words": [
+      "Swimming", "Dancing", "Sleeping", "Juggling", "Sneezing", "Climbing",
+      "Skateboarding", "Cooking", "Yawning", "Painting", "Fishing", "Diving",
+      "Skipping", "Surfing", "Snoring", "Whistling", "Cartwheel", "Karate"
+    ]
+  },
+  "objects": {
+    "label": "Everyday things",
+    "emoji": "🧦",
+    "words": [
+      "Toothbrush", "Backpack", "Umbrella", "Torch", "Kettle", "Scissors",
+      "Ladder", "Pillow", "Sandcastle", "Bicycle", "Telescope", "Wheelbarrow",
+      "Lightbulb", "Envelope", "Trampoline", "Deckchair", "Bathtub", "Kite"
+    ]
+  },
+  "screen": {
+    "label": "Movies & TV",
+    "emoji": "🎬",
+    "words": [
+      "Superhero", "Pirate", "Dinosaur", "Robot", "Wizard", "Astronaut",
+      "Ghost", "Dragon", "Mermaid", "Vampire", "Alien", "Ninja",
+      "Detective", "Zombie", "Fairy", "Knight"
+    ]
+  },
+  "tricky": {
+    "label": "Tricky",
+    "emoji": "🧠",
+    "words": [
+      "Jealousy", "Democracy", "Nostalgia", "Gravity", "Echo", "Silence",
+      "Freedom", "Time travel", "Recycling", "Homesick", "Imagination",
+      "Friendship", "Invisible", "Allergic", "Exhausted", "Suspicious"
+    ]
+  }
+}

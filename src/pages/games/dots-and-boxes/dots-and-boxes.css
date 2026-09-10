@@ -1,0 +1,177 @@
+/* src/pages/games/dots-and-boxes/dots-and-boxes.css
+   Scoped under .dab, never leaks into the hub shell. */
+
+.dab {
+  --dab-forest: var(--primary);
+  --dab-forest-dark: var(--primary-press);
+  --dab-cream: var(--ink-on-primary);
+  --dab-card: var(--surface-card);
+  --dab-gold: var(--secondary);
+  --dab-ink: var(--ink-1);
+  --dab-line: var(--border);
+  --dab-dot: var(--ink-1);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.dab-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.dab-back {
+  text-decoration: none;
+  color: var(--dab-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.dab-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.dab-panel {
+  background: var(--dab-card);
+  border: 1px solid var(--dab-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.dab-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.dab-chip {
+  border: 1px solid var(--dab-line);
+  background: var(--surface-card);
+  color: var(--dab-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.dab-chip.active {
+  background: var(--dab-forest);
+  color: var(--dab-cream);
+  border-color: var(--dab-forest);
+}
+
+.dab-status {
+  font-weight: 600;
+  color: var(--dab-ink);
+  text-align: center;
+}
+.dab-status.is-over {
+  color: var(--dab-forest-dark);
+  font-size: 1.05rem;
+}
+
+.dab-board {
+  display: grid;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+}
+.dab-dot {
+  width: 6px;
+  height: 6px;
+  margin: auto;
+  border-radius: 50%;
+  background: var(--dab-dot);
+}
+.dab-edge {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.dab-edge--h {
+  height: 6px;
+  width: 100%;
+  align-self: center;
+}
+.dab-edge--v {
+  width: 6px;
+  height: 100%;
+  justify-self: center;
+}
+.dab-edge::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--dab-line);
+  opacity: 0.5;
+}
+.dab-edge:hover:not(:disabled)::after {
+  opacity: 1;
+  background: var(--dab-forest);
+}
+.dab-edge.drawn::after {
+  opacity: 1;
+  background: var(--dab-forest);
+}
+.dab-edge:disabled {
+  cursor: default;
+}
+
+.dab-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  color: transparent;
+}
+.dab-box.p1 {
+  background: color-mix(in srgb, var(--dab-forest) 25%, transparent);
+  color: var(--dab-forest-dark);
+}
+.dab-box.p2 {
+  background: color-mix(in srgb, var(--dab-gold) 30%, transparent);
+  color: var(--dab-gold);
+}
+
+.dab-scoreboard {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--dab-ink);
+}
+.dab-scoreboard .p1 strong {
+  color: var(--dab-forest-dark);
+}
+.dab-scoreboard .p2 strong {
+  color: var(--dab-gold);
+}
+
+.dab-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.dab-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--dab-forest);
+  background: var(--surface-card);
+  color: var(--dab-forest);
+  cursor: pointer;
+}
+.dab-btn.primary {
+  background: var(--dab-forest);
+  color: var(--dab-cream);
+}
+.dab-btn.primary:hover {
+  background: var(--dab-forest-dark);
+}

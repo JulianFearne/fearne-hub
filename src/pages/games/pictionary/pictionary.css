@@ -1,0 +1,138 @@
+/* src/pages/games/pictionary/pictionary.css
+   Scoped under .pic, never leaks into the hub shell. */
+
+.pic {
+  --pic-forest: var(--primary);
+  --pic-forest-dark: var(--primary-press);
+  --pic-cream: var(--ink-on-primary);
+  --pic-card: var(--surface-card);
+  --pic-gold: var(--secondary);
+  --pic-ink: var(--ink-1);
+  --pic-line: var(--border);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pic-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.pic-back {
+  text-decoration: none;
+  color: var(--pic-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.pic-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.pic-panel {
+  background: var(--pic-card);
+  border: 1px solid var(--pic-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1.25rem;
+  justify-items: center;
+}
+
+.pic-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.pic-chip {
+  border: 1px solid var(--pic-line);
+  background: var(--surface-card);
+  color: var(--pic-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.pic-chip.active {
+  background: var(--pic-forest);
+  color: var(--pic-cream);
+  border-color: var(--pic-forest);
+}
+
+.pic-turn {
+  margin: 0;
+  font-weight: 600;
+  color: var(--pic-ink);
+  opacity: 0.7;
+}
+.pic-clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--pic-forest-dark);
+  opacity: 1;
+}
+
+.pic-card {
+  width: 100%;
+  min-height: 7rem;
+  border: 2px dashed var(--pic-line);
+  background: var(--surface-card);
+  color: var(--pic-ink);
+  border-radius: 12px;
+  padding: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.pic-card:hover {
+  border-color: var(--pic-forest);
+}
+.pic-card.revealed {
+  border-style: solid;
+  border-color: var(--pic-forest);
+  background: var(--pic-forest);
+  color: var(--pic-cream);
+  font-size: 1.6rem;
+  cursor: default;
+  transform: scale(1.02);
+}
+
+.pic-scoreboard {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--pic-ink);
+}
+
+.pic-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.pic-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--pic-forest);
+  background: var(--surface-card);
+  color: var(--pic-forest);
+  cursor: pointer;
+}
+.pic-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pic-btn.primary {
+  background: var(--pic-forest);
+  color: var(--pic-cream);
+}
+.pic-btn.primary:hover:not(:disabled) {
+  background: var(--pic-forest-dark);
+}

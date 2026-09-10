@@ -4,103 +4,95 @@
 // roadmap is visible without needing a route yet.
 
 import { Link } from 'react-router-dom';
-import './games-hub.css';
+import Card, { CardTitle, CardMeta } from '../../components/ds/Card.jsx';
+import Icon from '../../components/ds/Icon.jsx';
+import Badge from '../../components/ds/Badge.jsx';
 
 const GAMES = [
   {
     key: 'connect-four',
     title: 'Connect Four',
     blurb: 'Drop discs, get four in a row. Beat the computer or a family member.',
-    emoji: '🔴',
+    icon: 'grid-3x3',
     to: '/games/connect-four',
-    tags: ['1 player · offline', '2 players · online'],
+    tags: ['1 player, offline', '2 players, online'],
     live: true,
   },
   {
     key: 'sudoku',
     title: 'Sudoku',
     blurb: 'Number logic with easy, medium and hard puzzles.',
-    emoji: '🔢',
+    icon: 'hash',
     to: '/games/sudoku',
-    tags: ['1 player · offline'],
+    tags: ['1 player, offline'],
     live: true,
   },
   {
     key: 'hangman',
     title: 'Hangman',
     blurb: 'Guess the word one letter at a time. Themed word lists.',
-    emoji: '🔤',
+    icon: 'type',
     to: '/games/hangman',
-    tags: ['1 player · offline'],
+    tags: ['1 player, offline'],
     live: true,
   },
   {
     key: 'freecell',
     title: 'Freecell',
     blurb: 'The thinking-person’s solitaire. Almost always solvable.',
-    emoji: '🃏',
+    icon: 'layers',
     to: '/games/freecell',
-    tags: ['1 player · offline'],
+    tags: ['1 player, offline'],
     live: true,
   },
   {
     key: 'categories',
     title: 'Categories',
     blurb: 'Animal, place, thing and more — race the alphabet together.',
-    emoji: '🅰️',
+    icon: 'users',
     to: '/games/animal-place-thing',
-    tags: ['Multiplayer · online'],
+    tags: ['Multiplayer, online'],
     live: true,
   },
   {
     key: 'go-fish',
     title: 'Go Fish',
     blurb: 'Collect sets by asking other players for cards.',
-    emoji: '🐟',
+    icon: 'fish',
     to: '/games/go-fish',
-    tags: ['Multiplayer · online'],
+    tags: ['Multiplayer, online'],
     live: true,
   },
 ];
 
 function GameCard({ game }) {
-  const inner = (
-    <>
-      <span className="game-card-emoji">{game.emoji}</span>
-      <span className="game-card-title">{game.title}</span>
-      <span className="game-card-blurb">{game.blurb}</span>
-      <span className="game-card-tags">
-        {game.tags.map((t) => (
-          <span key={t} className="game-tag">
-            {t}
-          </span>
-        ))}
+  return (
+    <Card as={game.live ? Link : 'div'} to={game.live ? game.to : undefined} tile>
+      <span className="fh-recipes__mark">
+        <Icon name={game.icon} size={18} />
       </span>
-      {!game.live && <span className="game-card-soon">Coming soon</span>}
-    </>
+      <div>
+        <CardTitle>{game.title}</CardTitle>
+        <CardMeta>{game.blurb}</CardMeta>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
+          {game.tags.map((t) => (
+            <Badge key={t}>{t}</Badge>
+          ))}
+          {!game.live && <Badge tone="warning">Coming soon</Badge>}
+        </div>
+      </div>
+    </Card>
   );
-
-  if (game.live && game.to) {
-    return (
-      <Link to={game.to} className="game-card">
-        {inner}
-      </Link>
-    );
-  }
-  return <div className="game-card is-disabled">{inner}</div>;
 }
 
 export default function GamesHub() {
   return (
-    <div className="games-hub">
-      <header className="games-hub-header">
-        <h1 className="games-hub-title">Games</h1>
-        <p className="games-hub-sub">
-          Pick something to play. The offline ones work in the car with no signal.
-        </p>
-      </header>
+    <div>
+      <p className="fh-home__sub" style={{ marginBottom: 'var(--sp-7)' }}>
+        Pick something to play. The offline ones work in the car with no signal.
+      </p>
 
-      <div className="games-grid">
+      <div className="fh-recipes__grid">
         {GAMES.map((g) => (
           <GameCard key={g.key} game={g} />
         ))}

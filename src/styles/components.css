@@ -62,6 +62,23 @@
 .fh-row__trail{display:flex;align-items:center;gap:var(--sp-4);color:var(--ink-3);flex-shrink:0}
 .fh-row__lead{flex-shrink:0;display:grid;place-items:center;color:var(--ink-2)}
 
+/* ---- TickRow (shopping list) ---------------------------------------- */
+.fh-tick{display:flex;align-items:center;gap:var(--sp-6);width:100%;min-height:var(--tap-thumb);padding:var(--sp-5) var(--sp-6);background:transparent;border:0;text-align:left;cursor:pointer;color:inherit;transition:background var(--dur-2) var(--ease-out)}
+.fh-tick-row{display:flex;align-items:stretch;border-bottom:var(--bw-hair) solid var(--border)}
+.fh-tick-row:last-child{border-bottom:0}
+.fh-tick-row--trail{padding-right:var(--sp-5);gap:var(--sp-3);align-items:center}
+.fh-tick-row--trail .fh-tick{flex:1;min-width:0}
+.fh-tick-row--trail .fh-tick__label{overflow-wrap:anywhere}
+.fh-tick__trail{flex:none;display:flex;align-items:center}
+.fh-tick-row--trail:has(.fh-tick[aria-checked="true"]) .fh-tick__trail{visibility:hidden}
+.fh-tick:hover{background:var(--surface-sunken)}
+.fh-tick__box{width:30px;height:30px;flex-shrink:0;border:var(--bw-strong) solid var(--border-strong);border-radius:10px;display:grid;place-items:center;color:transparent;background:var(--surface-card);transition:background var(--dur-2) var(--ease-out),border-color var(--dur-2) var(--ease-out),transform var(--dur-1) var(--ease-snap)}
+.fh-tick[aria-checked="true"] .fh-tick__box{background:var(--success);border-color:var(--success);color:var(--white);animation:fh-pop var(--dur-4) var(--ease-snap)}
+@keyframes fh-pop{0%{transform:scale(1)}35%{transform:scale(1.18)}100%{transform:scale(1)}}
+.fh-tick__label{flex:1;font:var(--fw-medium) var(--fs-body-lg)/1.3 var(--font-text);color:var(--ink-1)}
+.fh-tick__qty{font:var(--type-meta);color:var(--ink-3);flex-shrink:0}
+.fh-tick[aria-checked="true"] .fh-tick__label{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-faint)}
+
 /* ---- Badge / Chip -------------------------------------------------- */
 .fh-badge{display:inline-flex;align-items:center;gap:var(--sp-2);height:24px;padding:0 var(--sp-4);border-radius:var(--r-xs);font:var(--type-caption);letter-spacing:var(--ls-meta);background:var(--surface-sunken);color:var(--ink-2);border:var(--bw-hair) solid var(--border)}
 .fh-badge--admin{background:var(--primary-soft);color:var(--primary-soft-ink);border-color:transparent}
@@ -73,6 +90,10 @@
 .fh-chip{display:inline-flex;align-items:center;gap:var(--sp-3);min-height:var(--tap-min);padding:0 var(--sp-6);border-radius:var(--r-pill);border:var(--bw-hair) solid var(--border);background:var(--surface-card);color:var(--ink-2);font:var(--fw-medium) var(--fs-meta)/1.2 var(--font-text);cursor:pointer;white-space:nowrap;transition:background var(--dur-2) var(--ease-out),color var(--dur-2) var(--ease-out),border-color var(--dur-2) var(--ease-out)}
 .fh-chip:hover{border-color:var(--border-strong);color:var(--ink-1)}
 .fh-chip[aria-pressed="true"]{background:var(--ink-1);border-color:var(--ink-1);color:var(--ink-inverse)}
+.fh-chip__count{color:var(--ink-3);font-variant-numeric:tabular-nums}
+.fh-chip[aria-pressed="true"] .fh-chip__count{color:rgba(255,255,255,.65)}
+.fh-chiprow{display:flex;gap:var(--sp-4);overflow-x:auto;padding-bottom:var(--sp-2);scrollbar-width:none}
+.fh-chiprow::-webkit-scrollbar{display:none}
 
 /* ---- Avatar / members ---------------------------------------------- */
 .fh-avatar{display:grid;place-items:center;border-radius:50%;font-family:var(--font-display);font-weight:var(--fw-bold);color:var(--white);flex-shrink:0;overflow:hidden;position:relative}
@@ -101,11 +122,17 @@
 .fh-select select{appearance:none;width:100%;min-height:var(--tap-min);padding:var(--sp-4) var(--sp-10) var(--sp-4) var(--sp-5);background:var(--surface-card);border:var(--bw-hair) solid var(--border-strong);border-radius:var(--r-field);font:var(--type-body);color:var(--ink-1);cursor:pointer}
 .fh-select select:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
 .fh-select__caret{position:absolute;right:var(--sp-5);top:50%;transform:translateY(-50%);color:var(--ink-3);pointer-events:none}
+textarea.fh-input{min-height:96px;resize:vertical;line-height:var(--lh-normal)}
+.fh-search{position:relative;display:block}
+.fh-search .fh-input{padding-left:42px;padding-right:var(--sp-10);border-radius:var(--r-pill)}
+.fh-search__icon{position:absolute;left:var(--sp-5);top:50%;transform:translateY(-50%);color:var(--ink-3);pointer-events:none}
+.fh-search__clear{position:absolute;right:var(--sp-2);top:50%;transform:translateY(-50%)}
 
 /* ---- Sheet / Modal -------------------------------------------------- */
 .fh-scrim{position:fixed;inset:0;background:var(--surface-scrim);backdrop-filter:blur(2px);display:flex;align-items:flex-end;justify-content:center;z-index:60;animation:fh-fade var(--dur-3) var(--ease-out)}
 @keyframes fh-fade{from{opacity:0}to{opacity:1}}
 .fh-sheet{width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;background:var(--surface-page);border-radius:var(--r-sheet) var(--r-sheet) 0 0;box-shadow:var(--shadow-sheet);animation:fh-rise var(--dur-3) var(--ease-out)}
+.fh-sheet--wide{max-width:720px}
 @keyframes fh-rise{from{transform:translateY(14px)}to{transform:none}}
 .fh-sheet__grip{width:40px;height:4px;border-radius:var(--r-pill);background:var(--border-strong);margin:var(--sp-4) auto 0}
 .fh-sheet__head{display:flex;align-items:center;gap:var(--sp-5);padding:var(--sp-6) var(--sp-6) var(--sp-4)}

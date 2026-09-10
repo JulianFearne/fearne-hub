@@ -83,30 +83,30 @@ export default function WorkoutHub() {
   };
 
   return (
-    <div className="workout">
-      <div className="workout-shell">
-        <div className="workout-header">
+    <div className="fh-workout">
+      <div className="fh-workout-shell">
+        <div className="fh-workout-header">
           <div>
-            <div className="workout-kicker">Fearne Hub</div>
+            <div className="fh-workout-kicker">Fearne Hub</div>
             <h1>Workouts</h1>
-            <p className="workout-sub">
+            <p className="fh-workout-sub">
               Pick a programme, upload one, or build your own. Your progress is tracked per person.
             </p>
           </div>
           {activeEnrollment && (
-            <button className="workout-btn workout-btn--gold" onClick={() => navigate("/workouts/tracker")}>
-              Continue →
+            <button className="fh-workout-btn fh-workout-btn--gold" onClick={() => navigate("/workouts/tracker")}>
+              Continue your workout
             </button>
           )}
         </div>
 
-        {error && <div className="workout-alert workout-alert--error">{error}</div>}
+        {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
 
-        <div className="workout-tabs">
+        <div className="fh-workout-tabs">
           {TABS.map((t) => (
             <button
               key={t.id}
-              className="workout-tab"
+              className="fh-workout-tab"
               data-active={tab === t.id}
               onClick={() => setTab(t.id)}
             >
@@ -116,7 +116,7 @@ export default function WorkoutHub() {
         </div>
 
         {loading ? (
-          <div className="workout-empty"><span className="workout-spinner" /> Loading workouts…</div>
+          <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading workouts…</div>
         ) : (
           <>
             {tab === "library" && (
@@ -150,7 +150,7 @@ export default function WorkoutHub() {
         />
       )}
 
-      {toast && <div className="workout-toast">{toast}</div>}
+      {toast && <div className="fh-workout-toast">{toast}</div>}
     </div>
   );
 }
@@ -161,7 +161,7 @@ export default function WorkoutHub() {
 
 function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
   if (!programs.length) {
-    return <div className="workout-empty">No workouts yet. Upload one or build your own.</div>;
+    return <div className="fh-workout-empty">No workouts yet. Upload one or build your own.</div>;
   }
 
   return (
@@ -174,37 +174,37 @@ function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
         const mine = p.author_id === userId;
 
         return (
-          <div key={p.id} className="workout-card workout-program-card" onClick={() => onPick(p)}>
-            <div className="workout-card__top">
+          <div key={p.id} className="fh-workout-card fh-workout-program-card" onClick={() => onPick(p)}>
+            <div className="fh-workout-card__top">
               <div>
                 <h2>{p.name}</h2>
-                {p.description && <p className="workout-card__sub">{p.description}</p>}
+                {p.description && <p className="fh-workout-card__sub">{p.description}</p>}
               </div>
-              {isActive && <span className="workout-pill workout-pill--active">Loaded</span>}
+              {isActive && <span className="fh-workout-pill fh-workout-pill--active">Loaded</span>}
             </div>
 
-            <div className="workout-program-meta">
-              <span className="workout-pill">{chains} chains</span>
-              <span className="workout-pill">{steps} steps</span>
+            <div className="fh-workout-program-meta">
+              <span className="fh-workout-pill">{chains} chains</span>
+              <span className="fh-workout-pill">{steps} steps</span>
               {def.targets && (
-                <span className="workout-pill">
+                <span className="fh-workout-pill">
                   {def.targets.sets}×{def.targets.reps}, {def.targets.streak} in a row
                 </span>
               )}
-              {def.sessions_per_week && <span className="workout-pill">{def.sessions_per_week}/week</span>}
-              {p.source === "builtin" && <span className="workout-pill">Built in</span>}
+              {def.sessions_per_week && <span className="fh-workout-pill">{def.sessions_per_week}/week</span>}
+              {p.source === "builtin" && <span className="fh-workout-pill">Built in</span>}
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button
-                className="workout-btn workout-btn--primary workout-btn--sm"
+                className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--sm"
                 onClick={(e) => { e.stopPropagation(); onPick(p); }}
               >
                 {isActive ? "Reload" : "Load this"}
               </button>
               {mine && p.source !== "builtin" && (
                 <button
-                  className="workout-btn workout-btn--danger workout-btn--sm"
+                  className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm"
                   onClick={(e) => { e.stopPropagation(); onDelete(p); }}
                 >
                   Delete
@@ -260,10 +260,10 @@ function UploadPanel({ onSaved }) {
   };
 
   return (
-    <div className="workout-card">
+    <div className="fh-workout-card">
       <h2>Upload a workout file</h2>
-      <p className="workout-card__sub" style={{ marginBottom: 14 }}>
-        JSON in the Fearne workout format. See docs/workout-program-format.md, or ask Claude to
+      <p className="fh-workout-card__sub" style={{ marginBottom: 14 }}>
+        JSON in the Fearne workout format. See docs/fh-workout-program-format.md, or ask Claude to
         generate one using that spec.
       </p>
 
@@ -278,17 +278,17 @@ function UploadPanel({ onSaved }) {
         style={{ minHeight: 130, fontFamily: "ui-monospace, monospace", fontSize: 12.5 }}
       />
 
-      {error && <div className="workout-alert workout-alert--error" style={{ marginTop: 12 }}>{error}</div>}
+      {error && <div className="fh-workout-alert fh-workout-alert--error" style={{ marginTop: 12 }}>{error}</div>}
 
       {result && !result.ok && (
-        <div className="workout-alert workout-alert--error" style={{ marginTop: 12 }}>
+        <div className="fh-workout-alert fh-workout-alert--error" style={{ marginTop: 12 }}>
           <strong>This file cannot be imported:</strong>
           <ul>{result.errors.map((m, i) => <li key={i}>{m}</li>)}</ul>
         </div>
       )}
 
       {result?.warnings?.length > 0 && (
-        <div className="workout-alert workout-alert--warn" style={{ marginTop: 12 }}>
+        <div className="fh-workout-alert fh-workout-alert--warn" style={{ marginTop: 12 }}>
           <strong>Imported with adjustments:</strong>
           <ul>{result.warnings.map((m, i) => <li key={i}>{m}</li>)}</ul>
         </div>
@@ -296,12 +296,12 @@ function UploadPanel({ onSaved }) {
 
       {result?.ok && (
         <>
-          <div className="workout-alert workout-alert--ok" style={{ marginTop: 12 }}>
+          <div className="fh-workout-alert fh-workout-alert--ok" style={{ marginTop: 12 }}>
             <strong>{result.program.name}</strong> looks good: {result.program.chains.length} chains,{" "}
             {result.program.chains.reduce((n, c) => n + c.exercises.length, 0)} steps,{" "}
             {result.program.record_sections.length} tick-lists.
           </div>
-          <button className="workout-btn workout-btn--primary workout-btn--block" onClick={save} disabled={saving}>
+          <button className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block" onClick={save} disabled={saving}>
             {saving ? "Saving…" : "Add to the library"}
           </button>
         </>
@@ -319,7 +319,7 @@ const blankChain = () => ({
   section: "",
   label: "",
   sub: "",
-  color: "#1f3d2b",
+  color: "#7A2E4E",
   exercisesText: "",
 });
 
@@ -382,9 +382,9 @@ function BuilderPanel({ onSaved }) {
   };
 
   return (
-    <div className="workout-card">
+    <div className="fh-workout-card">
       <h2>Build a workout</h2>
-      <p className="workout-card__sub" style={{ marginBottom: 16 }}>
+      <p className="fh-workout-card__sub" style={{ marginBottom: 16 }}>
         One chain per muscle pattern. List the exercises easiest first, one per line.
       </p>
 
@@ -402,15 +402,15 @@ function BuilderPanel({ onSaved }) {
         <NumField label="Per week" value={perWeek} onChange={setPerWeek} min={1} max={7} />
       </div>
 
-      <div className="workout-section-heading">Chains</div>
+      <div className="fh-workout-section-heading">Chains</div>
 
       {chains.map((c, i) => (
-        <div key={i} className="workout-card" style={{ background: "#faf7ef" }}>
-          <div className="workout-card__top">
+        <div key={i} className="fh-workout-card" style={{ background: "var(--surface-sunken)" }}>
+          <div className="fh-workout-card__top">
             <strong style={{ fontSize: 13 }}>Chain {i + 1}</strong>
             {chains.length > 1 && (
               <button
-                className="workout-btn workout-btn--danger workout-btn--sm"
+                className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm"
                 onClick={() => setChains((p) => p.filter((_, j) => j !== i))}
               >
                 Remove
@@ -440,23 +440,23 @@ function BuilderPanel({ onSaved }) {
       ))}
 
       <button
-        className="workout-btn workout-btn--ghost workout-btn--block"
+        className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--block"
         onClick={() => setChains((p) => [...p, blankChain()])}
         style={{ marginBottom: 14 }}
       >
         + Add another chain
       </button>
 
-      {error && <div className="workout-alert workout-alert--error">{error}</div>}
+      {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
 
       {result && !result.ok && (
-        <div className="workout-alert workout-alert--error">
+        <div className="fh-workout-alert fh-workout-alert--error">
           <strong>Not quite there:</strong>
           <ul>{result.errors.map((m, i) => <li key={i}>{m}</li>)}</ul>
         </div>
       )}
 
-      <button className="workout-btn workout-btn--primary workout-btn--block" onClick={save} disabled={saving}>
+      <button className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block" onClick={save} disabled={saving}>
         {saving ? "Saving…" : "Create workout"}
       </button>
     </div>
@@ -494,11 +494,11 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
   const [openChain, setOpenChain] = useState(chains[0]?.id ?? null);
 
   return (
-    <div className="workout-overlay" onClick={onCancel}>
-      <div className="workout-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="workout-kicker">Starting point</div>
+    <div className="fh-workout-overlay" onClick={onCancel}>
+      <div className="fh-workout-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="fh-workout-kicker">Starting point</div>
         <h2 style={{ marginBottom: 4 }}>{def.name}</h2>
-        <p className="workout-card__sub" style={{ marginBottom: 16 }}>
+        <p className="fh-workout-card__sub" style={{ marginBottom: 16 }}>
           You do not have to start at the bottom. Pick the hardest version you can already do
           comfortably in each chain.
         </p>
@@ -507,21 +507,21 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
           const isOpen = openChain === c.id;
           const cur = positions[c.id] ?? 0;
           return (
-            <div key={c.id} className="workout-card" style={{ background: "#fffdf7", marginBottom: 8 }}>
+            <div key={c.id} className="fh-workout-card" style={{ background: "var(--surface-sunken)", marginBottom: 8 }}>
               <div
-                className="workout-card__top"
+                className="fh-workout-card__top"
                 style={{ cursor: "pointer", marginBottom: isOpen ? 10 : 0 }}
                 onClick={() => setOpenChain(isOpen ? null : c.id)}
               >
                 <div>
-                  <div className="workout-card__label" style={{ "--w-accent": c.color }}>{c.label}</div>
-                  <div className="workout-card__sub">{c.exercises[cur]?.name ?? c.exercises[cur]}</div>
+                  <div className="fh-workout-card__label" style={{ "--w-accent": c.color }}>{c.label}</div>
+                  <div className="fh-workout-card__sub">{c.exercises[cur]?.name ?? c.exercises[cur]}</div>
                 </div>
-                <span className="workout-pill">{isOpen ? "close" : `${cur + 1}/${c.exercises.length}`}</span>
+                <span className="fh-workout-pill">{isOpen ? "close" : `${cur + 1}/${c.exercises.length}`}</span>
               </div>
 
               {isOpen && (
-                <div className="workout-ladder">
+                <div className="fh-workout-ladder">
                   {c.exercises.map((ex, i) => {
                     const nm = ex?.name ?? ex;
                     const state = i === cur ? "current" : i < cur ? "done" : "todo";
@@ -533,7 +533,7 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
                       >
                         <span className="idx">{i + 1}</span>
                         <span style={{ flex: 1 }}>{nm}</span>
-                        {ex?.unit === "seconds" && <span className="workout-pill">hold</span>}
+                        {ex?.unit === "seconds" && <span className="fh-workout-pill">hold</span>}
                         {i === cur && <span>✓</span>}
                       </button>
                     );
@@ -545,10 +545,10 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
         })}
 
         <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-          <button className="workout-btn workout-btn--ghost" style={{ flex: 1 }} onClick={onCancel}>
+          <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onCancel}>
             Cancel
           </button>
-          <button className="workout-btn workout-btn--primary" style={{ flex: 2 }} onClick={() => onConfirm(positions)}>
+          <button className="fh-workout-btn fh-workout-btn--primary" style={{ flex: 2 }} onClick={() => onConfirm(positions)}>
             Load and start
           </button>
         </div>

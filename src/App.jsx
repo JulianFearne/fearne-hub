@@ -37,7 +37,7 @@ const ROUTE_HEADERS = {
   '/': { wordmark: true, tab: true },
   '/recipes': { title: 'Recipes', tab: true },
   '/import': { title: 'Import recipes', back: '/recipes' },
-  '/planner': { title: "This week's meals", back: '/' },
+  '/planner': { title: "This week's meals", back: '/', wide: true },
   '/shopping': { title: 'Shopping lists', tab: true },
   '/games': { title: 'Games', tab: true },
   '/games/connect-four': { title: 'Connect Four', back: '/games' },
@@ -66,7 +66,7 @@ function HubShell({ children }) {
     ) : null
 
   return (
-    <div className="fh-app">
+    <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}`}>
       <HubHeader
         wordmark={meta.wordmark}
         title={meta.title}

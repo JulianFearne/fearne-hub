@@ -146,9 +146,9 @@ export default function WorkoutTracker() {
 
   if (loading) {
     return (
-      <div className="workout">
-        <div className="workout-shell">
-          <div className="workout-empty"><span className="workout-spinner" /> Loading your workout…</div>
+      <div className="fh-workout">
+        <div className="fh-workout-shell">
+          <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading your workout…</div>
         </div>
       </div>
     );
@@ -167,35 +167,35 @@ export default function WorkoutTracker() {
   const activeChain = modal ? program.chains.find((c) => c.id === modal.chainId) : null;
 
   return (
-    <div className="workout">
-      <div className="workout-shell">
-        <div className="workout-header">
+    <div className="fh-workout">
+      <div className="fh-workout-shell">
+        <div className="fh-workout-header">
           <div>
-            <div className="workout-kicker">Now training</div>
+            <div className="fh-workout-kicker">Now training</div>
             <h1>{program.name}</h1>
-            <p className="workout-sub">
+            <p className="fh-workout-sub">
               {program.targets.sets}×{program.targets.reps} for {program.targets.streak} workouts running
               moves you up a rung.
             </p>
           </div>
-          <button className="workout-btn workout-btn--ghost workout-btn--sm" onClick={() => navigate("/workouts")}>
+          <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => navigate("/workouts")}>
             Change
           </button>
         </div>
 
-        {error && <div className="workout-alert workout-alert--error">{error}</div>}
+        {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
 
         {/* ---- tick-list sections ---- */}
         {(program.record_sections || []).map((sec) => (
-          <div key={sec.id} className="workout-card workout-card--accent" style={{ "--w-accent": sec.color }}>
-            <div className="workout-card__label" style={{ "--w-accent": sec.color, marginBottom: 9 }}>
+          <div key={sec.id} className="fh-workout-card fh-workout-card--accent" style={{ "--w-accent": sec.color }}>
+            <div className="fh-workout-card__label" style={{ "--w-accent": sec.color, marginBottom: 9 }}>
               {sec.label}
             </div>
-            <div className="workout-chips">
+            <div className="fh-workout-chips">
               {sec.options.map((opt) => (
                 <button
                   key={opt}
-                  className="workout-chip"
+                  className="fh-workout-chip"
                   data-on={(records[sec.id] || []).includes(opt)}
                   onClick={() => toggleRecord(sec.id, opt, sec.select === "single")}
                 >
@@ -209,7 +209,7 @@ export default function WorkoutTracker() {
         {/* ---- progression chains ---- */}
         {sections.map((section) => (
           <div key={section}>
-            <div className="workout-section-heading">{section}</div>
+            <div className="fh-workout-section-heading">{section}</div>
             {bySection[section].map((chain) => {
               const cur = progress[chain.id] ?? { idx: 0, streak: 0 };
               const exercise = chain.exercises[cur.idx];
@@ -220,21 +220,21 @@ export default function WorkoutTracker() {
               const listOpen = openChainList === chain.id;
 
               return (
-                <div key={chain.id} className="workout-card workout-card--accent" style={{ "--w-accent": chain.color }}>
-                  <div className="workout-card__top">
+                <div key={chain.id} className="fh-workout-card fh-workout-card--accent" style={{ "--w-accent": chain.color }}>
+                  <div className="fh-workout-card__top">
                     <div>
-                      <div className="workout-card__label" style={{ "--w-accent": chain.color }}>{chain.label}</div>
-                      {chain.sub && <div className="workout-card__sub">{chain.sub}</div>}
+                      <div className="fh-workout-card__label" style={{ "--w-accent": chain.color }}>{chain.label}</div>
+                      {chain.sub && <div className="fh-workout-card__sub">{chain.sub}</div>}
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button
-                        className="workout-btn workout-btn--ghost workout-btn--sm"
+                        className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm"
                         onClick={() => setModal({ mode: "pick", chainId: chain.id })}
                       >
                         move
                       </button>
                       <button
-                        className="workout-btn workout-btn--ghost workout-btn--sm"
+                        className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm"
                         onClick={() => setOpenChainList(listOpen ? null : chain.id)}
                       >
                         {listOpen ? "hide" : "chain"}
@@ -242,36 +242,36 @@ export default function WorkoutTracker() {
                     </div>
                   </div>
 
-                  <div className="workout-exercise-name">{exercise.name}</div>
-                  <div className="workout-step">
+                  <div className="fh-workout-exercise-name">{exercise.name}</div>
+                  <div className="fh-workout-step">
                     step {cur.idx + 1} of {total} · target {target.sets}×{target.reps}
                     {target.unit === "seconds" ? "s hold" : ""}
                     {maxed && " · top of the chain"}
                   </div>
-                  {exercise.note && <p className="workout-card__sub" style={{ marginBottom: 8 }}>{exercise.note}</p>}
+                  {exercise.note && <p className="fh-workout-card__sub" style={{ marginBottom: 8 }}>{exercise.note}</p>}
 
-                  <div className="workout-track">
-                    <div className="workout-track__fill" style={{ width: `${pct}%` }} />
+                  <div className="fh-workout-track">
+                    <div className="fh-workout-track__fill" style={{ width: `${pct}%` }} />
                   </div>
 
-                  <div className="workout-streak">
+                  <div className="fh-workout-streak">
                     {Array.from({ length: target.streak }).map((_, i) => (
-                      <span key={i} className="workout-dot" data-on={i < cur.streak} />
+                      <span key={i} className="fh-workout-dot" data-on={i < cur.streak} />
                     ))}
-                    <span className="workout-streak__label">
+                    <span className="fh-workout-streak__label">
                       {cur.streak} of {target.streak} at target
                     </span>
                   </div>
 
                   <button
-                    className="workout-btn workout-btn--primary workout-btn--block"
+                    className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block"
                     onClick={() => setModal({ mode: "log", chainId: chain.id })}
                   >
                     Log {target.unit === "seconds" ? "hold" : "sets"}
                   </button>
 
                   {listOpen && (
-                    <ol className="workout-chain-list">
+                    <ol className="fh-workout-chain-list">
                       {chain.exercises.map((ex, i) => (
                         <li key={i} data-state={i === cur.idx ? "current" : i < cur.idx ? "done" : "todo"}>
                           {ex.name}
@@ -287,14 +287,14 @@ export default function WorkoutTracker() {
 
         <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
           <button
-            className="workout-btn workout-btn--gold"
+            className="fh-workout-btn fh-workout-btn--gold"
             style={{ flex: 1 }}
             onClick={handleFinish}
             disabled={busy || !sessionId}
           >
             Finish and save workout
           </button>
-          <button className="workout-btn workout-btn--ghost" onClick={() => navigate("/workouts/history")}>
+          <button className="fh-workout-btn fh-workout-btn--ghost" onClick={() => navigate("/workouts/history")}>
             History
           </button>
         </div>
@@ -328,7 +328,7 @@ export default function WorkoutTracker() {
         />
       )}
 
-      {toast && <div className="workout-toast">{toast}</div>}
+      {toast && <div className="fh-workout-toast">{toast}</div>}
     </div>
   );
 }
@@ -353,17 +353,17 @@ function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
   const willHit = filled.length >= target.sets && filled.every((v) => parseInt(v, 10) >= target.reps);
 
   return (
-    <div className="workout-overlay" onClick={onCancel}>
-      <div className="workout-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="workout-kicker" style={{ color: chain.color }}>
+    <div className="fh-workout-overlay" onClick={onCancel}>
+      <div className="fh-workout-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="fh-workout-kicker" style={{ color: chain.color }}>
           {chain.section} · {chain.label}
         </div>
         <h2 style={{ margin: "6px 0 3px" }}>{exercise.name}</h2>
-        <p className="workout-card__sub">
+        <p className="fh-workout-card__sub">
           Target {target.sets} × {target.reps}{isHold ? " seconds" : " reps"}
         </p>
 
-        <div className="workout-sets-row">
+        <div className="fh-workout-sets-row">
           {amounts.map((v, i) => (
             <div key={i}>
               <label htmlFor={`set-${i}`}>Set {i + 1}</label>
@@ -382,7 +382,7 @@ function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
         </div>
 
         {filled.length > 0 && (
-          <div className={`workout-alert ${willHit ? "workout-alert--ok" : "workout-alert--warn"}`}>
+          <div className={`fh-workout-alert ${willHit ? "fh-workout-alert--ok" : "fh-workout-alert--warn"}`}>
             {willHit
               ? "That hits the target. One more step toward levelling up."
               : "Below target, so the streak resets. Still worth logging."}
@@ -390,11 +390,11 @@ function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
         )}
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="workout-btn workout-btn--ghost" style={{ flex: 1 }} onClick={onCancel}>
+          <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onCancel}>
             Cancel
           </button>
           <button
-            className="workout-btn workout-btn--primary"
+            className="fh-workout-btn fh-workout-btn--primary"
             style={{ flex: 2 }}
             onClick={() => onSave(amounts)}
             disabled={busy || filled.length === 0}
@@ -413,15 +413,15 @@ function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
 
 function PickModal({ chain, idx, onCancel, onPick }) {
   return (
-    <div className="workout-overlay" onClick={onCancel}>
-      <div className="workout-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="workout-kicker" style={{ color: chain.color }}>{chain.label}</div>
+    <div className="fh-workout-overlay" onClick={onCancel}>
+      <div className="fh-workout-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="fh-workout-kicker" style={{ color: chain.color }}>{chain.label}</div>
         <h2 style={{ margin: "6px 0 3px" }}>Move along the chain</h2>
-        <p className="workout-card__sub" style={{ marginBottom: 14 }}>
+        <p className="fh-workout-card__sub" style={{ marginBottom: 14 }}>
           Jumping to a new rung resets that chain's streak.
         </p>
 
-        <div className="workout-ladder">
+        <div className="fh-workout-ladder">
           {chain.exercises.map((ex, i) => (
             <button
               key={i}
@@ -430,13 +430,13 @@ function PickModal({ chain, idx, onCancel, onPick }) {
             >
               <span className="idx">{i + 1}</span>
               <span style={{ flex: 1 }}>{ex.name}</span>
-              {ex.unit === "seconds" && <span className="workout-pill">hold</span>}
+              {ex.unit === "seconds" && <span className="fh-workout-pill">hold</span>}
               {i === idx && <span>✓</span>}
             </button>
           ))}
         </div>
 
-        <button className="workout-btn workout-btn--ghost workout-btn--block" style={{ marginTop: 14 }} onClick={onCancel}>
+        <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--block" style={{ marginTop: 14 }} onClick={onCancel}>
           Close
         </button>
       </div>
@@ -491,11 +491,11 @@ function RestTimer({ seconds, label, onDismiss }) {
   const ss = String(Math.abs(left) % 60).padStart(2, "0");
 
   return (
-    <div className="workout-timer" data-done={done}>
-      <div className="workout-timer__count">{done ? "Go" : `${mm}:${ss}`}</div>
+    <div className="fh-workout-timer" data-done={done}>
+      <div className="fh-workout-timer__count">{done ? "Go" : `${mm}:${ss}`}</div>
       <div style={{ flex: 1 }}>
-        <div className="workout-timer__label">{done ? `${label} rest over` : `Resting · ${label}`}</div>
-        <div className="workout-timer__bar"><span style={{ width: `${pct}%` }} /></div>
+        <div className="fh-workout-timer__label">{done ? `${label} rest over` : `Resting · ${label}`}</div>
+        <div className="fh-workout-timer__bar"><span style={{ width: `${pct}%` }} /></div>
       </div>
       {!done && (
         <button onClick={() => setPaused((p) => !p)}>{paused ? "Resume" : "Pause"}</button>

@@ -9,7 +9,12 @@ import {
   toggleListItem,
   deleteListItem,
 } from './mealPlanData'
-import './Recipes.css'
+import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
+import Button from '../components/ds/Button.jsx'
+import IconButton from '../components/ds/IconButton.jsx'
+import Icon from '../components/ds/Icon.jsx'
+import { Input } from '../components/ds/Field.jsx'
+import TickRow from '../components/ds/TickRow.jsx'
 
 export default function ShoppingLists() {
   const [lists, setLists] = useState([])
@@ -88,108 +93,98 @@ export default function ShoppingLists() {
   const activeList = lists.find((l) => l.id === activeId)
 
   if (activeList) {
-    return (
-      <ListDetail
-        list={activeList}
-        onBack={() => setActiveId(null)}
-      />
-    )
+    return <ListDetail list={activeList} onBack={() => setActiveId(null)} />
   }
 
   return (
     <div>
-      <div className="hub-intro">
-        <h1>Shopping Lists</h1>
-        <p>Keep separate lists, or combine a few into one before you head out.</p>
-      </div>
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
 
-      {error && <div className="rb-form-error">{error}</div>}
-
-      <form onSubmit={handleCreate} style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        <input
-          value={newListName}
-          onChange={(e) => setNewListName(e.target.value)}
-          placeholder="New list name, e.g. Family"
-          style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)' }}
-        />
-        <button className="btn-primary" style={{ width: 'auto', padding: '10px 18px' }} type="submit">
-          + Create
-        </button>
+      <form onSubmit={handleCreate} className="fh-shop__toolbar">
+        <Input value={newListName} onChange={(e) => setNewListName(e.target.value)} placeholder="New list name, e.g. Family" />
+        <Button type="submit" icon="plus">
+          Create
+        </Button>
       </form>
 
-      {loading && <p>Loading…</p>}
+      {loading && <p className="fh-loading">Loading…</p>}
 
       {!loading && lists.length === 0 && (
-        <div className="rb-empty">
-          <div className="rb-empty-icon">🛒</div>
-          <h3>No lists yet</h3>
-          <p>Create one above, or add ingredients from the Meal Planner.</p>
+        <div className="fh-empty">
+          <span className="fh-empty__mark">
+            <Icon name="shopping-basket" size={22} />
+          </span>
+          <p className="fh-empty__title">Nothing on this list yet</p>
+          <p className="fh-empty__body">Create one above, or pull the ingredients in from this week's meals.</p>
         </div>
       )}
 
       {!loading && lists.length > 0 && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, gap: 8 }}>
+          <div className="fh-shop__actions">
             {combineMode ? (
               <>
-                <button
-                  className="btn-primary"
-                  style={{ width: 'auto', padding: '8px 16px' }}
-                  disabled={selectedForCombine.length < 2}
-                  onClick={handleCombine}
-                >
-                  Combine {selectedForCombine.length} lists
-                </button>
-                <button
-                  className="mp-nav-btn"
-                  onClick={() => {
-                    setCombineMode(false)
-                    setSelectedForCombine([])
-                  }}
-                >
+                <Button variant="quiet" onClick={() => { setCombineMode(false); setSelectedForCombine([]) }}>
                   Cancel
-                </button>
+                </Button>
+                <Button icon="merge" disabled={selectedForCombine.length < 2} onClick={handleCombine}>
+                  Combine {selectedForCombine.length} lists
+                </Button>
               </>
             ) : (
-              <button className="mp-nav-btn" onClick={() => setCombineMode(true)}>
-                Combine lists…
-              </button>
+              <Button variant="quiet" icon="merge" onClick={() => setCombineMode(true)}>
+                Combine lists
+              </Button>
             )}
           </div>
 
-          <div className="pin-grid">
+          <div className="fh-shop__grid">
             {lists.map((l) => (
-              <div
+              <Card
                 key={l.id}
-                className="pin-card"
-                style={{ cursor: 'pointer' }}
-                onClick={() =>
-                  combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id)
-                }
+                as="div"
+                tile
+                role="button"
+                tabIndex={0}
+                style={{ position: 'relative' }}
+                onClick={() => (combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') (combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id))
+                }}
               >
-                <span className="pin-dot" />
                 {combineMode && (
-                  <input
-                    type="checkbox"
-                    checked={selectedForCombine.includes(l.id)}
-                    onChange={() => toggleCombineSelect(l.id)}
-                    style={{ position: 'absolute', top: 10, right: 10 }}
-                  />
+                  <span className="fh-shop__combinebox">
+                    <span className="fh-tick__box" style={selectedForCombine.includes(l.id) ? { background: 'var(--success)', borderColor: 'var(--success)', color: 'var(--white)' } : undefined}>
+                      {selectedForCombine.includes(l.id) && <Icon name="check" size={16} />}
+                    </span>
+                  </span>
                 )}
-                <h3>{l.name}</h3>
-                {!combineMode && (
-                  <button
-                    className="rb-delete-btn"
-                    style={{ marginTop: 8 }}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteList(l.id)
-                    }}
-                  >
-                    Delete list
-                  </button>
-                )}
-              </div>
+                <span className="fh-recipes__mark">
+                  <Icon name="shopping-basket" size={18} />
+                </span>
+                <div>
+                  <CardTitle>{l.name}</CardTitle>
+                  {!combineMode && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon="trash-2"
+                      style={{ marginTop: 'var(--sp-3)', color: 'var(--danger)' }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteList(l.id)
+                      }}
+                    >
+                      Delete list
+                    </Button>
+                  )}
+                </div>
+              </Card>
             ))}
           </div>
         </>
@@ -249,60 +244,55 @@ function ListDetail({ list, onBack }) {
 
   return (
     <div>
-      <button className="mp-nav-btn" onClick={onBack} style={{ marginBottom: 16 }}>
-        ← All lists
-      </button>
+      <Button variant="quiet" icon="chevron-left" style={{ marginBottom: 'var(--sp-6)' }} onClick={onBack}>
+        All lists
+      </Button>
 
-      <div className="hub-intro">
-        <h1>{list.name}</h1>
-      </div>
+      <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)', marginBottom: 'var(--sp-6)' }}>{list.name}</p>
 
-      {error && <div className="rb-form-error">{error}</div>}
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <input
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-          placeholder="Add an item…"
-          style={{ flex: 2, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)' }}
-        />
-        <input
-          value={newAmount}
-          onChange={(e) => setNewAmount(e.target.value)}
-          placeholder="Amount (optional)"
-          style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)' }}
-        />
-        <button className="btn-primary" style={{ width: 'auto', padding: '10px 18px' }} type="submit">
+      <form onSubmit={handleAdd} className="fh-shop__add">
+        <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Add an item…" />
+        <Input value={newAmount} onChange={(e) => setNewAmount(e.target.value)} placeholder="Amount (optional)" style={{ flex: '0 0 140px' }} />
+        <Button type="submit" icon="plus">
           Add
-        </button>
+        </Button>
       </form>
 
-      {loading && <p>Loading…</p>}
+      {loading && <p className="fh-loading">Loading…</p>}
 
       {!loading && items.length === 0 && (
-        <div className="rb-empty">
-          <div className="rb-empty-icon">🛒</div>
-          <h3>This list is empty</h3>
-          <p>Add items above, or pull ingredients in from the Meal Planner.</p>
+        <div className="fh-empty">
+          <span className="fh-empty__mark">
+            <Icon name="shopping-basket" size={22} />
+          </span>
+          <p className="fh-empty__title">This list is empty</p>
+          <p className="fh-empty__body">Add items above, or pull ingredients in from this week's meals.</p>
         </div>
       )}
 
       {!loading && unchecked.length > 0 && (
-        <ul style={{ listStyle: 'none', marginBottom: 20 }}>
+        <div className="fh-rows">
           {unchecked.map((item) => (
             <ShoppingItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
           ))}
-        </ul>
+        </div>
       )}
 
       {!loading && checked.length > 0 && (
         <>
-          <div className="rb-sidebar-title">Got it ({checked.length})</div>
-          <ul style={{ listStyle: 'none' }}>
+          <p className="fh-shop__group">Got it ({checked.length})</p>
+          <div className="fh-rows">
             {checked.map((item) => (
               <ShoppingItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
             ))}
-          </ul>
+          </div>
         </>
       )}
     </div>
@@ -311,32 +301,14 @@ function ListDetail({ list, onBack }) {
 
 function ShoppingItem({ item, onToggle, onDelete }) {
   return (
-    <li
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '8px 0',
-        borderBottom: '1px dashed var(--line)',
-        opacity: item.checked ? 0.5 : 1,
-      }}
+    <TickRow
+      checked={item.checked}
+      onToggle={() => onToggle(item)}
+      qty={item.amount}
+      trail={<IconButton icon="x" label={`Remove ${item.name}`} onClick={() => onDelete(item.id)} />}
     >
-      <input type="checkbox" checked={item.checked} onChange={() => onToggle(item)} />
-      <span style={{ flex: 1, textDecoration: item.checked ? 'line-through' : 'none' }}>
-        {item.name}
-        {item.amount ? ` — ${item.amount}` : ''}
-        {item.recipe_title && (
-          <span style={{ fontSize: '0.72rem', color: 'var(--ink-soft)', marginLeft: 6 }}>
-            ({item.recipe_title})
-          </span>
-        )}
-      </span>
-      <button
-        onClick={() => onDelete(item.id)}
-        style={{ background: 'none', border: 'none', color: 'var(--ink-soft)', fontSize: '0.8rem' }}
-      >
-        ✕
-      </button>
-    </li>
+      {item.name}
+      {item.recipe_title && <span style={{ color: 'var(--ink-3)', font: 'var(--type-caption)' }}> ({item.recipe_title})</span>}
+    </TickRow>
   )
 }

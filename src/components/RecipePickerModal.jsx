@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchRecipes } from '../pages/recipesData'
+import Sheet from './ds/Sheet.jsx'
+import SearchField from './ds/SearchField.jsx'
+import Icon from './ds/Icon.jsx'
 
 export default function RecipePickerModal({ onClose, onPick }) {
   const [recipes, setRecipes] = useState([])
@@ -15,54 +18,26 @@ export default function RecipePickerModal({ onClose, onPick }) {
   const visible = recipes.filter((r) => r.title.toLowerCase().includes(search.trim().toLowerCase()))
 
   return (
-    <div className="rb-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="rb-modal" style={{ maxWidth: 480 }}>
-        <div className="rb-modal-close">
-          <button className="rb-close-btn" onClick={onClose}>
-            ✕
+    <Sheet title="Pick a recipe" onClose={onClose}>
+      <SearchField value={search} onChange={setSearch} placeholder="Search recipes…" />
+
+      {loading && <p className="fh-loading" style={{ marginTop: 'var(--sp-6)' }}>Loading…</p>}
+      {!loading && visible.length === 0 && (
+        <p className="fh-loading" style={{ marginTop: 'var(--sp-6)' }}>No recipes match that search.</p>
+      )}
+
+      <div className="fh-rows" style={{ marginTop: 'var(--sp-6)', maxHeight: 360, overflowY: 'auto' }}>
+        {visible.map((r) => (
+          <button key={r.id} className="fh-row" onClick={() => onPick(r)}>
+            <span className="fh-row__lead">
+              <Icon name="soup" size={18} />
+            </span>
+            <span className="fh-row__body">
+              <span className="fh-row__label">{r.title}</span>
+            </span>
           </button>
-        </div>
-        <div className="rb-modal-body">
-          <div className="rb-modal-title" style={{ fontSize: '1.3rem' }}>
-            Pick a recipe
-          </div>
-          <div className="field" style={{ marginBottom: 16 }}>
-            <input
-              type="text"
-              placeholder="Search recipes…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
-            />
-          </div>
-
-          {loading && <p>Loading…</p>}
-
-          {!loading && visible.length === 0 && <p>No recipes match that search.</p>}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflowY: 'auto' }}>
-            {visible.map((r) => (
-              <button
-                key={r.id}
-                onClick={() => onPick(r)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  textAlign: 'left',
-                  padding: '10px 12px',
-                  border: '1px solid var(--rb-border)',
-                  borderRadius: 10,
-                  background: '#fff',
-                }}
-              >
-                <span style={{ fontSize: '1.3rem' }}>{r.emoji}</span>
-                <span>{r.title}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
-    </div>
+    </Sheet>
   )
 }

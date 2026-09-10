@@ -1,8 +1,8 @@
 import Icon from './Icon.jsx'
 
-export function Field({ label, hint, error, htmlFor, children }) {
+export function Field({ label, hint, error, htmlFor, children, className = '', ...rest }) {
   return (
-    <div className="fh-field">
+    <div className={`fh-field ${className}`.trim()} {...rest}>
       {label && (
         <label className="fh-field__label" htmlFor={htmlFor}>
           {label}

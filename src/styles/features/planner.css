@@ -1,0 +1,25 @@
+/* Meal planner. Scoped under .fh-planner. */
+.fh-planner__toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-5);flex-wrap:wrap;margin-bottom:var(--sp-6)}
+.fh-planner__week{display:flex;align-items:center;gap:var(--sp-3)}
+.fh-planner__label{font:var(--type-title-sm);min-width:120px;text-align:center}
+.fh-planner__days{display:flex;flex-direction:column;gap:var(--sp-5)}
+.fh-planner__day{background:var(--surface-card);border:var(--bw-hair) solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+.fh-planner__dayhead{display:flex;align-items:baseline;gap:var(--sp-4);padding:var(--sp-5) var(--sp-6);border-bottom:var(--bw-hair) solid var(--border);background:var(--surface-sunken)}
+.fh-planner__dayname{font:var(--fw-bold) var(--fs-body)/1 var(--font-display);letter-spacing:var(--ls-title)}
+.fh-planner__daydate{font:var(--type-meta);color:var(--ink-3)}
+.fh-planner__day--today .fh-planner__dayhead{background:var(--primary-soft)}
+.fh-planner__day--today .fh-planner__dayname{color:var(--primary-soft-ink)}
+.fh-planner__slot{display:flex;align-items:center;gap:var(--sp-5);width:100%;min-height:var(--tap-min);padding:var(--sp-5) var(--sp-6);border:0;border-bottom:var(--bw-hair) solid var(--border);background:transparent;text-align:left;cursor:pointer;color:inherit;transition:background var(--dur-2) var(--ease-out)}
+.fh-planner__slot:last-child{border-bottom:0}
+.fh-planner__slot:hover{background:var(--surface-sunken)}
+.fh-planner__meal{width:76px;flex-shrink:0;font:var(--type-caption);color:var(--ink-3)}
+.fh-planner__dish{flex:1;font:var(--fw-medium) var(--fs-body)/1.3 var(--font-text);color:var(--ink-1)}
+.fh-planner__dish--empty{color:var(--ink-3)}
+@media (min-width:900px){
+  .fh-planner__days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--sp-4)}
+  .fh-planner__day{display:flex;flex-direction:column}
+  .fh-planner__dayhead{flex-direction:column;gap:0;align-items:flex-start;padding:var(--sp-5)}
+  .fh-planner__slot{flex-direction:column;align-items:flex-start;gap:var(--sp-3);flex:1;padding:var(--sp-5);min-height:104px}
+  .fh-planner__meal{width:auto}
+  .fh-planner__dish{font-size:var(--fs-meta)}
+}

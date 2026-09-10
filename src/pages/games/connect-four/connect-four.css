@@ -158,6 +158,7 @@
 .c4-board {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  align-items: start;
   gap: 2.2%;
   background: var(--c4-green);
   border-radius: 12px;

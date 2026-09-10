@@ -47,31 +47,31 @@ export default function WorkoutHistory() {
   }, []);
 
   return (
-    <div className="workout">
-      <div className="workout-shell">
-        <div className="workout-header">
+    <div className="fh-workout">
+      <div className="fh-workout-shell">
+        <div className="fh-workout-header">
           <div>
-            <div className="workout-kicker">Fearne Hub</div>
+            <div className="fh-workout-kicker">Fearne Hub</div>
             <h1>Your history</h1>
-            <p className="workout-sub">Everything you have logged, and how it is trending.</p>
+            <p className="fh-workout-sub">Everything you have logged, and how it is trending.</p>
           </div>
-          <button className="workout-btn workout-btn--ghost workout-btn--sm" onClick={() => navigate("/workouts/tracker")}>
+          <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => navigate("/workouts/tracker")}>
             Back to tracker
           </button>
         </div>
 
-        {error && <div className="workout-alert workout-alert--error">{error}</div>}
+        {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
 
-        <div className="workout-tabs">
+        <div className="fh-workout-tabs">
           {TABS.map((t) => (
-            <button key={t.id} className="workout-tab" data-active={tab === t.id} onClick={() => setTab(t.id)}>
+            <button key={t.id} className="fh-workout-tab" data-active={tab === t.id} onClick={() => setTab(t.id)}>
               {t.label}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="workout-empty"><span className="workout-spinner" /> Loading…</div>
+          <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>
         ) : (
           <>
             {tab === "sessions" && <SessionsPanel />}
@@ -110,8 +110,8 @@ function SessionsPanel() {
     }
   };
 
-  if (loading) return <div className="workout-empty"><span className="workout-spinner" /> Loading…</div>;
-  if (!sessions.length) return <div className="workout-empty">No workouts logged yet. Go and do one.</div>;
+  if (loading) return <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>;
+  if (!sessions.length) return <div className="fh-workout-empty">No workouts logged yet. Go and do one.</div>;
 
   const weekCount = sessions.filter(
     (s) => Date.now() - new Date(s.performed_at).getTime() < 7 * 864e5
@@ -119,16 +119,16 @@ function SessionsPanel() {
 
   return (
     <>
-      <div className="workout-stat-row">
-        <div className="workout-stat">
+      <div className="fh-workout-stat-row">
+        <div className="fh-workout-stat">
           <div className="val">{sessions.length}</div>
           <div className="cap">Total</div>
         </div>
-        <div className="workout-stat">
+        <div className="fh-workout-stat">
           <div className="val">{weekCount}</div>
           <div className="cap">This week</div>
         </div>
-        <div className="workout-stat">
+        <div className="fh-workout-stat">
           <div className="val">{streakWeeks(sessions)}</div>
           <div className="cap">Week streak</div>
         </div>
@@ -140,24 +140,24 @@ function SessionsPanel() {
         const picked = Object.values(s.record_selections || {}).flat();
 
         return (
-          <div key={s.id} className="workout-card" style={{ cursor: "pointer" }} onClick={() => toggle(s.id)}>
-            <div className="workout-card__top" style={{ marginBottom: open ? 12 : 0 }}>
+          <div key={s.id} className="fh-workout-card" style={{ cursor: "pointer" }} onClick={() => toggle(s.id)}>
+            <div className="fh-workout-card__top" style={{ marginBottom: open ? 12 : 0 }}>
               <div>
                 <h3>{fmtDate(s.performed_at)}</h3>
-                <div className="workout-card__sub">
+                <div className="fh-workout-card__sub">
                   {s.workout_programs?.name}
                   {s.duration_seconds ? ` · ${Math.round(s.duration_seconds / 60)} min` : ""}
                 </div>
               </div>
-              <span className="workout-pill">{open ? "close" : "view"}</span>
+              <span className="fh-workout-pill">{open ? "close" : "view"}</span>
             </div>
 
             {open && (
               <>
-                {rows.length === 0 && <p className="workout-card__sub">No sets recorded in this session.</p>}
+                {rows.length === 0 && <p className="fh-workout-card__sub">No sets recorded in this session.</p>}
                 {rows.map((r) => (
-                  <div key={r.id} className="workout-log-row">
-                    <span className="dot" style={{ background: r.advanced ? "#c9a227" : "#2f5540" }} />
+                  <div key={r.id} className="fh-workout-log-row">
+                    <span className="dot" style={{ background: r.advanced ? "var(--secondary)" : "var(--primary)" }} />
                     <div className="body">
                       <div className="name">{r.exercise_name}</div>
                       <div className="meta">
@@ -170,11 +170,11 @@ function SessionsPanel() {
                 ))}
 
                 {picked.length > 0 && (
-                  <p className="workout-card__sub" style={{ marginTop: 10 }}>
+                  <p className="fh-workout-card__sub" style={{ marginTop: 10 }}>
                     Also did: {picked.join(", ")}
                   </p>
                 )}
-                {s.notes && <p className="workout-card__sub" style={{ marginTop: 6 }}>{s.notes}</p>}
+                {s.notes && <p className="fh-workout-card__sub" style={{ marginTop: 6 }}>{s.notes}</p>}
               </>
             )}
           </div>
@@ -204,7 +204,7 @@ function ProgressPanel({ program, programId }) {
   }, [programId, chainId]);
 
   if (!program) {
-    return <div className="workout-empty">Load a workout first and your progress will show up here.</div>;
+    return <div className="fh-workout-empty">Load a workout first and your progress will show up here.</div>;
   }
 
   const levelUps = rows.filter((r) => r.advanced);
@@ -212,36 +212,36 @@ function ProgressPanel({ program, programId }) {
 
   return (
     <>
-      <div className="workout-tabs" style={{ marginBottom: 16 }}>
+      <div className="fh-workout-tabs" style={{ marginBottom: 16 }}>
         {program.chains.map((c) => (
-          <button key={c.id} className="workout-tab" data-active={chainId === c.id} onClick={() => setChainId(c.id)}>
+          <button key={c.id} className="fh-workout-tab" data-active={chainId === c.id} onClick={() => setChainId(c.id)}>
             {c.label}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="workout-empty"><span className="workout-spinner" /> Loading…</div>
+        <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>
       ) : rows.length === 0 ? (
-        <div className="workout-empty">Nothing logged for {chain?.label} yet.</div>
+        <div className="fh-workout-empty">Nothing logged for {chain?.label} yet.</div>
       ) : (
         <>
-          <div className="workout-stat-row">
-            <div className="workout-stat">
+          <div className="fh-workout-stat-row">
+            <div className="fh-workout-stat">
               <div className="val">{rows.length}</div>
               <div className="cap">Sessions</div>
             </div>
-            <div className="workout-stat">
+            <div className="fh-workout-stat">
               <div className="val">{levelUps.length}</div>
               <div className="cap">Level ups</div>
             </div>
-            <div className="workout-stat">
+            <div className="fh-workout-stat">
               <div className="val">{best}</div>
               <div className="cap">Best set</div>
             </div>
           </div>
 
-          <div className="workout-card">
+          <div className="fh-workout-card">
             <h3 style={{ marginBottom: 10 }}>Best set each session</h3>
             <LineChart
               points={rows.map((r) => ({
@@ -250,21 +250,21 @@ function ProgressPanel({ program, programId }) {
                 flag: r.advanced,
               }))}
               unit={rows[0]?.unit === "seconds" ? "s" : ""}
-              accent={chain?.color || "#1f3d2b"}
+              accent={chain?.color || "var(--primary)"}
             />
-            <p className="workout-card__sub" style={{ marginTop: 8 }}>
+            <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
               Gold dots are the sessions where you moved up a rung. Dips are normal: the number
               resets when the exercise gets harder.
             </p>
           </div>
 
-          <div className="workout-section-heading">Rungs climbed</div>
+          <div className="fh-workout-section-heading">Rungs climbed</div>
           {levelUps.length === 0 ? (
-            <p className="workout-card__sub">No level ups on this chain yet. Keep at it.</p>
+            <p className="fh-workout-card__sub">No level ups on this chain yet. Keep at it.</p>
           ) : (
             levelUps.slice().reverse().map((r, i) => (
-              <div key={i} className="workout-log-row">
-                <span className="dot" style={{ background: "#c9a227" }} />
+              <div key={i} className="fh-workout-log-row">
+                <span className="dot" style={{ background: "var(--secondary)" }} />
                 <div className="body">
                   <div className="name">{r.exercise_name}</div>
                   <div className="meta">cleared with {r.amounts.join(" / ")}</div>
@@ -303,11 +303,11 @@ function WeightPanel() {
     })();
   }, [refresh]);
 
-  if (allowed === null) return <div className="workout-empty"><span className="workout-spinner" /> Loading…</div>;
+  if (allowed === null) return <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>;
 
   if (!allowed) {
     return (
-      <div className="workout-empty">
+      <div className="fh-workout-empty">
         Weight tracking is available on adult accounts only. An admin can change this on the Admin page.
       </div>
     );
@@ -343,10 +343,10 @@ function WeightPanel() {
 
   return (
     <>
-      <div className="workout-card">
+      <div className="fh-workout-card">
         <h3 style={{ marginBottom: 12 }}>Log today's weight</h3>
-        {error && <div className="workout-alert workout-alert--error">{error}</div>}
-        <div className="workout-weight-grid">
+        {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
+        <div className="fh-workout-weight-grid">
           <div>
             <label htmlFor="wt">Weight (kg)</label>
             <input
@@ -364,51 +364,51 @@ function WeightPanel() {
             <label htmlFor="wd">Date</label>
             <input id="wd" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
-          <button className="workout-btn workout-btn--primary" onClick={save} disabled={busy || !value}>
+          <button className="fh-workout-btn fh-workout-btn--primary" onClick={save} disabled={busy || !value}>
             {busy ? "…" : "Save"}
           </button>
         </div>
-        <p className="workout-card__sub">One entry per day. Saving again for the same date replaces it.</p>
+        <p className="fh-workout-card__sub">One entry per day. Saving again for the same date replaces it.</p>
       </div>
 
       {rows.length > 0 && (
         <>
-          <div className="workout-stat-row">
-            <div className="workout-stat">
+          <div className="fh-workout-stat-row">
+            <div className="fh-workout-stat">
               <div className="val">{latest.weight_kg}</div>
               <div className="cap">Latest kg</div>
             </div>
-            <div className="workout-stat">
+            <div className="fh-workout-stat">
               <div className="val">{change > 0 ? "+" : ""}{change.toFixed(1)}</div>
               <div className="cap">Change</div>
             </div>
             {avg30 && (
-              <div className="workout-stat">
+              <div className="fh-workout-stat">
                 <div className="val">{avg30}</div>
                 <div className="cap">30 day avg</div>
               </div>
             )}
           </div>
 
-          <div className="workout-card">
+          <div className="fh-workout-card">
             <h3 style={{ marginBottom: 10 }}>Trend</h3>
             <LineChart
               points={rows.map((r) => ({ x: new Date(r.logged_on).getTime(), y: Number(r.weight_kg) }))}
               unit="kg"
-              accent="#1f3d2b"
+              accent="var(--primary)"
             />
           </div>
 
-          <div className="workout-section-heading">Entries</div>
+          <div className="fh-workout-section-heading">Entries</div>
           {rows.slice().reverse().slice(0, 30).map((r) => (
-            <div key={r.id} className="workout-log-row">
-              <span className="dot" style={{ background: "#c9a227" }} />
+            <div key={r.id} className="fh-workout-log-row">
+              <span className="dot" style={{ background: "var(--secondary)" }} />
               <div className="body">
                 <div className="name">{r.weight_kg} kg</div>
                 {r.note && <div className="meta">{r.note}</div>}
               </div>
               <div className="when">{fmtDate(r.logged_on, true)}</div>
-              <button className="workout-btn workout-btn--danger workout-btn--sm" onClick={() => remove(r.id)}>
+              <button className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm" onClick={() => remove(r.id)}>
                 ✕
               </button>
             </div>
@@ -423,14 +423,14 @@ function WeightPanel() {
 /* Tiny SVG line chart                                                         */
 /* ========================================================================== */
 
-function LineChart({ points, unit = "", accent = "#1f3d2b" }) {
+function LineChart({ points, unit = "", accent = "var(--primary)" }) {
   if (!points || points.length === 0) return null;
 
   const W = 640, H = 180, PAD = 28;
 
   if (points.length === 1) {
     return (
-      <p className="workout-card__sub">
+      <p className="fh-workout-card__sub">
         Only one entry so far ({points[0].y}{unit}). The chart appears once there are two.
       </p>
     );
@@ -452,7 +452,7 @@ function LineChart({ points, unit = "", accent = "#1f3d2b" }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Progress chart">
-      <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="#d9d0bb" strokeWidth="1" />
+      <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--border)" strokeWidth="1" />
       <path d={area} fill={accent} opacity="0.08" />
       <path d={d} fill="none" stroke={accent} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p, i) => (
@@ -461,11 +461,11 @@ function LineChart({ points, unit = "", accent = "#1f3d2b" }) {
           cx={sx(p.x)}
           cy={sy(p.y)}
           r={p.flag ? 4.5 : 2.5}
-          fill={p.flag ? "#c9a227" : accent}
+          fill={p.flag ? "var(--secondary)" : accent}
         />
       ))}
-      <text x={PAD} y={16} fontSize="11" fill="#6d7a68">{maxY}{unit}</text>
-      <text x={PAD} y={H - PAD - 4} fontSize="11" fill="#6d7a68">{minY}{unit}</text>
+      <text x={PAD} y={16} fontSize="11" fill="var(--ink-3)">{maxY}{unit}</text>
+      <text x={PAD} y={H - PAD - 4} fontSize="11" fill="var(--ink-3)">{minY}{unit}</text>
     </svg>
   );
 }

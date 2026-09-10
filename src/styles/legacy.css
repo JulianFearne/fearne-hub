@@ -1,5 +1,4 @@
-/* Fraunces + Inter, kept loaded only because workout.css and
-   AnimalPlaceThing.css still reference those font families by name.
-   Drop this file once Workouts and Animal Place Thing are migrated to
-   Gabarito/Onest. */
+/* Fraunces + Inter, kept loaded only because AnimalPlaceThing.css still
+   references those font families by name. Drop this file once Animal
+   Place Thing is migrated to Gabarito/Onest. */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap');

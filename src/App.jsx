@@ -20,6 +20,8 @@ import Sudoku from './pages/games/sudoku/Sudoku.jsx'
 import Freecell from './pages/games/freecell/Freecell.jsx'
 import GoFish from './pages/games/go-fish/GoFish.jsx'
 import WouldYouRather from './pages/games/would-you-rather/WouldYouRather.jsx'
+import TicTacToe from './pages/games/tic-tac-toe/TicTacToe.jsx'
+import Pictionary from './pages/games/pictionary/Pictionary.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -54,6 +56,8 @@ const ROUTE_HEADERS = {
   '/games/freecell': { title: 'Freecell', back: '/games' },
   '/games/go-fish': { title: 'Go Fish', back: '/games' },
   '/games/would-you-rather': { title: 'Would You Rather', back: '/games' },
+  '/games/tic-tac-toe': { title: 'Tic Tac Toe', back: '/games' },
+  '/games/pictionary': { title: 'Pictionary', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -230,6 +234,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <WouldYouRather />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/tic-tac-toe"
+          element={
+            <ProtectedRoute>
+              <TicTacToe />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/pictionary"
+          element={
+            <ProtectedRoute>
+              <Pictionary />
             </ProtectedRoute>
           }
         />

@@ -1,0 +1,141 @@
+/* src/pages/games/tic-tac-toe/tic-tac-toe.css
+   Scoped under .ttt, never leaks into the hub shell. */
+
+.ttt {
+  --ttt-forest: var(--primary);
+  --ttt-forest-dark: var(--primary-press);
+  --ttt-cream: var(--ink-on-primary);
+  --ttt-card: var(--surface-card);
+  --ttt-gold: var(--secondary);
+  --ttt-terracotta: var(--danger);
+  --ttt-ink: var(--ink-1);
+  --ttt-line: var(--border);
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.ttt-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.ttt-back {
+  text-decoration: none;
+  color: var(--ttt-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.ttt-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.ttt-panel {
+  background: var(--ttt-card);
+  border: 1px solid var(--ttt-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.ttt-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.ttt-chip {
+  border: 1px solid var(--ttt-line);
+  background: var(--surface-card);
+  color: var(--ttt-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ttt-chip.active {
+  background: var(--ttt-forest);
+  color: var(--ttt-cream);
+  border-color: var(--ttt-forest);
+}
+
+.ttt-status {
+  font-weight: 600;
+  color: var(--ttt-ink);
+  text-align: center;
+}
+.ttt-status.is-over {
+  color: var(--ttt-forest-dark);
+  font-size: 1.05rem;
+}
+
+.ttt-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 280px;
+}
+.ttt-cell {
+  aspect-ratio: 1;
+  border: 2px solid var(--ttt-line);
+  background: var(--surface-card);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--ttt-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ttt-cell:hover:not(:disabled) {
+  border-color: var(--ttt-forest);
+}
+.ttt-cell:disabled {
+  cursor: default;
+}
+.ttt-cell.x {
+  color: var(--ttt-forest);
+}
+.ttt-cell.o {
+  color: var(--ttt-gold);
+}
+.ttt-cell.win {
+  background: var(--ttt-forest);
+  border-color: var(--ttt-forest);
+  color: var(--ttt-cream);
+}
+
+.ttt-scoreboard {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--ttt-ink);
+}
+
+.ttt-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.ttt-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--ttt-forest);
+  background: var(--surface-card);
+  color: var(--ttt-forest);
+  cursor: pointer;
+}
+.ttt-btn.primary {
+  background: var(--ttt-forest);
+  color: var(--ttt-cream);
+}
+.ttt-btn.primary:hover {
+  background: var(--ttt-forest-dark);
+}

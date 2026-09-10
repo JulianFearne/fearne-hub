@@ -63,6 +63,15 @@ const GAMES = [
     tags: ['Multiplayer, online'],
     live: true,
   },
+  {
+    key: 'would-you-rather',
+    title: 'Would You Rather',
+    blurb: 'Pass the phone round and argue about which is worse.',
+    icon: 'users',
+    to: '/games/would-you-rather',
+    tags: ['Pass and play, offline'],
+    live: true,
+  },
 ];
 
 function GameCard({ game }) {

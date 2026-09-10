@@ -1,0 +1,142 @@
+/* src/pages/games/would-you-rather/would-you-rather.css
+   Scoped under .wyr — never leaks into the hub shell. */
+
+.wyr {
+  --wyr-forest: var(--primary);
+  --wyr-forest-dark: var(--primary-press);
+  --wyr-cream: var(--ink-on-primary);
+  --wyr-card: var(--surface-card);
+  --wyr-gold: var(--secondary);
+  --wyr-ink: var(--ink-1);
+  --wyr-line: var(--border);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.wyr-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.wyr-back {
+  text-decoration: none;
+  color: var(--wyr-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.wyr-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.wyr-panel {
+  background: var(--wyr-card);
+  border: 1px solid var(--wyr-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1.25rem;
+  justify-items: center;
+}
+
+.wyr-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.wyr-chip {
+  border: 1px solid var(--wyr-line);
+  background: var(--surface-card);
+  color: var(--wyr-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.wyr-chip.active {
+  background: var(--wyr-forest);
+  color: var(--wyr-cream);
+  border-color: var(--wyr-forest);
+}
+
+.wyr-prompt {
+  margin: 0;
+  font-weight: 600;
+  color: var(--wyr-ink);
+  opacity: 0.7;
+}
+
+.wyr-options {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  justify-items: center;
+}
+.wyr-option {
+  width: 100%;
+  border: 2px solid var(--wyr-line);
+  background: var(--surface-card);
+  color: var(--wyr-ink);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+.wyr-option:hover:not(:disabled) {
+  border-color: var(--wyr-forest);
+}
+.wyr-option.chosen {
+  background: var(--wyr-forest);
+  border-color: var(--wyr-forest);
+  color: var(--wyr-cream);
+  transform: scale(1.02);
+}
+.wyr-option.faded {
+  opacity: 0.45;
+}
+.wyr-option:disabled {
+  cursor: default;
+}
+.wyr-or {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--wyr-gold);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.wyr-scoreboard {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--wyr-ink);
+}
+
+.wyr-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.wyr-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--wyr-forest);
+  background: var(--surface-card);
+  color: var(--wyr-forest);
+  cursor: pointer;
+}
+.wyr-btn.primary {
+  background: var(--wyr-forest);
+  color: var(--wyr-cream);
+}
+.wyr-btn.primary:hover {
+  background: var(--wyr-forest-dark);
+}

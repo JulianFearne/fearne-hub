@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient'
 // docs/push-notifications.md) and set as the VAPID_PUBLIC_KEY secret on the
 // `notify` Edge Function. The public half is meant to ship in the client
 // bundle — only the private half needs to stay secret.
-const VAPID_PUBLIC_KEY = 'REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY'
+const VAPID_PUBLIC_KEY = 'BN68eC0fUo8GiduNH27davbWAPtcTDUTVRTbDISmOhi_RM_AymuXiih6NABTlO0884rS5hggc5BZ2dryU13LMyg'
 
 export function isPushSupported() {
   return typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window

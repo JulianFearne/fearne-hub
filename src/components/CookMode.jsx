@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import Button from './ds/Button.jsx'
+import IconButton from './ds/IconButton.jsx'
 
 function detectTimerSeconds(text) {
   let best = 0
@@ -134,81 +136,73 @@ export default function CookMode({ recipe, onExit }) {
   }
 
   return (
-    <div className="rb-cook-overlay">
-      <div className="rb-cook-header">
-        <div className="rb-cook-title">
-          {recipe.emoji} {recipe.title}
-        </div>
-        <div>
-          <button className="rb-cook-hbtn" onClick={() => setIngOpen((o) => !o)}>
-            🧾 Ingredients
-          </button>
-          <button className="rb-cook-hbtn" onClick={onExit}>
-            ✕ Exit
-          </button>
-        </div>
+    <div className="fh-cook">
+      <div className="fh-cook__top">
+        <p className="fh-cook__title">{recipe.title}</p>
+        <Button variant="quiet" size="sm" icon="list-checks" onClick={() => setIngOpen((o) => !o)}>
+          Ingredients
+        </Button>
+        <IconButton icon="x" label="Exit Cook Mode" variant="onFeature" onClick={onExit} />
       </div>
 
-      <div className="rb-cook-progress">
+      <div className="fh-cook__dots">
         {recipe.steps.map((_, i) => (
-          <div key={i} className={`rb-cook-dot ${i < step ? 'done' : i === step ? 'current' : ''}`} />
+          <div
+            key={i}
+            className={`fh-cook__dot${i < step ? ' fh-cook__dot--done' : i === step ? ' fh-cook__dot--current' : ''}`}
+          />
         ))}
       </div>
 
-      <div className="rb-cook-body-wrap">
-        <div className="rb-cook-main">
-          <div className="rb-cook-step-label">
-            Step {step + 1} of {recipe.steps.length}
+      <div className="fh-cook__body">
+        <p className="fh-cook__label">
+          Step {step + 1} of {recipe.steps.length}
+        </p>
+        <p className="fh-cook__step">{stepText}</p>
+
+        {total > 0 && (
+          <div className={`fh-cook__timer${finished ? ' fh-cook__timer--finished' : ''}`}>
+            <span className="fh-cook__timer-time">{fmtTime(remaining)}</span>
+            <Button variant="secondary" icon={running ? 'pause' : 'play'} onClick={toggleTimer}>
+              {running ? 'Pause' : remaining <= 0 || remaining === total ? 'Start timer' : 'Resume'}
+            </Button>
+            <Button variant="quiet" onClick={resetTimer}>
+              Reset
+            </Button>
           </div>
-          <div className="rb-cook-step-text">{stepText}</div>
+        )}
 
-          {total > 0 && (
-            <div className={`rb-cook-timer ${finished ? 'finished' : ''}`}>
-              <div className="rb-cook-timer-display">{fmtTime(remaining)}</div>
-              <button className="rb-cook-tbtn" onClick={toggleTimer}>
-                {running ? '⏸ Pause' : remaining <= 0 || remaining === total ? '▶ Start timer' : '▶ Resume'}
-              </button>
-              <button className="rb-cook-tbtn secondary" onClick={resetTimer}>
-                ↺ Reset
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className={`rb-cook-ing-panel ${ingOpen ? 'open' : ''}`}>
-          <h4>Ingredients</h4>
-          <ul>
-            {recipe.ingredients.map((i, idx) =>
-              i.group ? (
-                <li key={idx} className="rb-ing-group">
-                  {i.group}
-                </li>
-              ) : (
-                <li key={idx}>
-                  {i.name}
-                  {i.amount ? (
-                    <>
-                      {' — '}
-                      <strong>{i.amount}</strong>
-                    </>
-                  ) : null}
-                </li>
-              )
-            )}
-          </ul>
-        </div>
+        {ingOpen && (
+          <div className="fh-cook__ingredients">
+            <h4>Ingredients</h4>
+            <ul>
+              {recipe.ingredients.map((i, idx) =>
+                i.group ? (
+                  <li key={idx} style={{ fontWeight: 'var(--fw-semibold)' }}>
+                    {i.group}
+                  </li>
+                ) : (
+                  <li key={idx}>
+                    {i.name}
+                    {i.amount ? ` — ${i.amount}` : ''}
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
+        )}
       </div>
 
-      <div className="rb-cook-footer">
-        <button className="rb-cook-nav-btn" onClick={handlePrev} disabled={step === 0}>
-          ← Back
-        </button>
-        <span className="rb-cook-count">
+      <div className="fh-cook__foot">
+        <Button variant="quiet" icon="chevron-left" onClick={handlePrev} disabled={step === 0}>
+          Back
+        </Button>
+        <span className="fh-cook__count">
           {step + 1} / {recipe.steps.length}
         </span>
-        <button className="rb-cook-nav-btn primary" onClick={handleNext}>
-          {step === recipe.steps.length - 1 ? '✓ Finish' : 'Next →'}
-        </button>
+        <Button variant="secondary" onClick={handleNext}>
+          {step === recipe.steps.length - 1 ? 'Finish cooking' : 'Next step'}
+        </Button>
       </div>
     </div>
   )

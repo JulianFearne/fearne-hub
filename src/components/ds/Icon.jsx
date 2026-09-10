@@ -34,6 +34,8 @@ import {
   Sparkles,
   LogOut,
   Shield,
+  Cookie,
+  CupSoda,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -74,6 +76,8 @@ const ICONS = {
   sparkles: Sparkles,
   'log-out': LogOut,
   shield: Shield,
+  cookie: Cookie,
+  'cup-soda': CupSoda,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

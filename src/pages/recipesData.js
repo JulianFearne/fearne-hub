@@ -1,12 +1,14 @@
 import { supabase } from '../supabaseClient'
 
+// No emoji per the design system's content rules — categories carry a
+// Lucide icon name instead, rendered through the Icon component.
 export const CATEGORIES = [
-  { id: 'all',     label: 'All',      emoji: '🍴' },
-  { id: 'starter', label: 'Starters', emoji: '🥗' },
-  { id: 'main',    label: 'Mains',    emoji: '🍽️' },
-  { id: 'dessert', label: 'Desserts', emoji: '🍰' },
-  { id: 'snack',   label: 'Snacks',   emoji: '🍿' },
-  { id: 'drink',   label: 'Drinks',   emoji: '🥤' },
+  { id: 'all',     label: 'All',      icon: 'utensils' },
+  { id: 'starter', label: 'Starters', icon: 'soup' },
+  { id: 'main',    label: 'Mains',    icon: 'chef-hat' },
+  { id: 'dessert', label: 'Desserts', icon: 'sparkles' },
+  { id: 'snack',   label: 'Snacks',   icon: 'cookie' },
+  { id: 'drink',   label: 'Drinks',   icon: 'cup-soda' },
 ]
 
 export async function fetchRecipes() {
@@ -22,7 +24,10 @@ export async function addRecipe(recipe) {
   const { data: userData } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('recipes')
-    .insert([{ ...recipe, created_by: userData.user.id }])
+    // The design system dropped emoji from the add-recipe form (no emoji,
+    // per its content rules), but the `emoji` column still backs the meal
+    // planner's embed until that page is migrated too — keep it filled in.
+    .insert([{ emoji: '🍽️', ...recipe, created_by: userData.user.id }])
     .select()
     .single()
   if (error) throw error

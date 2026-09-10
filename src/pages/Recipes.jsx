@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { CATEGORIES, fetchRecipes, addRecipe, deleteRecipe } from './recipesData'
 import RecipeModal from '../components/RecipeModal.jsx'
 import RecipeForm from '../components/RecipeForm.jsx'
 import CookMode from '../components/CookMode.jsx'
-import './Recipes.css'
-import { Link } from 'react-router-dom'   // add to the imports at the top
+import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
+import Button from '../components/ds/Button.jsx'
+import Icon from '../components/ds/Icon.jsx'
+import SearchField from '../components/ds/SearchField.jsx'
+import { Chip, ChipRow } from '../components/ds/Chip.jsx'
 
+function recipeMeta(r) {
+  return [r.time, r.serves ? `serves ${r.serves}` : null, r.difficulty].filter(Boolean).join(', ')
+}
 
 export default function Recipes() {
   const { user } = useAuth()
@@ -70,93 +77,84 @@ export default function Recipes() {
     setSelected(null)
   }
 
-  const sectionTitle = category === 'all' ? 'All Recipes' : CATEGORIES.find((c) => c.id === category)?.label
-
   return (
-    <div className="recipe-book">
-      <div className="rb-header">
-        <div className="rb-logo">
-          <span>Fearne</span> Recipe Book
-        </div>
-        <div className="rb-search">
-          <input
-            type="text"
-            placeholder="Search recipes…"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setCategory('all')
+    <div>
+      <div className="fh-recipes__toolbar">
+        <SearchField
+          value={search}
+          onChange={(v) => {
+            setSearch(v)
+            setCategory('all')
+          }}
+          placeholder="Search recipes…"
+        />
+        <Button icon="plus" onClick={() => setShowForm(true)}>
+          Add a recipe
+        </Button>
+        <Button as={Link} to="/import" variant="quiet" icon="share-2">
+          Import
+        </Button>
+      </div>
+
+      <ChipRow>
+        {CATEGORIES.map((c) => (
+          <Chip
+            key={c.id}
+            active={category === c.id}
+            count={counts[c.id] ?? 0}
+            onClick={() => {
+              setCategory(c.id)
+              setSearch('')
             }}
-          />
+          >
+            {c.label}
+          </Chip>
+        ))}
+      </ChipRow>
+
+      <div className="fh-recipes__section">
+        <span />
+        <span className="fh-recipes__count">
+          {visible.length} recipe{visible.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      {loading && <p className="fh-loading">Loading recipes…</p>}
+      {loadError && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {loadError}
         </div>
-       <button className="rb-add-btn" onClick={() => setShowForm(true)}>
-          + Add recipe
-        </button>
-        <Link to="/import" className="rb-add-btn" style={{ textDecoration: 'none' }}>
-          ⬆ Import
-        </Link>
-      </div>
+      )}
 
-      <div className="rb-layout">
-        <aside className="rb-sidebar">
-          <div className="rb-sidebar-title">Categories</div>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              className={`rb-cat-btn ${category === c.id ? 'active' : ''}`}
-              onClick={() => {
-                setCategory(c.id)
-                setSearch('')
-              }}
-            >
-              <span>{c.emoji}</span>
-              <span>{c.label}</span>
-              <span className="rb-cat-count">{counts[c.id] ?? 0}</span>
-            </button>
-          ))}
-        </aside>
+      {!loading && !loadError && visible.length === 0 && (
+        <div className="fh-empty">
+          <span className="fh-empty__mark">
+            <Icon name="search-x" size={22} />
+          </span>
+          <p className="fh-empty__title">Nothing here yet</p>
+          <p className="fh-empty__body">Add the first recipe for this category, or try a different search.</p>
+        </div>
+      )}
 
-        <main className="rb-main">
-          <div className="rb-section-header">
-            <h2>{sectionTitle}</h2>
-            <span className="rb-count-label">
-              {visible.length} recipe{visible.length === 1 ? '' : 's'}
-            </span>
-          </div>
-
-          {loading && <p>Loading recipes…</p>}
-          {loadError && <div className="rb-form-error">{loadError}</div>}
-
-          {!loading && !loadError && visible.length === 0 && (
-            <div className="rb-empty">
-              <div className="rb-empty-icon">🍽️</div>
-              <h3>No recipes here yet</h3>
-              <p>Add the first one for this category.</p>
-            </div>
-          )}
-
-          {!loading && visible.length > 0 && (
-            <div className="rb-grid">
-              {visible.map((r) => (
-                <button key={r.id} className="rb-card" onClick={() => setSelected(r)}>
-                  <div className={`rb-card-thumb acc-${r.category}`}>{r.emoji}</div>
-                  <div className="rb-card-body">
-                    <div className="rb-card-category">
-                      {CATEGORIES.find((c) => c.id === r.category)?.label}
-                    </div>
-                    <div className="rb-card-title">{r.title}</div>
-                    <div className="rb-card-meta">
-                      {r.time && <span>⏱ {r.time}</span>}
-                      {r.serves && <span>👤 {r.serves}</span>}
-                      {r.difficulty && <span>⭐ {r.difficulty}</span>}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </main>
-      </div>
+      {!loading && visible.length > 0 && (
+        <div className="fh-recipes__grid">
+          {visible.map((r) => {
+            const cat = CATEGORIES.find((c) => c.id === r.category)
+            return (
+              <Card key={r.id} tile onClick={() => setSelected(r)}>
+                <span className="fh-recipes__mark">
+                  <Icon name={cat?.icon ?? 'utensils'} size={18} />
+                </span>
+                <div>
+                  <CardTitle>{r.title}</CardTitle>
+                  <CardMeta>{recipeMeta(r) || cat?.label}</CardMeta>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      )}
 
       {selected && (
         <RecipeModal

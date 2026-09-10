@@ -15,6 +15,7 @@
 @import './components.css';
 @import './features/hub.css';
 @import './features/auth.css';
+@import './features/recipes.css';
 
 .placeholder {
   background: var(--surface-sunken);

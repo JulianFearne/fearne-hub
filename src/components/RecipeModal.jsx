@@ -1,92 +1,100 @@
 import { CATEGORIES } from '../pages/recipesData'
+import Sheet from './ds/Sheet.jsx'
+import Button from './ds/Button.jsx'
+import Icon from './ds/Icon.jsx'
 
 function catLabel(id) {
   return CATEGORIES.find((c) => c.id === id)?.label || id
 }
+function catIcon(id) {
+  return CATEGORIES.find((c) => c.id === id)?.icon ?? 'utensils'
+}
 
 export default function RecipeModal({ recipe, canDelete, onClose, onDelete, onCook }) {
   return (
-    <div className="rb-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="rb-modal">
-        <div className="rb-modal-close">
-          <button className="rb-close-btn" onClick={onClose}>
-            ✕
-          </button>
+    <Sheet title={recipe.title} onClose={onClose} wide>
+      <span className="fh-recipedetail__mark">
+        <Icon name={catIcon(recipe.category)} size={26} />
+      </span>
+      <p className="fh-recipedetail__cat">{catLabel(recipe.category)}</p>
+      <p className="fh-recipedetail__title">{recipe.title}</p>
+
+      <div className="fh-recipedetail__facts">
+        {recipe.time && (
+          <span className="fh-recipedetail__fact">
+            <Icon name="clock" size={14} />
+            {recipe.time}
+          </span>
+        )}
+        {recipe.serves && (
+          <span className="fh-recipedetail__fact">
+            <Icon name="users" size={14} />
+            Serves {recipe.serves}
+          </span>
+        )}
+        {recipe.difficulty && (
+          <span className="fh-recipedetail__fact">
+            <Icon name="sparkles" size={14} />
+            {recipe.difficulty}
+          </span>
+        )}
+      </div>
+
+      {(recipe.tags || []).length > 0 && (
+        <div className="fh-recipedetail__tags">
+          {recipe.tags.map((t) => (
+            <span className="fh-badge" key={t}>
+              {t}
+            </span>
+          ))}
         </div>
+      )}
 
-        <div className={`rb-modal-hero acc-${recipe.category}`}>{recipe.emoji}</div>
+      {recipe.steps?.length > 0 && (
+        <Button variant="primary" icon="chef-hat" block onClick={onCook}>
+          Start cooking
+        </Button>
+      )}
 
-        <div className="rb-modal-body">
-          <div className="rb-modal-cat">{catLabel(recipe.category)}</div>
-          <div className="rb-modal-title">{recipe.title}</div>
-          <div className="rb-modal-meta">
-            {recipe.time && <span>⏱ {recipe.time}</span>}
-            {recipe.serves && <span>👤 Serves {recipe.serves}</span>}
-            {recipe.difficulty && <span>⭐ {recipe.difficulty}</span>}
-            {(recipe.tags || []).map((t) => (
-              <span key={t}>🏷 {t}</span>
-            ))}
-          </div>
-
-          {recipe.steps?.length > 0 && (
-            <button className="rb-cook-start-btn" onClick={onCook}>
-              ▶ &nbsp;Start Cook Mode
-            </button>
+      <div className="fh-recipedetail__cols" style={{ marginTop: 'var(--sp-8)' }}>
+        <div>
+          <p className="fh-recipedetail__h">Ingredients</p>
+          {(recipe.ingredients || []).map((i, idx) =>
+            i.group ? (
+              <p key={idx} className="fh-recipedetail__group">
+                {i.group}
+              </p>
+            ) : (
+              <div key={idx} className="fh-recipedetail__ing">
+                <span>{i.name}</span>
+                {i.amount && <span>{i.amount}</span>}
+              </div>
+            )
           )}
-
-          <div className="rb-two-col">
-            <div>
-              <div className="rb-section-label">Ingredients</div>
-              <ul className="rb-ingredients-list">
-                {(recipe.ingredients || []).map((i, idx) =>
-                  i.group ? (
-                    <li key={idx} className="rb-ing-group">
-                      {i.group}
-                    </li>
-                  ) : (
-                    <li key={idx}>
-                      <span className="rb-ing-dot" />
-                      <span>
-                        {i.name}
-                        {i.amount ? (
-                          <>
-                            {' — '}
-                            <strong>{i.amount}</strong>
-                          </>
-                        ) : null}
-                      </span>
-                    </li>
-                  )
-                )}
-              </ul>
+        </div>
+        <div>
+          <p className="fh-recipedetail__h">Method</p>
+          {(recipe.steps || []).map((s, i) => (
+            <div key={i} className="fh-recipedetail__step">
+              <span className="fh-recipedetail__num">{i + 1}</span>
+              <span>{s}</span>
             </div>
-            <div>
-              <div className="rb-section-label">Method</div>
-              <ol className="rb-steps-list">
-                {(recipe.steps || []).map((s, i) => (
-                  <li key={i}>
-                    <span className="rb-step-num">{i + 1}</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-
-          {recipe.notes && (
-            <div className="rb-notes-box">
-              <strong>Notes &amp; Tips</strong>
-              {recipe.notes}
-            </div>
-          )}
-
-          {canDelete && (
-            <button className="rb-delete-btn" onClick={onDelete}>
-              Delete this recipe
-            </button>
-          )}
+          ))}
         </div>
       </div>
-    </div>
+
+      {recipe.notes && (
+        <div className="fh-recipedetail__notes">
+          <strong>Notes and tips</strong>
+          {recipe.notes}
+        </div>
+      )}
+
+      {canDelete && (
+        <Button variant="ghost" icon="trash-2" style={{ marginTop: 'var(--sp-7)', color: 'var(--danger)' }} onClick={onDelete}>
+          Delete this recipe
+        </Button>
+      )}
+    </Sheet>
   )
 }

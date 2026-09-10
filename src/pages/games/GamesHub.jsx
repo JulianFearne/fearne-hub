@@ -2,11 +2,17 @@
 // Landing page for the games section. New games slot in by adding an entry to
 // GAMES below and a route. `live: false` renders a "coming soon" card so the
 // roadmap is visible without needing a route yet.
+//
+// The list is sorted and grouped alphabetically at render time (source order
+// above doesn't matter), with a search box and an A-Z index rail down the
+// side, contacts-app style, for jumping straight to a letter.
 
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card, { CardTitle, CardMeta } from '../../components/ds/Card.jsx';
 import Icon from '../../components/ds/Icon.jsx';
 import Badge from '../../components/ds/Badge.jsx';
+import SearchField from '../../components/ds/SearchField.jsx';
 
 const GAMES = [
   {
@@ -137,6 +143,17 @@ const GAMES = [
   },
 ];
 
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+function normalize(s) {
+  return s.toLowerCase();
+}
+
+function groupLetter(title) {
+  const ch = title[0].toUpperCase();
+  return ch >= 'A' && ch <= 'Z' ? ch : '#';
+}
+
 function GameCard({ game }) {
   return (
     <Card as={game.live ? Link : 'div'} to={game.live ? game.to : undefined} tile>
@@ -158,17 +175,144 @@ function GameCard({ game }) {
 }
 
 export default function GamesHub() {
+  const [query, setQuery] = useState('');
+  const trimmed = query.trim();
+
+  const sortedGames = useMemo(
+    () => [...GAMES].sort((a, b) => a.title.localeCompare(b.title)),
+    [],
+  );
+
+  const filteredGames = useMemo(() => {
+    if (!trimmed) return sortedGames;
+    const q = normalize(trimmed);
+    return sortedGames.filter(
+      (g) =>
+        normalize(g.title).includes(q) ||
+        normalize(g.blurb).includes(q) ||
+        g.tags.some((t) => normalize(t).includes(q)),
+    );
+  }, [sortedGames, trimmed]);
+
+  const groups = useMemo(() => {
+    const map = new Map();
+    for (const g of filteredGames) {
+      const letter = groupLetter(g.title);
+      if (!map.has(letter)) map.set(letter, []);
+      map.get(letter).push(g);
+    }
+    return map;
+  }, [filteredGames]);
+
+  const showIndex = !trimmed;
+
+  const railRef = useRef(null);
+  const draggingRef = useRef(false);
+  const lastLetterRef = useRef(null);
+  const [activeLetter, setActiveLetter] = useState(null);
+
+  function jumpTo(letter) {
+    let target = letter;
+    if (!groups.has(target)) {
+      const idx = ALPHABET.indexOf(letter);
+      let found = null;
+      for (let i = idx; i < ALPHABET.length && found === null; i++) {
+        if (groups.has(ALPHABET[i])) found = ALPHABET[i];
+      }
+      if (found === null) {
+        for (let i = idx; i >= 0 && found === null; i--) {
+          if (groups.has(ALPHABET[i])) found = ALPHABET[i];
+        }
+      }
+      target = found;
+    }
+    if (!target) return;
+    document.getElementById(`fh-games-letter-${target}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function letterFromPointer(clientY) {
+    const rail = railRef.current;
+    if (!rail) return null;
+    const rect = rail.getBoundingClientRect();
+    const ratio = (clientY - rect.top) / rect.height;
+    const clamped = Math.min(Math.max(ratio, 0), 0.999);
+    return ALPHABET[Math.floor(clamped * ALPHABET.length)];
+  }
+
+  function handlePointerMove(e) {
+    if (!draggingRef.current) return;
+    const letter = letterFromPointer(e.clientY);
+    if (!letter || letter === lastLetterRef.current) return;
+    lastLetterRef.current = letter;
+    setActiveLetter(letter);
+    jumpTo(letter);
+    if (navigator.vibrate) navigator.vibrate(5);
+  }
+
+  function handlePointerDown(e) {
+    draggingRef.current = true;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    handlePointerMove(e);
+  }
+
+  function endDrag() {
+    draggingRef.current = false;
+    lastLetterRef.current = null;
+    setActiveLetter(null);
+  }
+
   return (
-    <div>
-      <p className="fh-home__sub" style={{ marginBottom: 'var(--sp-7)' }}>
+    <div className="fh-games">
+      <p className="fh-home__sub" style={{ marginBottom: 'var(--sp-6)' }}>
         Pick something to play. The offline ones work in the car with no signal.
       </p>
 
-      <div className="fh-recipes__grid">
-        {GAMES.map((g) => (
-          <GameCard key={g.key} game={g} />
-        ))}
+      <div className="fh-games__search">
+        <SearchField value={query} onChange={setQuery} placeholder="Search games" />
       </div>
+
+      {filteredGames.length === 0 ? (
+        <p className="fh-games__empty">No games match "{trimmed}".</p>
+      ) : (
+        <div className="fh-games__list">
+          {[...groups.entries()].map(([letter, games]) => (
+            <section key={letter} id={`fh-games-letter-${letter}`} className="fh-games__group">
+              <h2 className="fh-games__group-title">{letter}</h2>
+              <div className="fh-recipes__grid">
+                {games.map((g) => (
+                  <GameCard key={g.key} game={g} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {showIndex && (
+        <>
+          <div
+            ref={railRef}
+            className="fh-games__index"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+          >
+            {ALPHABET.map((letter) => (
+              <button
+                key={letter}
+                type="button"
+                tabIndex={-1}
+                className={`fh-games__index-letter ${groups.has(letter) ? 'has-games' : ''} ${activeLetter === letter ? 'active' : ''}`}
+                onClick={() => jumpTo(letter)}
+              >
+                {letter}
+              </button>
+            ))}
+          </div>
+          {activeLetter && <div className="fh-games__index-bubble">{activeLetter}</div>}
+        </>
+      )}
     </div>
   );
 }

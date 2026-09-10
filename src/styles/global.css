@@ -13,6 +13,7 @@
 @import './features/hub.css';
 @import './features/auth.css';
 @import './features/recipes.css';
+@import './features/games.css';
 @import './features/planner.css';
 @import './features/shopping.css';
 @import './features/chores.css';

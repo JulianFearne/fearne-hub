@@ -1,0 +1,80 @@
+/* Games hub: search box, alphabetical grouping and the A-Z index rail.
+   Scoped under .fh-games so it can't leak into other feature CSS. */
+
+/* The index rail clamps to a fixed 4px from the left edge once the viewport
+   is too narrow to fit it beside the centred content (see .fh-games__index
+   below) — below that width the rail would sit under the page's own left
+   gutter, so give the content extra breathing room to clear it. */
+@media (max-width: 800px) {
+  .fh-games{padding-left:28px}
+}
+
+.fh-games__search{margin-bottom:var(--sp-7)}
+
+.fh-games__empty{font:var(--type-body);color:var(--ink-3);padding:var(--sp-8) 0;text-align:center}
+
+.fh-games__list{display:flex;flex-direction:column;gap:var(--sp-7)}
+
+.fh-games__group{scroll-margin-top:calc(var(--header-h) + var(--sp-5))}
+
+.fh-games__group-title{
+  position:sticky;
+  top:var(--header-h);
+  z-index:20;
+  margin:0 0 var(--sp-4);
+  padding:var(--sp-2) 0;
+  font:var(--fw-semibold) var(--fs-meta)/1.2 var(--font-text);
+  color:var(--ink-3);
+  background:var(--surface-page);
+}
+
+/* A-Z index rail, fixed to the left edge of the viewport (or just left of
+   the centred content on wide screens), spanning between the sticky header
+   and the bottom tab bar. touch-action:none stops the browser's own scroll
+   gesture from fighting the drag-to-jump handling in GamesHub.jsx. */
+.fh-games__index{
+  position:fixed;
+  left:max(4px, calc(50vw - (var(--content-max) / 2) - 32px));
+  top:calc(var(--header-h) + var(--sp-6));
+  bottom:calc(var(--bar-h) + env(safe-area-inset-bottom) + var(--sp-6));
+  z-index:30;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  padding:var(--sp-3) var(--sp-2);
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.fh-games__index-letter{
+  border:0;
+  background:transparent;
+  padding:0;
+  width:16px;
+  font:var(--fw-semibold) 9px/1.3 var(--font-text);
+  color:var(--ink-faint);
+  cursor:pointer;
+}
+.fh-games__index-letter.has-games{color:var(--ink-3)}
+.fh-games__index-letter.active{color:var(--primary);transform:scale(1.3)}
+
+.fh-games__index-bubble{
+  position:fixed;
+  top:50%;
+  left:max(4px, calc(50vw - (var(--content-max) / 2) - 32px));
+  transform:translate(28px, -50%);
+  z-index:31;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:var(--primary);
+  color:var(--ink-on-primary);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font:var(--fw-semibold) 24px/1 var(--font-display);
+  box-shadow:var(--shadow-2);
+  pointer-events:none;
+}

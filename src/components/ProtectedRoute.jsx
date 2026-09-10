@@ -5,7 +5,7 @@ export default function ProtectedRoute({ children, requireRole }) {
   const { session, loading, profile, profileLoading, isApproved, role } = useAuth()
 
   if (loading || (session && profileLoading && !profile)) {
-    return <div className="main-content">Loading…</div>
+    return <p className="fh-loading">Loading…</p>
   }
 
   if (!session) {

@@ -1,6 +1,9 @@
-import { Routes, Route } from 'react-router-dom'
-import Nav from './components/Nav.jsx'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import HubHeader from './components/ds/HubHeader.jsx'
+import TabBar from './components/ds/TabBar.jsx'
+import IconButton from './components/ds/IconButton.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
@@ -20,139 +23,203 @@ import WorkoutHub from './pages/WorkoutHub.jsx'
 import WorkoutTracker from './pages/WorkoutTracker.jsx'
 import WorkoutHistory from './pages/WorkoutHistory.jsx'
 
-export default function App() {
+const TAB_ITEMS = [
+  { to: '/', label: 'Home', icon: 'house', end: true },
+  { to: '/recipes', label: 'Cook', icon: 'soup' },
+  { to: '/shopping', label: 'Shop', icon: 'shopping-basket' },
+  { to: '/workouts', label: 'Move', icon: 'dumbbell' },
+  { to: '/games', label: 'Play', icon: 'gamepad-2' },
+]
+
+// Header per route. `tab: true` marks a tab-bar destination (no back
+// button); everything else gets a back arrow to the path given.
+const ROUTE_HEADERS = {
+  '/': { wordmark: true, tab: true },
+  '/recipes': { title: 'Recipes', tab: true },
+  '/import': { title: 'Import recipes', back: '/recipes' },
+  '/planner': { title: "This week's meals", back: '/' },
+  '/shopping': { title: 'Shopping lists', tab: true },
+  '/games': { title: 'Games', tab: true },
+  '/games/connect-four': { title: 'Connect Four', back: '/games' },
+  '/games/hangman': { title: 'Hangman', back: '/games' },
+  '/games/sudoku': { title: 'Sudoku', back: '/games' },
+  '/games/freecell': { title: 'Freecell', back: '/games' },
+  '/games/go-fish': { title: 'Go Fish', back: '/games' },
+  '/admin': { title: 'Family admin', back: '/' },
+  '/workouts': { title: 'Workouts', tab: true },
+  '/workouts/tracker': { title: 'Workout', back: '/workouts' },
+  '/workouts/history': { title: 'History', back: '/workouts' },
+}
+
+function HubShell({ children }) {
+  const { isAdmin, signOut } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const meta = ROUTE_HEADERS[location.pathname] ?? { title: 'Fearne Hub', back: '/' }
+
+  const actions =
+    location.pathname === '/' ? (
+      <>
+        {isAdmin && <IconButton icon="shield" label="Admin" onClick={() => navigate('/admin')} />}
+        <IconButton icon="log-out" label="Sign out" onClick={() => signOut()} />
+      </>
+    ) : null
+
   return (
-    <div className="app-shell">
-      <Nav />
-      <div className="main-content">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/pending" element={<PendingApproval />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/recipes"
-            element={
-              <ProtectedRoute>
-                <Recipes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/import"
-            element={
-              <ProtectedRoute>
-                <ImportRecipes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/planner"
-            element={
-              <ProtectedRoute>
-                <MealPlanner />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shopping"
-            element={
-              <ProtectedRoute>
-                <ShoppingLists />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games"
-            element={
-              <ProtectedRoute>
-                <GamesHub />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/connect-four"
-            element={
-              <ProtectedRoute>
-                <ConnectFour />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/hangman"
-            element={
-              <ProtectedRoute>
-                <Hangman />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/sudoku"
-            element={
-              <ProtectedRoute>
-                <Sudoku />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/freecell"
-            element={
-              <ProtectedRoute>
-                <Freecell />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/games/go-fish"
-            element={
-              <ProtectedRoute>
-                <GoFish />
-              </ProtectedRoute>
-            }
-          />
-          {/* Not behind ProtectedRoute on purpose: this game is playable by
-              anyone with the code, hub account or not (see AnimalPlaceThing.jsx). */}
-          <Route path="/games/animal-place-thing" element={<AnimalPlaceThing />} />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requireRole="admin">
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/workouts"
-            element={
-              <ProtectedRoute>
-                <WorkoutHub />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/workouts/tracker"
-            element={
-              <ProtectedRoute>
-                <WorkoutTracker />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/workouts/history"
-            element={
-              <ProtectedRoute>
-                <WorkoutHistory />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </div>
+    <div className="fh-app">
+      <HubHeader
+        wordmark={meta.wordmark}
+        title={meta.title}
+        onBack={meta.back ? () => navigate(meta.back) : null}
+        actions={actions}
+      />
+      <div className="fh-app__body">{children}</div>
+      <TabBar items={TAB_ITEMS} />
     </div>
+  )
+}
+
+export default function App() {
+  const location = useLocation()
+
+  // The game is playable by guests too (no account needed), so it gets no
+  // hub chrome at all — see the route below.
+  if (location.pathname === '/games/animal-place-thing') {
+    return <AnimalPlaceThing />
+  }
+
+  if (location.pathname === '/login') {
+    return <Login />
+  }
+
+  if (location.pathname === '/pending') {
+    return <PendingApproval />
+  }
+
+  return (
+    <HubShell>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recipes"
+          element={
+            <ProtectedRoute>
+              <Recipes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/import"
+          element={
+            <ProtectedRoute>
+              <ImportRecipes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/planner"
+          element={
+            <ProtectedRoute>
+              <MealPlanner />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/shopping"
+          element={
+            <ProtectedRoute>
+              <ShoppingLists />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games"
+          element={
+            <ProtectedRoute>
+              <GamesHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/connect-four"
+          element={
+            <ProtectedRoute>
+              <ConnectFour />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/hangman"
+          element={
+            <ProtectedRoute>
+              <Hangman />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/sudoku"
+          element={
+            <ProtectedRoute>
+              <Sudoku />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/freecell"
+          element={
+            <ProtectedRoute>
+              <Freecell />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/go-fish"
+          element={
+            <ProtectedRoute>
+              <GoFish />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireRole="admin">
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workouts"
+          element={
+            <ProtectedRoute>
+              <WorkoutHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workouts/tracker"
+          element={
+            <ProtectedRoute>
+              <WorkoutTracker />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workouts/history"
+          element={
+            <ProtectedRoute>
+              <WorkoutHistory />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </HubShell>
   )
 }

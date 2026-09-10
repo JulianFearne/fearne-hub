@@ -1,0 +1,162 @@
+/* ---- Base ramps ---------------------------------------------------- */
+:root {
+  /* plum — primary */
+  --plum-900: #3b1526; --plum-800: #58203a; --plum-700: #7a2e4e; --plum-600: #95436a;
+  --plum-300: #d89bb6; --plum-200: #ebc7d6; --plum-100: #f5e3eb; --plum-050: #fbf2f6;
+  /* marigold — secondary */
+  --marigold-900: #3a2410; --marigold-800: #6b4310; --marigold-700: #8a5a12; --marigold-600: #b07b1e;
+  --marigold-500: #f0a32b; --marigold-300: #f7ce86; --marigold-100: #fbebd1; --marigold-050: #fdf6e9;
+  /* warm neutrals */
+  --clay-950: #1a1518; --clay-900: #241e22; --clay-800: #2c2529; --clay-700: #3b3237;
+  --clay-500: #6e6570; --clay-400: #8a7f87; --clay-300: #c9bdb4; --clay-200: #e7ddd3;
+  --clay-100: #ede7df; --clay-050: #f6f1eb; --clay-000: #fcf8f3;
+  --white: #ffffff;
+  /* semantics */
+  --green-700: #2a5540; --green-600: #33604a; --green-100: #dfebe2;
+  --blue-700: #274f77; --blue-600: #2f5d8c; --blue-100: #dde7f2;
+  --red-700: #8f231c; --red-600: #b02a21; --red-100: #f7ded9;
+}
+
+/* ---- Semantic roles: light (default) -------------------------------- */
+:root {
+  --surface-canvas: var(--clay-100);
+  --surface-page: var(--clay-000);
+  --surface-card: var(--white);
+  --surface-sunken: var(--clay-050);
+  --surface-inverse: var(--clay-900);
+  --surface-feature: var(--plum-700); /* full-colour feature panels */
+  --surface-scrim: rgba(36, 30, 34, .46);
+  --surface-veil: rgba(252, 248, 243, .86); /* blurred bars */
+
+  --ink-1: var(--clay-900); /* titles, primary text */
+  --ink-2: #574f57; /* secondary text */
+  --ink-3: var(--clay-500); /* muted / meta (AA at 15px) */
+  --ink-faint: var(--clay-400); /* decorative only, never body */
+  --ink-on-feature: #fdf3e7;
+  --ink-on-primary: var(--white);
+  --ink-on-secondary: var(--marigold-900);
+  --ink-inverse: var(--clay-000);
+
+  --primary: var(--plum-700);
+  --primary-hover: var(--plum-600);
+  --primary-press: var(--plum-800);
+  --primary-soft: var(--plum-100);
+  --primary-soft-ink: var(--plum-800);
+
+  --secondary: var(--marigold-500);
+  --secondary-hover: #f7b348;
+  --secondary-press: var(--marigold-600);
+  --secondary-soft: var(--marigold-100);
+  --secondary-soft-ink: var(--marigold-700);
+
+  --success: var(--green-600); --success-soft: var(--green-100); --success-soft-ink: var(--green-700);
+  --warning: var(--marigold-700); --warning-soft: var(--marigold-100); --warning-soft-ink: var(--marigold-800);
+  --danger: var(--red-600); --danger-hover: #c2372d; --danger-soft: var(--red-100); --danger-soft-ink: var(--red-700);
+  --info: var(--blue-600); --info-soft: var(--blue-100); --info-soft-ink: var(--blue-700);
+
+  --border: var(--clay-200);
+  --border-strong: var(--clay-300);
+  --border-on-feature: rgba(253, 243, 231, .22);
+  --danger-on-feature: #f4a9a2; /* danger ink on a plum feature panel */
+  --focus-ring: var(--plum-700);
+  --focus-ring-offset: var(--surface-page);
+
+  /* member colours — one per household member, all AA with white ink */
+  --member-1: var(--plum-700); --member-2: var(--blue-600); --member-3: var(--green-600);
+  --member-4: var(--marigold-700); --member-5: #6a4a8f; --member-6: #0f6c6c;
+}
+
+/* ---- Semantic roles: dark ------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-canvas: #120e10;
+    --surface-page: var(--clay-950);
+    --surface-card: var(--clay-800);
+    --surface-sunken: #211b1f;
+    --surface-inverse: var(--clay-000);
+    --surface-feature: var(--plum-800);
+    --surface-scrim: rgba(9, 6, 8, .62);
+    --surface-veil: rgba(26, 21, 24, .84);
+
+    --ink-1: #f7f0ea; --ink-2: #cdc2c7; --ink-3: #a2969d; --ink-faint: #7c717a;
+    --ink-on-feature: #fdf3e7; --ink-on-primary: #2a0f1c; --ink-inverse: var(--clay-900);
+
+    --primary: #eb9dbb; --primary-hover: #f3b4cb; --primary-press: #d8809f;
+    --primary-soft: #3e1728; --primary-soft-ink: #f3b4cb;
+
+    --secondary: var(--marigold-500); --secondary-hover: #f7c066; --secondary-press: var(--marigold-600);
+    --secondary-soft: #3a2610; --secondary-soft-ink: var(--marigold-300);
+
+    --success: #7fc49f; --success-soft: #1b3a2b; --success-soft-ink: #9fd7b6;
+    --warning: var(--marigold-300); --warning-soft: #3a2610; --warning-soft-ink: var(--marigold-300);
+    --danger: #f2938a; --danger-hover: #f7a9a1; --danger-soft: #431814; --danger-soft-ink: #f2938a;
+    --info: #8fbae4; --info-soft: #16293c; --info-soft-ink: #a9cbec;
+
+    --border: #3b3237; --border-strong: #4e434a;
+    --focus-ring: #f3b4cb; --focus-ring-offset: var(--surface-page);
+
+    --member-1: #eb9dbb; --member-2: #8fbae4; --member-3: #7fc49f;
+    --member-4: var(--marigold-300); --member-5: #bfa3de; --member-6: #78c6c6;
+  }
+  /* forced light while the OS prefers dark */
+  [data-theme="light"] {
+    --surface-canvas: var(--clay-100);
+    --surface-page: var(--clay-000);
+    --surface-card: var(--white);
+    --surface-sunken: var(--clay-050);
+    --surface-inverse: var(--clay-900);
+    --surface-feature: var(--plum-700);
+    --surface-scrim: rgba(36, 30, 34, .46);
+    --surface-veil: rgba(252, 248, 243, .86);
+
+    --ink-1: var(--clay-900);
+    --ink-2: #574f57;
+    --ink-3: var(--clay-500);
+    --ink-faint: var(--clay-400);
+    --ink-on-feature: #fdf3e7;
+    --ink-on-primary: var(--white);
+    --ink-on-secondary: var(--marigold-900);
+    --ink-inverse: var(--clay-000);
+
+    --primary: var(--plum-700);
+    --primary-hover: var(--plum-600);
+    --primary-press: var(--plum-800);
+    --primary-soft: var(--plum-100);
+    --primary-soft-ink: var(--plum-800);
+
+    --secondary: var(--marigold-500);
+    --secondary-hover: #f7b348;
+    --secondary-press: var(--marigold-600);
+    --secondary-soft: var(--marigold-100);
+    --secondary-soft-ink: var(--marigold-700);
+
+    --success: var(--green-600); --success-soft: var(--green-100); --success-soft-ink: var(--green-700);
+    --warning: var(--marigold-700); --warning-soft: var(--marigold-100); --warning-soft-ink: var(--marigold-800);
+    --danger: var(--red-600); --danger-hover: #c2372d; --danger-soft: var(--red-100); --danger-soft-ink: var(--red-700);
+    --info: var(--blue-600); --info-soft: var(--blue-100); --info-soft-ink: var(--blue-700);
+
+    --border: var(--clay-200);
+    --border-strong: var(--clay-300);
+    --border-on-feature: rgba(253, 243, 231, .22);
+    --danger-on-feature: #f4a9a2;
+    --focus-ring: var(--plum-700);
+    --focus-ring-offset: var(--surface-page);
+
+    --member-1: var(--plum-700); --member-2: var(--blue-600); --member-3: var(--green-600);
+    --member-4: var(--marigold-700); --member-5: #6a4a8f; --member-6: #0f6c6c;
+  }
+}
+/* Explicit override: [data-theme="dark"] on <html> forces dark. */
+[data-theme="dark"] {
+  --surface-canvas: #120e10; --surface-page: #1a1518; --surface-card: #2c2529; --surface-sunken: #211b1f;
+  --surface-inverse: #fcf8f3; --surface-feature: #58203a; --surface-scrim: rgba(9, 6, 8, .62); --surface-veil: rgba(26, 21, 24, .84);
+  --ink-1: #f7f0ea; --ink-2: #cdc2c7; --ink-3: #a2969d; --ink-faint: #7c717a; --ink-on-primary: #2a0f1c; --ink-inverse: #241e22;
+  --primary: #eb9dbb; --primary-hover: #f3b4cb; --primary-press: #d8809f; --primary-soft: #3e1728; --primary-soft-ink: #f3b4cb;
+  --secondary: #f0a32b; --secondary-hover: #f7c066; --secondary-press: #b07b1e; --secondary-soft: #3a2610; --secondary-soft-ink: #f7ce86;
+  --success: #7fc49f; --success-soft: #1b3a2b; --success-soft-ink: #9fd7b6;
+  --warning: #f7ce86; --warning-soft: #3a2610; --warning-soft-ink: #f7ce86;
+  --danger: #f2938a; --danger-hover: #f7a9a1; --danger-soft: #431814; --danger-soft-ink: #f2938a;
+  --info: #8fbae4; --info-soft: #16293c; --info-soft-ink: #a9cbec;
+  --border: #3b3237; --border-strong: #4e434a; --focus-ring: #f3b4cb;
+  --member-1: #eb9dbb; --member-2: #8fbae4; --member-3: #7fc49f; --member-4: #f7ce86; --member-5: #bfa3de; --member-6: #78c6c6;
+}

@@ -1,0 +1,16 @@
+/* Global styles are tokens + reset ONLY. Feature CSS lives under a
+   per-feature root class (.fh-recipes, .fh-planner, …). */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--surface-page); color: var(--ink-1); font: var(--type-body); letter-spacing: var(--ls-body); -webkit-font-smoothing: antialiased; text-wrap: pretty; }
+h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
+h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: var(--ls-title); line-height: var(--lh-snug); }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+img, svg, video { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--primary); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--primary-hover); }
+:focus-visible { outline: var(--bw-focus) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

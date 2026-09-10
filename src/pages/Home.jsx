@@ -9,7 +9,7 @@ const shortcuts = [
   { to: '/planner', title: "This week's meals", blurb: '7 days, planned out', icon: 'calendar-days' },
   { to: '/shopping', title: 'Shopping lists', blurb: 'Tick off, or combine a shop', icon: 'shopping-basket' },
   { to: '/workouts', title: 'Workouts', blurb: 'Log a session, see your progress', icon: 'dumbbell' },
-  { to: '/games', title: 'Games', blurb: 'Animal Place Thing, and more to come', icon: 'gamepad-2' },
+  { to: '/games', title: 'Games', blurb: 'Connect Four, Sudoku, Hangman, and more', icon: 'gamepad-2' },
 ]
 
 export default function Home() {

@@ -1,0 +1,282 @@
+/* src/pages/games/go-fish/go-fish.css
+   Scoped under .go-fish — never leaks into the hub shell. */
+
+.go-fish {
+  --gf2-forest: #22402f;
+  --gf2-forest-dark: #182e21;
+  --gf2-cream: #f5f0e1;
+  --gf2-card: #fdfbf5;
+  --gf2-gold: #d6a419;
+  --gf2-terracotta: #c85c3a;
+  --gf2-ink: #26231d;
+  --gf2-line: rgba(38, 35, 29, 0.15);
+  --gf2-red: #b3261e;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.gf2-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.gf2-back {
+  text-decoration: none;
+  color: var(--gf2-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.gf2-title {
+  font-family: 'Fraunces', Georgia, serif;
+  margin: 0;
+}
+
+.gf2-panel {
+  background: var(--gf2-card);
+  border: 1px solid var(--gf2-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 3px 10px rgba(38, 35, 29, 0.12);
+  display: grid;
+  gap: 1rem;
+}
+
+.gf2-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gf2-ink);
+}
+.gf2-input,
+.gf2-code-input {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--gf2-line);
+  font-size: 0.95rem;
+}
+.gf2-code-input {
+  font-family: 'Menlo', 'Consolas', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  flex: 1;
+}
+
+.gf2-divider {
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.gf2-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gf2-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  border: 1px solid var(--gf2-forest);
+  background: #fff;
+  color: var(--gf2-forest);
+  cursor: pointer;
+}
+.gf2-btn.primary {
+  background: var(--gf2-forest);
+  color: var(--gf2-cream);
+}
+.gf2-btn.primary:hover {
+  background: var(--gf2-forest-dark);
+}
+.gf2-btn.ghost {
+  border-color: var(--gf2-line);
+  color: var(--gf2-ink);
+}
+.gf2-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.gf2-error {
+  color: var(--gf2-red);
+  font-size: 0.85rem;
+}
+.gf2-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.gf2-waiting-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.1rem;
+  margin: 0;
+  text-align: center;
+}
+.gf2-code-display {
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+}
+.gf2-code-label {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.gf2-code-value {
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--gf2-forest);
+}
+
+.gf2-players {
+  display: grid;
+  gap: 0.4rem;
+}
+.gf2-player-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(34, 64, 47, 0.08);
+  font-size: 0.9rem;
+}
+.gf2-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gf2-gold);
+}
+
+.gf2-turn-banner {
+  text-align: center;
+  font-weight: 600;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(38, 35, 29, 0.05);
+}
+.gf2-turn-banner.is-mine {
+  background: rgba(214, 164, 25, 0.22);
+  color: var(--gf2-forest-dark);
+}
+
+.gf2-opponents {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+.gf2-opponent {
+  border: 1px solid var(--gf2-line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  cursor: pointer;
+}
+.gf2-opponent:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.gf2-opponent.active-turn {
+  border-color: var(--gf2-gold);
+}
+.gf2-opponent-name {
+  font-weight: 700;
+  color: var(--gf2-ink);
+}
+.gf2-opponent-count,
+.gf2-opponent-books {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.gf2-pond {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.gf2-log {
+  font-size: 0.85rem;
+  background: rgba(38, 35, 29, 0.04);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+}
+
+.gf2-my-books {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gf2-forest-dark);
+}
+
+.gf2-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.gf2-card {
+  border: 1px solid var(--gf2-line);
+  background: #fff;
+  border-radius: 6px;
+  min-width: 2.6rem;
+  height: 3.6rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(38, 35, 29, 0.15);
+}
+.gf2-card.red {
+  color: var(--gf2-red);
+}
+.gf2-card.black {
+  color: var(--gf2-ink);
+}
+.gf2-card.selected {
+  outline: 3px solid var(--gf2-gold);
+  outline-offset: -1px;
+}
+.gf2-card:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.gf2-finished {
+  display: grid;
+  gap: 0.8rem;
+  text-align: center;
+}
+.gf2-finished-title {
+  font-family: 'Fraunces', Georgia, serif;
+  margin: 0;
+}
+.gf2-finished-sub {
+  margin: 0;
+  font-weight: 600;
+}
+.gf2-scoreboard {
+  display: grid;
+  gap: 0.35rem;
+}
+.gf2-score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0.7rem;
+  background: rgba(34, 64, 47, 0.06);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.gf2-score-pts {
+  font-weight: 700;
+  color: var(--gf2-forest-dark);
+}
+.gf2-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+}

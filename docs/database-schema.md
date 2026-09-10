@@ -259,6 +259,8 @@ consequences for the schema:
 | `used_letters` | text[] | letters already played this game |
 | `round` | int | current round number, starts at 0 |
 | `deadline` | timestamptz | nullable; round end time, drives the countdown |
+| `category_set` | text | `'classic'` \| `'world'` \| `'bigKids'` — selects which named list from `CATEGORY_SETS` in `scoring.js` this session scores against; defaults to `'classic'` |
+| `round_seconds` | int | round length in seconds, host-selectable (60/90/120); defaults to 90 |
 
 ### `game_players`
 
@@ -279,7 +281,7 @@ A player leaving deletes their row (`match({ session_id, user_id })`).
 | `session_id` | text | references `game_sessions.id` |
 | `round` | int | |
 | `user_id` | uuid | references `auth.users.id` |
-| `answers` | jsonb | `{ Object, Name, Animal, Place, Food }` (see `CATEGORIES` in `scoring.js`) |
+| `answers` | jsonb | keyed by category name, e.g. `{ Object, Name, Animal, Place, Food }` for the classic set — the actual keys depend on the session's `category_set` (see `CATEGORY_SETS` in `scoring.js`) |
 
 Unique constraint on `(session_id, round, user_id)` — one submission per
 player per round, upserted on submit or on timer expiry.
@@ -294,3 +296,26 @@ insert/update/delete only rows that are theirs — `host_id = auth.uid()` on
 joining a specific game; there's otherwise no per-game access control (any
 authenticated user can read any session's rows if they know or guess the
 code).
+
+## Games: `c4_sessions`, `c4_players`, `c4_moves`
+
+Backing store for online Connect Four (`src/pages/games/connect-four/`).
+Unlike AnimalPlaceThing, this one is gated behind hub login/approval like
+every other feature (no anonymous-guest exception) — RLS uses `is_approved()`
+throughout. The board and winner are never stored; they're derived from the
+move rows by `deriveState()` in `engine.js`. Full column-by-column definition,
+RLS policies and realtime setup live in
+[`_reference/connect-four-schema.sql`](../_reference/connect-four-schema.sql)
+— run that file to create these tables.
+
+## Games: `gf_sessions`, `gf_players`, `gf_events`
+
+Backing store for online Go Fish (`src/pages/games/go-fish/`). Same
+`is_approved()`-gated pattern as Connect Four. Hands, the pond, whose turn it
+is and completed books are never stored — they're derived by
+`deriveState()` in `engine.js` from `gf_sessions.deck_seed` (feeds the shared
+`mulberry32` seeded shuffle in `src/pages/games/lib/deck.js`) plus the
+append-only `gf_events` log of "who asked whom for what rank" rows. Full
+definition, RLS policies and realtime setup live in
+[`_reference/go-fish-schema.sql`](../_reference/go-fish-schema.sql) — run
+that file to create these tables.

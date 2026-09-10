@@ -16,9 +16,37 @@
 // No external dependencies (keeps the hub's no-new-npm constraint).
 // ============================================================================
 
-export const RULES_VERSION = 1;
+// Bumped from 1: sessions now carry a category_set (and round_seconds), so a
+// session created on the old, single-category-list bundle must not be joined
+// by this one (and vice versa) — see the rules_version mismatch check in
+// AnimalPlaceThing.jsx.
+export const RULES_VERSION = 2;
 
-export const CATEGORIES = ["Object", "Name", "Animal", "Place", "Food"];
+// Named, additive variants on the base game — same rules, same session/
+// player/submission structure, just a different list of categories per
+// round. Add a new entry here to add a new themed variant; nothing else
+// needs to change shape.
+export const CATEGORY_SETS = {
+  classic: { label: "Classic", categories: ["Object", "Name", "Animal", "Place", "Food"] },
+  world: {
+    label: "Around the World",
+    categories: ["Country", "City", "Animal", "Food", "Language"],
+  },
+  bigKids: {
+    label: "Big Kids",
+    categories: ["Job", "Film or TV show", "Animal", "Place", "Brand"],
+  },
+};
+
+export const DEFAULT_CATEGORY_SET = "classic";
+
+export function categoriesFor(categorySet) {
+  return (CATEGORY_SETS[categorySet] || CATEGORY_SETS[DEFAULT_CATEGORY_SET]).categories;
+}
+
+// Kept as the classic list for anything that doesn't (yet) care about
+// variants — every session created before this change is a classic session.
+export const CATEGORIES = CATEGORY_SETS[DEFAULT_CATEGORY_SET].categories;
 
 export const SCORE_UNIQUE = 10; // valid answer nobody else gave
 export const SCORE_SHARED = 5; // valid answer at least one other player gave
@@ -116,13 +144,13 @@ function pointsForStatus(status) {
 //
 // Duplicate detection considers ONLY valid answers, so a wrong-letter entry
 // never accidentally marks a correct one as shared.
-export function scoreRound(letter, submissionsByUser) {
+export function scoreRound(letter, submissionsByUser, categories = CATEGORIES) {
   const userIds = Object.keys(submissionsByUser || {});
 
   // Build per-category counts of valid, normalized answers.
   // dupKeys[cat] = Set of normalized values that appear 2+ times.
   const dupKeys = {};
-  for (const cat of CATEGORIES) {
+  for (const cat of categories) {
     const counts = new Map();
     for (const uid of userIds) {
       const raw = submissionsByUser[uid]?.answers?.[cat];
@@ -137,16 +165,16 @@ export function scoreRound(letter, submissionsByUser) {
 
   const byUser = {};
   for (const uid of userIds) {
-    const categories = {};
+    const categoryResults = {};
     let total = 0;
-    for (const cat of CATEGORIES) {
+    for (const cat of categories) {
       const raw = submissionsByUser[uid]?.answers?.[cat] ?? "";
       const status = statusFor(raw, letter, dupKeys[cat]);
       const points = pointsForStatus(status);
-      categories[cat] = { raw, status, points };
+      categoryResults[cat] = { raw, status, points };
       total += points;
     }
-    byUser[uid] = { total, categories };
+    byUser[uid] = { total, categories: categoryResults };
   }
 
   return { rulesVersion: RULES_VERSION, letter, byUser };
@@ -158,10 +186,10 @@ export function scoreRound(letter, submissionsByUser) {
 //
 // @param {Array<{letter: string, submissionsByUser: Object}>} rounds
 // @returns {Object<string, number>} userId → cumulative points
-export function totalScores(rounds) {
+export function totalScores(rounds, categories = CATEGORIES) {
   const totals = {};
   for (const { letter, submissionsByUser } of rounds || []) {
-    const { byUser } = scoreRound(letter, submissionsByUser);
+    const { byUser } = scoreRound(letter, submissionsByUser, categories);
     for (const [uid, r] of Object.entries(byUser)) {
       totals[uid] = (totals[uid] || 0) + r.total;
     }

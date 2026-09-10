@@ -1,0 +1,47 @@
+{
+  "animals": {
+    "label": "Animals",
+    "emoji": "🐾",
+    "words": [
+      "ELEPHANT", "GIRAFFE", "PENGUIN", "DOLPHIN", "KANGAROO", "OCTOPUS",
+      "CHEETAH", "FLAMINGO", "HEDGEHOG", "PLATYPUS", "OTTER", "TORTOISE",
+      "SQUIRREL", "PEACOCK", "WALRUS", "CHAMELEON", "ANTEATER", "GAZELLE"
+    ]
+  },
+  "places": {
+    "label": "Places",
+    "emoji": "🗺️",
+    "words": [
+      "MOUNTAIN", "HARBOUR", "VILLAGE", "DESERT", "RAINFOREST", "GLACIER",
+      "LIGHTHOUSE", "VALLEY", "WATERFALL", "ISLAND", "MEADOW", "CANYON",
+      "CASTLE", "ORCHARD", "HARBOUR", "PENINSULA", "PRAIRIE", "COASTLINE"
+    ]
+  },
+  "food": {
+    "label": "Food",
+    "emoji": "🍽️",
+    "words": [
+      "PANCAKE", "AVOCADO", "SPAGHETTI", "PINEAPPLE", "BISCUIT", "OMELETTE",
+      "SANDWICH", "BROCCOLI", "PORRIDGE", "CUSTARD", "PRETZEL", "LASAGNE",
+      "MUFFIN", "CASSEROLE", "CRUMPET", "AUBERGINE", "MERINGUE", "CHUTNEY"
+    ]
+  },
+  "science": {
+    "label": "Science",
+    "emoji": "🔬",
+    "words": [
+      "GRAVITY", "MAGNET", "OXYGEN", "VOLCANO", "ECLIPSE", "MOLECULE",
+      "GALAXY", "SKELETON", "BACTERIA", "ELECTRON", "GLACIER", "METEOR",
+      "CRYSTAL", "PENDULUM", "HABITAT", "NUTRIENT", "SATELLITE", "ENZYME"
+    ]
+  },
+  "sport": {
+    "label": "Sport",
+    "emoji": "⚽",
+    "words": [
+      "CRICKET", "REFEREE", "STADIUM", "MARATHON", "GYMNASTICS", "HOCKEY",
+      "TROPHY", "GOALKEEPER", "CYCLING", "WRESTLING", "ATHLETE", "RACKET",
+      "OLYMPICS", "SNOWBOARD", "PADDLE", "STRIKER", "WHISTLE", "HURDLE"
+    ]
+  }
+}

@@ -15,8 +15,10 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
-  CATEGORIES,
   RULES_VERSION,
+  CATEGORY_SETS,
+  DEFAULT_CATEGORY_SET,
+  categoriesFor,
   scoreRound,
   totalScores,
   shapeRounds,
@@ -40,7 +42,8 @@ const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 // Hard letters (framework P2 #15): excluded from the pool except in alphabet
 // mode, so younger kids aren't stumped by X/Q/Z.
 const HARD = new Set(["Q", "X", "Z"]);
-const ROUND_SECONDS = 90;
+const DEFAULT_ROUND_SECONDS = 90;
+const ROUND_SECONDS_OPTIONS = [60, 90, 120];
 
 const codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O/1/I
 const randCode = () =>
@@ -109,6 +112,8 @@ export default function AnimalPlaceThing() {
 
   const [endCondition, setEndCondition] = useState("manual");
   const [pointGoal, setPointGoal] = useState(50);
+  const [categorySet, setCategorySet] = useState(DEFAULT_CATEGORY_SET);
+  const [roundSeconds, setRoundSeconds] = useState(DEFAULT_ROUND_SECONDS);
 
   const answersRef = useRef({}); // framework P0 #2: timer reads live answers
   const timerRef = useRef(null);
@@ -117,6 +122,9 @@ export default function AnimalPlaceThing() {
 
   // Derived, never stored locally (framework P0 #4).
   const isHost = !!session && session.host_id === userId;
+  // Which category list this session plays with — additive per-session
+  // variant, defaults to classic for sessions with no category_set set.
+  const categories = categoriesFor(session?.category_set);
 
   useEffect(() => {
     answersRef.current = myAnswers;
@@ -197,16 +205,16 @@ export default function AnimalPlaceThing() {
   // ── Scoring (derived, never stored) ───────────────────────────────────────
   const usedLetters = session?.used_letters || [];
   const totals = useMemo(
-    () => totalScores(shapeRounds(submissions, usedLetters)),
-    [submissions, usedLetters]
+    () => totalScores(shapeRounds(submissions, usedLetters), categories),
+    [submissions, usedLetters, categories]
   );
   const roundResult = useMemo(() => {
     if (!session?.current_letter) return null;
     const roundSubs = submissions.filter((r) => r.round === session.round);
     const byUser = {};
     roundSubs.forEach((r) => (byUser[r.user_id] = { answers: r.answers || {} }));
-    return scoreRound(session.current_letter, byUser);
-  }, [submissions, session?.round, session?.current_letter]);
+    return scoreRound(session.current_letter, byUser, categories);
+  }, [submissions, session?.round, session?.current_letter, categories]);
 
   const sortedPlayers = useMemo(
     () => [...players].sort((a, b) => (totals[b.user_id] || 0) - (totals[a.user_id] || 0)),
@@ -244,6 +252,8 @@ export default function AnimalPlaceThing() {
         endCondition,
         pointGoal,
         rulesVersion: RULES_VERSION,
+        categorySet,
+        roundSeconds,
       });
       await upsertPlayer(code, uid, name);
       setCreateCode(code);
@@ -298,7 +308,9 @@ export default function AnimalPlaceThing() {
       current_letter: letter,
       used_letters: [...(session.used_letters || []), letter],
       round: (session.round || 0) + 1,
-      deadline: new Date(Date.now() + ROUND_SECONDS * 1000).toISOString(),
+      deadline: new Date(
+        Date.now() + (session.round_seconds || DEFAULT_ROUND_SECONDS) * 1000
+      ).toISOString(),
     });
   }
 
@@ -431,6 +443,26 @@ export default function AnimalPlaceThing() {
                   />
                 </label>
               )}
+              <label className="apt-field">
+                <span>Categories</span>
+                <select value={categorySet} onChange={(e) => setCategorySet(e.target.value)}>
+                  {Object.entries(CATEGORY_SETS).map(([key, set]) => (
+                    <option key={key} value={key}>
+                      {set.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="apt-field">
+                <span>Round length</span>
+                <select value={roundSeconds} onChange={(e) => setRoundSeconds(Number(e.target.value))}>
+                  {ROUND_SECONDS_OPTIONS.map((secs) => (
+                    <option key={secs} value={secs}>
+                      {secs}s
+                    </option>
+                  ))}
+                </select>
+              </label>
               {createError && <p className="apt-error">{createError}</p>}
               <button className="apt-btn apt-btn-primary" onClick={createSession} disabled={creating}>
                 {creating ? "Creating…" : "Create game"}
@@ -540,7 +572,7 @@ export default function AnimalPlaceThing() {
           </div>
 
           <div className="apt-answers">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <label key={cat} className="apt-answer-row">
                 <span className="apt-cat">{cat}</span>
                 <input
@@ -582,7 +614,7 @@ export default function AnimalPlaceThing() {
             <div className="apt-result-table">
               <div className="apt-result-head">
                 <span>Player</span>
-                {CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <span key={c}>{c}</span>
                 ))}
                 <span>+Pts</span>
@@ -595,7 +627,7 @@ export default function AnimalPlaceThing() {
                     className={"apt-result-row" + (p.user_id === userId ? " apt-me" : "")}
                   >
                     <span className="apt-rc-name">{p.display_name}</span>
-                    {CATEGORIES.map((cat) => {
+                    {categories.map((cat) => {
                       const cell = r?.categories?.[cat];
                       return (
                         <span key={cat} className={"apt-rc apt-rc-" + (cell?.status || "blank")}>
@@ -622,7 +654,7 @@ export default function AnimalPlaceThing() {
                       <span>{p.display_name}</span>
                       <span className="apt-rc-pts">+{r?.total || 0}</span>
                     </div>
-                    {CATEGORIES.map((cat) => {
+                    {categories.map((cat) => {
                       const cell = r?.categories?.[cat];
                       return (
                         <div key={cat} className="apt-rcard-row">

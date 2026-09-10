@@ -9,7 +9,12 @@ import Login from './pages/Login.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
 import Recipes from './pages/Recipes.jsx'
-import Games from './pages/Games.jsx'
+import GamesHub from './pages/games/GamesHub.jsx'
+import ConnectFour from './pages/games/connect-four/ConnectFour.jsx'
+import Hangman from './pages/games/hangman/Hangman.jsx'
+import Sudoku from './pages/games/sudoku/Sudoku.jsx'
+import Freecell from './pages/games/freecell/Freecell.jsx'
+import GoFish from './pages/games/go-fish/GoFish.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -35,6 +40,11 @@ const ROUTE_HEADERS = {
   '/planner': { title: "This week's meals", back: '/' },
   '/shopping': { title: 'Shopping lists', tab: true },
   '/games': { title: 'Games', tab: true },
+  '/games/connect-four': { title: 'Connect Four', back: '/games' },
+  '/games/hangman': { title: 'Hangman', back: '/games' },
+  '/games/sudoku': { title: 'Sudoku', back: '/games' },
+  '/games/freecell': { title: 'Freecell', back: '/games' },
+  '/games/go-fish': { title: 'Go Fish', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -133,7 +143,47 @@ export default function App() {
           path="/games"
           element={
             <ProtectedRoute>
-              <Games />
+              <GamesHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/connect-four"
+          element={
+            <ProtectedRoute>
+              <ConnectFour />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/hangman"
+          element={
+            <ProtectedRoute>
+              <Hangman />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/sudoku"
+          element={
+            <ProtectedRoute>
+              <Sudoku />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/freecell"
+          element={
+            <ProtectedRoute>
+              <Freecell />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/go-fish"
+          element={
+            <ProtectedRoute>
+              <GoFish />
             </ProtectedRoute>
           }
         />

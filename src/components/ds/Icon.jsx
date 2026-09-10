@@ -50,9 +50,10 @@ import {
   Mail,
   Camera,
   Dice5,
-  LayoutGrid,
+  Dice6,
   Anchor,
   Dot,
+  Ticket,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -109,9 +110,10 @@ const ICONS = {
   mail: Mail,
   camera: Camera,
   'dice-5': Dice5,
-  'layout-grid': LayoutGrid,
+  'dice-6': Dice6,
   anchor: Anchor,
   dot: Dot,
+  ticket: Ticket,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

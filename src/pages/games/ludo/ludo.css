@@ -1,0 +1,250 @@
+/* src/pages/games/ludo/ludo.css
+   Scoped under .ludo, never leaks into the hub shell. */
+
+.ludo {
+  --ludo-forest: var(--primary);
+  --ludo-forest-dark: var(--primary-press);
+  --ludo-cream: var(--ink-on-primary);
+  --ludo-card: var(--surface-card);
+  --ludo-gold: var(--secondary);
+  --ludo-ink: var(--ink-1);
+  --ludo-line: var(--border);
+  --p1: var(--primary);
+  --p2: var(--secondary);
+  --p3: var(--success);
+  --p4: var(--info);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.ludo-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.ludo-back {
+  text-decoration: none;
+  color: var(--ludo-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.ludo-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.ludo-panel {
+  background: var(--ludo-card);
+  border: 1px solid var(--ludo-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.ludo-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.ludo-chip {
+  border: 1px solid var(--ludo-line);
+  background: var(--surface-card);
+  color: var(--ludo-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ludo-chip.active {
+  background: var(--ludo-forest);
+  color: var(--ludo-cream);
+  border-color: var(--ludo-forest);
+}
+
+.ludo-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.ludo-player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--ludo-line);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--ludo-ink);
+  opacity: 0.5;
+}
+.ludo-player-chip.active {
+  opacity: 1;
+  border-color: currentColor;
+  font-weight: 700;
+}
+.ludo-player-chip.p1 { color: var(--p1); }
+.ludo-player-chip.p2 { color: var(--p2); }
+.ludo-player-chip.p3 { color: var(--p3); }
+.ludo-player-chip.p4 { color: var(--p4); }
+
+.ludo-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  grid-template-rows: repeat(14, 1fr);
+  gap: 1px;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  background: var(--ludo-line);
+  border: 1px solid var(--ludo-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ludo-cell {
+  position: relative;
+  background: var(--surface-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ludo-cell.safe {
+  background: color-mix(in srgb, currentColor 20%, var(--surface-card));
+}
+.ludo-cell.safe.p1 { color: var(--p1); }
+.ludo-cell.safe.p2 { color: var(--p2); }
+.ludo-cell.safe.p3 { color: var(--p3); }
+.ludo-cell.safe.p4 { color: var(--p4); }
+
+.ludo-cell-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ludo-center {
+  grid-row: 3 / 13;
+  grid-column: 3 / 13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ludo-card);
+  border-radius: 6px;
+  text-align: center;
+  padding: 0.5rem;
+}
+.ludo-center-winner {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ludo-forest-dark);
+}
+.ludo-center-tallies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+.ludo-tally {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.ludo-tally.p1 { color: var(--p1); }
+.ludo-tally.p2 { color: var(--p2); }
+.ludo-tally.p3 { color: var(--p3); }
+.ludo-tally.p4 { color: var(--p4); }
+
+.ludo-token-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ludo-cream);
+  display: inline-block;
+}
+.ludo-token-dot.p1 { background: var(--p1); }
+.ludo-token-dot.p2 { background: var(--p2); }
+.ludo-token-dot.p3 { background: var(--p3); }
+.ludo-token-dot.p4 { background: var(--p4); }
+
+.ludo-status {
+  font-weight: 600;
+  color: var(--ludo-ink);
+  text-align: center;
+  min-height: 1.4em;
+  font-size: 0.9rem;
+}
+.ludo-status.is-over {
+  color: var(--ludo-forest-dark);
+  font-size: 1.05rem;
+}
+
+.ludo-tokens-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+.ludo-token-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  border: 2px solid var(--ludo-line);
+  background: var(--surface-card);
+  border-radius: 10px;
+  padding: 0.5rem 0.25rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: currentColor;
+}
+.ludo-token-btn.p1 { color: var(--p1); }
+.ludo-token-btn.p2 { color: var(--p2); }
+.ludo-token-btn.p3 { color: var(--p3); }
+.ludo-token-btn.p4 { color: var(--p4); }
+.ludo-token-btn:not(:disabled):hover {
+  border-color: currentColor;
+}
+.ludo-token-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ludo-token-btn-sub {
+  font-weight: 400;
+  font-size: 0.65rem;
+  color: var(--ludo-ink);
+  opacity: 0.7;
+}
+
+.ludo-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.ludo-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--ludo-forest);
+  background: var(--surface-card);
+  color: var(--ludo-forest);
+  cursor: pointer;
+}
+.ludo-btn.primary {
+  background: var(--ludo-forest);
+  color: var(--ludo-cream);
+}
+.ludo-btn.primary:hover:not(:disabled) {
+  background: var(--ludo-forest-dark);
+}
+.ludo-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

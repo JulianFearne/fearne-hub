@@ -1,0 +1,234 @@
+/* src/pages/games/bingo/bingo.css
+   Scoped under .bgo, never leaks into the hub shell. */
+
+.bgo {
+  --bgo-forest: var(--primary);
+  --bgo-forest-dark: var(--primary-press);
+  --bgo-cream: var(--ink-on-primary);
+  --bgo-card: var(--surface-card);
+  --bgo-gold: var(--secondary);
+  --bgo-ink: var(--ink-1);
+  --bgo-line: var(--border);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.bgo-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.bgo-back {
+  text-decoration: none;
+  color: var(--bgo-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.bgo-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.bgo-panel {
+  background: var(--bgo-card);
+  border: 1px solid var(--bgo-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.bgo-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.bgo-chip {
+  border: 1px solid var(--bgo-line);
+  background: var(--surface-card);
+  color: var(--bgo-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.bgo-chip.active {
+  background: var(--bgo-forest);
+  color: var(--bgo-cream);
+  border-color: var(--bgo-forest);
+}
+
+.bgo-caller {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+.bgo-ball {
+  flex-shrink: 0;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  border: 3px solid var(--bgo-forest);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-card);
+}
+.bgo-ball.has-number {
+  background: var(--bgo-forest);
+}
+.bgo-ball-letter {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--bgo-cream);
+  opacity: 0.85;
+}
+.bgo-ball-number {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--bgo-cream);
+  line-height: 1;
+}
+.bgo-ball-hint {
+  font-size: 1.5rem;
+  opacity: 0.35;
+}
+.bgo-caller-info {
+  flex: 1;
+  min-width: 0;
+}
+.bgo-status {
+  margin: 0;
+  font-weight: 600;
+  color: var(--bgo-ink);
+}
+.bgo-drawn-count {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.bgo-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+.bgo-history-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--bgo-line);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  color: var(--bgo-ink);
+  opacity: 0.75;
+}
+.bgo-history-chip:first-child {
+  opacity: 1;
+  border-color: var(--bgo-forest);
+  color: var(--bgo-forest-dark);
+}
+
+.bgo-cards {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+.bgo-card {
+  border: 1px solid var(--bgo-line);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+.bgo-card.won {
+  border-color: var(--bgo-forest);
+  background: color-mix(in srgb, var(--bgo-forest) 10%, var(--surface-card));
+}
+.bgo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  color: var(--bgo-ink);
+}
+.bgo-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+.bgo-badge.line {
+  background: var(--secondary-soft);
+  color: var(--secondary-soft-ink);
+}
+.bgo-badge.full {
+  background: var(--bgo-forest);
+  color: var(--bgo-cream);
+}
+.bgo-card-letters {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--bgo-forest);
+  margin-bottom: 0.25rem;
+}
+.bgo-card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+.bgo-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bgo-line);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--bgo-ink);
+}
+.bgo-cell.marked {
+  background: var(--bgo-forest);
+  color: var(--bgo-cream);
+  border-color: var(--bgo-forest);
+}
+.bgo-cell.free {
+  font-size: 0.85rem;
+}
+
+.bgo-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.bgo-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--bgo-forest);
+  background: var(--surface-card);
+  color: var(--bgo-forest);
+  cursor: pointer;
+}
+.bgo-btn.primary {
+  background: var(--bgo-forest);
+  color: var(--bgo-cream);
+}
+.bgo-btn.primary:hover:not(:disabled) {
+  background: var(--bgo-forest-dark);
+}
+.bgo-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

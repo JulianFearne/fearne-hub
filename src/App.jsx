@@ -25,6 +25,8 @@ import Pictionary from './pages/games/pictionary/Pictionary.jsx'
 import DotsAndBoxes from './pages/games/dots-and-boxes/DotsAndBoxes.jsx'
 import SnakesAndLadders from './pages/games/snakes-and-ladders/SnakesAndLadders.jsx'
 import Battleship from './pages/games/battleship/Battleship.jsx'
+import Ludo from './pages/games/ludo/Ludo.jsx'
+import Bingo from './pages/games/bingo/Bingo.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -64,6 +66,8 @@ const ROUTE_HEADERS = {
   '/games/dots-and-boxes': { title: 'Dots and Boxes', back: '/games' },
   '/games/snakes-and-ladders': { title: 'Snakes and Ladders', back: '/games' },
   '/games/battleship': { title: 'Battleship', back: '/games' },
+  '/games/ludo': { title: 'Ludo', back: '/games' },
+  '/games/bingo': { title: 'Bingo', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -280,6 +284,22 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Battleship />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/ludo"
+          element={
+            <ProtectedRoute>
+              <Ludo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/bingo"
+          element={
+            <ProtectedRoute>
+              <Bingo />
             </ProtectedRoute>
           }
         />

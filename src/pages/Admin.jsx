@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext.jsx'
+import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
+import Button from '../components/ds/Button.jsx'
+import Icon from '../components/ds/Icon.jsx'
+import Badge from '../components/ds/Badge.jsx'
+import { Select } from '../components/ds/Field.jsx'
+import Avatar from '../components/ds/Avatar.jsx'
 
 const ROLES = ['admin', 'adult', 'kid']
 
@@ -48,32 +54,28 @@ export default function Admin() {
 
   return (
     <div>
-      <div className="hub-intro">
-        <h1>Family Admin</h1>
-        <p>Approve new sign-ups and manage everyone's role.</p>
-      </div>
-
-      {error && <div className="rb-form-error">{error}</div>}
-      {loading && <p>Loading…</p>}
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
+      {loading && <p className="fh-loading">Loading…</p>}
 
       {!loading && pending.length > 0 && (
         <>
-          <h3 style={{ marginBottom: 12 }}>Waiting for approval ({pending.length})</h3>
-          <div className="pin-grid" style={{ marginBottom: 32 }}>
+          <p className="fh-recipedetail__h">Waiting for approval ({pending.length})</p>
+          <div className="fh-recipes__grid" style={{ marginBottom: 'var(--sp-9)' }}>
             {pending.map((p) => (
-              <div key={p.id} className="pin-card" style={{ cursor: 'default' }}>
-                <span className="pin-dot" />
-                <h3>{p.email}</h3>
-                <p>Signed up {new Date(p.created_at).toLocaleDateString()}</p>
-                <button
-                  className="btn-primary"
-                  style={{ marginTop: 12 }}
-                  disabled={busyId === p.id}
-                  onClick={() => setApproved(p.id, true)}
-                >
+              <Card key={p.id} tile>
+                <div>
+                  <CardTitle>{p.email}</CardTitle>
+                  <CardMeta>Signed up {new Date(p.created_at).toLocaleDateString()}</CardMeta>
+                </div>
+                <Button loading={busyId === p.id} onClick={() => setApproved(p.id, true)}>
                   Approve
-                </button>
-              </div>
+                </Button>
+              </Card>
             ))}
           </div>
         </>
@@ -81,70 +83,48 @@ export default function Admin() {
 
       {!loading && (
         <>
-          <h3 style={{ marginBottom: 12 }}>Everyone ({everyone.length})</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p className="fh-recipedetail__h">Everyone ({everyone.length})</p>
+          <div className="fh-rows">
             {everyone.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  flexWrap: 'wrap',
-                  background: 'var(--cream-card)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 10,
-                  padding: '12px 16px',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 160 }}>
-                  <strong>{p.email}</strong>
-                  {p.id === user?.id && <span style={{ opacity: 0.6 }}> (you)</span>}
-                </div>
-
-                <span
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '3px 10px',
-                    borderRadius: 20,
-                    background: p.approved ? '#e4f0e4' : '#fdf3d7',
-                    color: p.approved ? '#2d4a31' : '#7a5c10',
-                  }}
-                >
-                  {p.approved ? 'Approved' : 'Pending'}
+              <div key={p.id} className="fh-row fh-row--static">
+                <Avatar name={p.email} size="md" />
+                <span className="fh-row__body">
+                  <span className="fh-row__label">
+                    {p.email}
+                    {p.id === user?.id && <span style={{ color: 'var(--ink-3)' }}> (you)</span>}
+                  </span>
+                  <span className="fh-row__meta">
+                    <Badge tone={p.approved ? 'success' : 'warning'}>{p.approved ? 'Approved' : 'Pending'}</Badge>
+                  </span>
                 </span>
-
-                <select
-                  value={p.role}
-                  disabled={busyId === p.id || p.id === user?.id}
-                  onChange={(e) => setRole(p.id, e.target.value)}
-                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--line)' }}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-
-                {p.approved ? (
-                  <button
-                    className="rb-delete-btn"
+                <span className="fh-row__trail">
+                  <Select
+                    value={p.role}
                     disabled={busyId === p.id || p.id === user?.id}
-                    onClick={() => setApproved(p.id, false)}
+                    onChange={(e) => setRole(p.id, e.target.value)}
                   >
-                    Revoke access
-                  </button>
-                ) : (
-                  <button
-                    className="btn-primary"
-                    style={{ width: 'auto', padding: '8px 16px' }}
-                    disabled={busyId === p.id}
-                    onClick={() => setApproved(p.id, true)}
-                  >
-                    Approve
-                  </button>
-                )}
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </Select>
+                  {p.approved ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={busyId === p.id || p.id === user?.id}
+                      onClick={() => setApproved(p.id, false)}
+                      style={{ color: 'var(--danger)' }}
+                    >
+                      Revoke access
+                    </Button>
+                  ) : (
+                    <Button size="sm" loading={busyId === p.id} onClick={() => setApproved(p.id, true)}>
+                      Approve
+                    </Button>
+                  )}
+                </span>
               </div>
             ))}
           </div>

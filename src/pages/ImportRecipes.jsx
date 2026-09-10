@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { CATEGORIES, addRecipe, fetchRecipes } from './recipesData'
-import './Recipes.css'
+import Card from '../components/ds/Card.jsx'
+import Button from '../components/ds/Button.jsx'
+import Icon from '../components/ds/Icon.jsx'
 
 const VALID_CATEGORIES = CATEGORIES.filter((c) => c.id !== 'all').map((c) => c.id)
 const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard']
@@ -141,101 +143,108 @@ export default function ImportRecipes() {
   }
 
   return (
-    <div className="recipe-book">
-      <div className="rb-main" style={{ maxWidth: 640, margin: '0 auto' }}>
-        <div className="rb-section-header">
-          <h2>Import recipes</h2>
+    <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      <p style={{ font: 'var(--type-body)', color: 'var(--ink-2)', marginBottom: 'var(--sp-6)' }}>
+        Upload a recipe <strong>.json</strong> file in the Fearne Hub format. Ask Claude to create
+        recipes using the format spec, download the file it produces, and drop it here.
+      </p>
+
+      <Card style={{ marginBottom: 'var(--sp-6)' }}>
+        <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} />
+      </Card>
+
+      {error && (
+        <div className="fh-notice fh-notice--danger" style={{ display: 'block' }}>
+          <p style={{ font: 'var(--type-label)', marginBottom: 'var(--sp-2)' }}>
+            <Icon name="alert-circle" size={16} /> That file has a problem
+          </p>
+          {error}
         </div>
+      )}
 
-        <p style={{ fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-          Upload a recipe <strong>.json</strong> file in the Fearne Hub format. Ask Claude to
-          create recipes using the format spec, download the file it produces, and drop it here.
-        </p>
-
-        <div className="rb-form-field">
-          <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} />
+      {problems.length > 0 && (
+        <div className="fh-notice fh-notice--danger" style={{ display: 'block' }}>
+          <strong>The file has some problems — nothing was imported:</strong>
+          <ul style={{ margin: 'var(--sp-4) 0 0 1.1rem' }}>
+            {problems.map((p, i) => (
+              <li key={i}>{p}</li>
+            ))}
+          </ul>
         </div>
+      )}
 
-        {error && <div className="rb-form-error">{error}</div>}
-
-        {problems.length > 0 && (
-          <div className="rb-form-error">
-            <strong>The file has some problems — nothing was imported:</strong>
-            <ul style={{ margin: '0.5rem 0 0 1.1rem' }}>
-              {problems.map((p, i) => (
-                <li key={i}>{p}</li>
-              ))}
-            </ul>
+      {status === 'previewing' && parsed && (
+        <div>
+          <p className="fh-recipedetail__h">
+            Ready to import {parsed.length} recipe{parsed.length === 1 ? '' : 's'}
+          </p>
+          <div className="fh-rows" style={{ marginBottom: 'var(--sp-6)' }}>
+            {parsed.map((r) => (
+              <div key={r.title} className="fh-row fh-row--static">
+                <span className="fh-row__lead">
+                  <Icon name={CATEGORIES.find((c) => c.id === r.category)?.icon ?? 'utensils'} size={18} />
+                </span>
+                <span className="fh-row__body">
+                  <span className="fh-row__label">{r.title}</span>
+                  <span className="fh-row__meta">
+                    {CATEGORIES.find((c) => c.id === r.category)?.label}, {r.ingredients.filter((i) => i.name).length}{' '}
+                    ingredients, {r.steps.length} steps
+                  </span>
+                </span>
+              </div>
+            ))}
           </div>
-        )}
 
-        {status === 'previewing' && parsed && (
-          <div>
-            <div className="rb-section-header" style={{ marginTop: '1rem' }}>
-              <h2 style={{ fontSize: '1.15rem' }}>Ready to import {parsed.length} recipe{parsed.length === 1 ? '' : 's'}</h2>
+          {duplicates.length > 0 && (
+            <div className="fh-notice" style={{ background: 'var(--warning-soft)', color: 'var(--warning-soft-ink)', display: 'block' }}>
+              Heads up: {duplicates.join(', ')} {duplicates.length === 1 ? 'already exists' : 'already exist'} in the
+              cookbook. Importing will add {duplicates.length === 1 ? 'a duplicate' : 'duplicates'} rather than
+              replacing.
             </div>
-            <ul style={{ listStyle: 'none', marginBottom: '1.25rem' }}>
-              {parsed.map((r) => (
-                <li key={r.title} style={{ padding: '0.4rem 0', borderBottom: '1px dashed var(--rb-border)', fontSize: '0.9rem' }}>
-                  {r.emoji} <strong>{r.title}</strong>
-                  {' — '}
-                  {CATEGORIES.find((c) => c.id === r.category)?.label}
-                  {', '}
-                  {r.ingredients.filter((i) => i.name).length} ingredients, {r.steps.length} steps
-                </li>
-              ))}
-            </ul>
+          )}
 
-            {duplicates.length > 0 && (
-              <div className="rb-form-error" style={{ background: '#fdf3d7', color: '#7a5c10' }}>
-                Heads up: {duplicates.join(', ')} {duplicates.length === 1 ? 'already exists' : 'already exist'} in
-                the cookbook. Importing will add {duplicates.length === 1 ? 'a duplicate' : 'duplicates'} rather
-                than replacing.
+          <Button block onClick={runImport} style={{ marginBottom: 'var(--sp-5)' }}>
+            Import {parsed.length} recipe{parsed.length === 1 ? '' : 's'}
+          </Button>
+          <Button variant="quiet" block onClick={reset}>
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {status === 'importing' && (
+        <p className="fh-loading">
+          Importing… ({imported.length} of {parsed?.length} done)
+        </p>
+      )}
+
+      {status === 'done' && (
+        <div>
+          <div className="fh-notice fh-notice--success">
+            <Icon name="check-circle" size={16} />
+            Done — added {imported.length} recipe{imported.length === 1 ? '' : 's'} to the cookbook.
+          </div>
+          <Button block onClick={reset}>
+            Import another file
+          </Button>
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div>
+          <div className="fh-notice fh-notice--danger" style={{ display: 'block' }}>
+            {error}
+            {imported.length > 0 && (
+              <div style={{ marginTop: 'var(--sp-4)' }}>
+                These were saved before the error, so they won't need re-importing: {imported.join(', ')}
               </div>
             )}
-
-            <button className="rb-form-submit" onClick={runImport}>
-              Import {parsed.length} recipe{parsed.length === 1 ? '' : 's'}
-            </button>
-            <button
-              className="rb-delete-btn"
-              style={{ marginTop: '0.75rem', width: '100%' }}
-              onClick={reset}
-            >
-              Cancel
-            </button>
           </div>
-        )}
-
-        {status === 'importing' && <p>Importing… ({imported.length} of {parsed?.length} done)</p>}
-
-        {status === 'done' && (
-          <div>
-            <div className="rb-form-error" style={{ background: '#e4f0e4', color: '#2d4a31' }}>
-              Done — added {imported.length} recipe{imported.length === 1 ? '' : 's'} to the cookbook.
-            </div>
-            <button className="rb-form-submit" onClick={reset}>
-              Import another file
-            </button>
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div>
-            <div className="rb-form-error">
-              {error}
-              {imported.length > 0 && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  These were saved before the error, so they won't need re-importing: {imported.join(', ')}
-                </div>
-              )}
-            </div>
-            <button className="rb-form-submit" onClick={reset}>
-              Start over
-            </button>
-          </div>
-        )}
-      </div>
+          <Button block onClick={reset}>
+            Start over
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

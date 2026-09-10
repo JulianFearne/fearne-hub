@@ -1,0 +1,10 @@
+/* Shopping lists. Scoped under .fh-shop. */
+.fh-shop__toolbar{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-shop__toolbar .fh-input{flex:1}
+.fh-shop__actions{display:flex;justify-content:flex-end;gap:var(--sp-4);margin-bottom:var(--sp-5)}
+.fh-shop__grid{display:grid;grid-template-columns:1fr;gap:var(--sp-5)}
+@media (min-width:600px){.fh-shop__grid{grid-template-columns:1fr 1fr}}
+.fh-shop__combinebox{position:absolute;top:var(--sp-5);right:var(--sp-5)}
+.fh-shop__group{font:var(--fw-semibold) var(--fs-meta)/1.2 var(--font-text);color:var(--ink-3);margin:var(--sp-7) var(--sp-6) var(--sp-4)}
+.fh-shop__add{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-shop__add .fh-input{flex:1}

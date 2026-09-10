@@ -1,8 +1,7 @@
-/* Entry point. Order matters: legacy.css first (chrome the not-yet-ported
-   pages still use), then the new design system — tokens + reset + the
-   component layer win the cascade for anything they both touch (body,
-   headings), while old page-specific classes stay untouched until their
-   pages are migrated. See legacy.css for what's still pending and why. */
+/* Entry point. Order matters: legacy.css first (a font import Workouts
+   and Animal Place Thing still need), then the new design system —
+   tokens + reset + the component layer win the cascade for anything
+   they both touch (body, headings). See legacy.css for what's pending. */
 @import './legacy.css';
 @import './tokens/fonts.css';
 @import './tokens/colors.css';
@@ -16,13 +15,5 @@
 @import './features/hub.css';
 @import './features/auth.css';
 @import './features/recipes.css';
-
-.placeholder {
-  background: var(--surface-sunken);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--r-panel);
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--ink-2);
-}
-.placeholder h2 { margin-bottom: 8px; }
+@import './features/planner.css';
+@import './features/shopping.css';

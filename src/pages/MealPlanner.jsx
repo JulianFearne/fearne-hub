@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, Fragment } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MEAL_TYPES,
@@ -15,10 +15,13 @@ import {
   addListItems,
 } from './mealPlanData'
 import RecipePickerModal from '../components/RecipePickerModal.jsx'
-import './MealPlanner.css'
-import './Recipes.css'
+import Sheet from '../components/ds/Sheet.jsx'
+import Button from '../components/ds/Button.jsx'
+import IconButton from '../components/ds/IconButton.jsx'
+import Icon from '../components/ds/Icon.jsx'
+import { Field, Select, Input } from '../components/ds/Field.jsx'
 
-const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 export default function MealPlanner() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
@@ -79,81 +82,80 @@ export default function MealPlanner() {
     }
   }
 
-  const weekLabel = `${weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} \u2013 ${weekEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+  const weekLabel = `${weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${weekEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
   const todayISO = toISODate(new Date())
 
   return (
     <div>
-      <div className="hub-intro">
-        <h1>Meal Planner</h1>
-        <p>Plan the week, then turn it straight into a shopping list.</p>
-      </div>
-
-      {error && <div className="rb-form-error">{error}</div>}
-
-      <div className="mp-toolbar">
-        <div className="mp-week-nav">
-          <button className="mp-nav-btn" onClick={() => setWeekStart(addDays(weekStart, -7))}>
-            ← Prev
-          </button>
-          <span className="mp-week-label">{weekLabel}</span>
-          <button className="mp-nav-btn" onClick={() => setWeekStart(addDays(weekStart, 7))}>
-            Next →
-          </button>
-          <button className="mp-nav-btn" onClick={() => setWeekStart(startOfWeek(new Date()))}>
-            Today
-          </button>
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
         </div>
-        <button className="mp-shop-btn" onClick={() => setShowShopModal(true)} disabled={entries.length === 0}>
-          🛒 Add week to shopping list
-        </button>
+      )}
+
+      <div className="fh-planner__toolbar">
+        <div className="fh-planner__week">
+          <IconButton icon="chevron-left" label="Previous week" onClick={() => setWeekStart(addDays(weekStart, -7))} />
+          <span className="fh-planner__label">{weekLabel}</span>
+          <IconButton icon="chevron-right" label="Next week" onClick={() => setWeekStart(addDays(weekStart, 7))} />
+        </div>
+        <Button variant="quiet" size="sm" onClick={() => setWeekStart(startOfWeek(new Date()))}>
+          This week
+        </Button>
+        <Button icon="shopping-basket" disabled={entries.length === 0} onClick={() => setShowShopModal(true)}>
+          Add week to shopping list
+        </Button>
       </div>
 
       {loading ? (
-        <p>Loading…</p>
+        <p className="fh-loading">Loading…</p>
       ) : (
-        <div className="mp-grid">
-          <div className="mp-corner" />
-          {days.map((d, i) => (
-            <div key={i} className={`mp-day-header ${toISODate(d) === todayISO ? 'mp-today' : ''}`}>
-              {DAY_LABELS[i]}
-              <span className="mp-day-date">{d.getDate()}/{d.getMonth() + 1}</span>
-            </div>
-          ))}
-
-          {MEAL_TYPES.map((meal) => (
-            <Fragment key={meal.id}>
-              <div className="mp-meal-label">{meal.label}</div>
-              {days.map((d, i) => {
-                const entry = entryFor(d, meal.id)
-                return (
-                  <div
-                    key={`${meal.id}-${i}`}
-                    className={`mp-cell ${entry ? 'mp-cell-filled' : 'mp-cell-empty'}`}
-                    onClick={() => !entry && setPickerSlot({ date: d, mealType: meal.id })}
-                  >
-                    {entry ? (
-                      <>
-                        <span className="mp-cell-emoji">{entry.recipes?.emoji || '🍽️'}</span>
-                        <span className="mp-cell-title">{entry.recipes?.title}</span>
-                        <button
-                          className="mp-cell-remove"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleRemove(entry)
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </>
-                    ) : (
-                      '+'
-                    )}
-                  </div>
-                )
-              })}
-            </Fragment>
-          ))}
+        <div className="fh-planner__days">
+          {days.map((d, i) => {
+            const isToday = toISODate(d) === todayISO
+            return (
+              <div key={i} className={`fh-planner__day${isToday ? ' fh-planner__day--today' : ''}`}>
+                <div className="fh-planner__dayhead">
+                  <span className="fh-planner__dayname">{DAY_LABELS[i]}</span>
+                  <span className="fh-planner__daydate">
+                    {d.getDate()}/{d.getMonth() + 1}
+                  </span>
+                </div>
+                {MEAL_TYPES.map((meal) => {
+                  const entry = entryFor(d, meal.id)
+                  return (
+                    <div
+                      key={meal.id}
+                      className="fh-planner__slot"
+                      role={entry ? undefined : 'button'}
+                      tabIndex={entry ? undefined : 0}
+                      onClick={entry ? undefined : () => setPickerSlot({ date: d, mealType: meal.id })}
+                      onKeyDown={
+                        entry
+                          ? undefined
+                          : (e) => {
+                              if (e.key === 'Enter' || e.key === ' ') setPickerSlot({ date: d, mealType: meal.id })
+                            }
+                      }
+                    >
+                      <span className="fh-planner__meal">{meal.label}</span>
+                      <span className={`fh-planner__dish${entry ? '' : ' fh-planner__dish--empty'}`}>
+                        {entry ? entry.recipes?.title : 'Add a meal'}
+                      </span>
+                      {entry && (
+                        <IconButton
+                          icon="x"
+                          label={`Remove ${entry.recipes?.title}`}
+                          onClick={() => handleRemove(entry)}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -208,65 +210,64 @@ function AddToShoppingListModal({ entries, onClose }) {
   }
 
   return (
-    <div className="rb-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="rb-modal" style={{ maxWidth: 440 }}>
-        <div className="rb-modal-close">
-          <button className="rb-close-btn" onClick={onClose}>
-            ✕
-          </button>
+    <Sheet
+      title="Add this week's ingredients"
+      onClose={onClose}
+      footer={
+        !done && (
+          <>
+            <Button variant="quiet" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleAdd} loading={saving}>
+              {saving ? 'Adding…' : 'Add ingredients'}
+            </Button>
+          </>
+        )
+      }
+    >
+      <p style={{ font: 'var(--type-meta)', color: 'var(--ink-3)', marginBottom: 'var(--sp-6)' }}>
+        {ingredients.length} ingredient{ingredients.length === 1 ? '' : 's'} from this week's planned meals.
+      </p>
+
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
         </div>
-        <div className="rb-modal-body">
-          <div className="rb-modal-title" style={{ fontSize: '1.3rem' }}>
-            Add this week's ingredients
+      )}
+
+      {loading ? (
+        <p className="fh-loading">Loading lists…</p>
+      ) : done ? (
+        <>
+          <div className="fh-notice fh-notice--success">
+            <Icon name="check-circle" size={16} />
+            Added. Head to Shopping Lists to see it.
           </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--rb-brown)', marginBottom: 16 }}>
-            {ingredients.length} ingredient{ingredients.length === 1 ? '' : 's'} from this week's planned meals.
-          </p>
-
-          {error && <div className="rb-form-error">{error}</div>}
-
-          {loading ? (
-            <p>Loading lists…</p>
-          ) : done ? (
-            <div className="rb-form-error" style={{ background: '#e4f0e4', color: '#2d4a31' }}>
-              Added. Head to Shopping Lists to see it.
-            </div>
-          ) : (
-            <>
-              <div className="rb-form-field">
-                <label>Add to which list?</label>
-                <select value={choice} onChange={(e) => setChoice(e.target.value)}>
-                  {lists.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                  <option value="new">+ New list…</option>
-                </select>
-              </div>
-              {choice === 'new' && (
-                <div className="rb-form-field">
-                  <label>New list name</label>
-                  <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Family" />
-                </div>
-              )}
-              <button className="rb-form-submit" onClick={handleAdd} disabled={saving}>
-                {saving ? 'Adding…' : 'Add ingredients'}
-              </button>
-            </>
+          <Button as={Link} to="/shopping" block>
+            Go to Shopping Lists
+          </Button>
+        </>
+      ) : (
+        <>
+          <Field label="Add to which list?" htmlFor="mp-list-choice">
+            <Select id="mp-list-choice" value={choice} onChange={(e) => setChoice(e.target.value)}>
+              {lists.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+              <option value="new">New list…</option>
+            </Select>
+          </Field>
+          {choice === 'new' && (
+            <Field label="New list name" htmlFor="mp-list-name" style={{ marginTop: 'var(--sp-5)' }}>
+              <Input id="mp-list-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Family" />
+            </Field>
           )}
-
-          {done && (
-            <Link
-              to="/shopping"
-              className="rb-form-submit"
-              style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 10 }}
-            >
-              Go to Shopping Lists
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Sheet>
   )
 }

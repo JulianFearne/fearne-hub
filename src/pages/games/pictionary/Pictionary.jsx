@@ -1,5 +1,7 @@
 // src/pages/games/pictionary/Pictionary.jsx
-// Offline pass-and-play word generator for Pictionary-style drawing games.
+// Offline pass-and-play word generator for Pictionary-style drawing games,
+// with a Charades mode (acting instead of drawing) that reuses the exact
+// same categories, timer and scoreboard: only the framing text changes.
 // No Supabase, no props: one phone gets passed round the room. Category
 // picker over JSON words (words.json), same pattern as Hangman's word lists
 // and Would You Rather's prompts.
@@ -16,8 +18,13 @@ const TIMER_OPTIONS = [
   { key: '60', label: '60s', seconds: 60 },
   { key: '90', label: '90s', seconds: 90 },
 ]
+const MODES = {
+  draw: { label: 'Draw', title: 'Pictionary', performer: 'drawer', verb: 'draw' },
+  act: { label: 'Act', title: 'Charades', performer: 'actor', verb: 'act out' },
+}
 
 export default function Pictionary() {
+  const [mode, setMode] = useState('draw')
   const [categoryKey, setCategoryKey] = useState(CATEGORY_KEYS[0])
   const [index, setIndex] = useState(() => randomIndex(words[CATEGORY_KEYS[0]].words.length))
   const [revealed, setRevealed] = useState(false)
@@ -31,6 +38,7 @@ export default function Pictionary() {
   const list = words[categoryKey].words
   const current = list[index]
   const timerSeconds = TIMER_OPTIONS.find((t) => t.key === timerKey).seconds
+  const modeInfo = MODES[mode]
 
   // Countdown while a word is revealed and a timer is selected.
   useEffect(() => {
@@ -76,10 +84,22 @@ export default function Pictionary() {
         <Link to="/games" className="pic-back">
           ← Games
         </Link>
-        <h1 className="pic-title">Pictionary</h1>
+        <h1 className="pic-title">{modeInfo.title}</h1>
       </header>
 
       <div className="pic-panel">
+        <div className="pic-themes">
+          {Object.keys(MODES).map((key) => (
+            <button
+              key={key}
+              className={`pic-chip ${mode === key ? 'active' : ''}`}
+              onClick={() => setMode(key)}
+            >
+              {MODES[key].label}
+            </button>
+          ))}
+        </div>
+
         <div className="pic-themes">
           {CATEGORY_KEYS.map((key) => (
             <button
@@ -105,14 +125,14 @@ export default function Pictionary() {
         </div>
 
         <p className="pic-turn">
-          Team {team.toUpperCase()}'s turn to draw
+          Team {team.toUpperCase()}'s turn to {modeInfo.verb}
           {timerSeconds > 0 && revealed && (
             <span className="pic-clock"> · {formatClock(timeLeft)}</span>
           )}
         </p>
 
         <button className={`pic-card ${revealed ? 'revealed' : ''}`} onClick={!revealed ? reveal : undefined}>
-          {revealed ? current : 'Tap to reveal, then pass the phone to the drawer'}
+          {revealed ? current : `Tap to reveal, then pass the phone to the ${modeInfo.performer}`}
         </button>
 
         <div className="pic-scoreboard">

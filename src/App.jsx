@@ -22,6 +22,9 @@ import GoFish from './pages/games/go-fish/GoFish.jsx'
 import WouldYouRather from './pages/games/would-you-rather/WouldYouRather.jsx'
 import TicTacToe from './pages/games/tic-tac-toe/TicTacToe.jsx'
 import Pictionary from './pages/games/pictionary/Pictionary.jsx'
+import DotsAndBoxes from './pages/games/dots-and-boxes/DotsAndBoxes.jsx'
+import SnakesAndLadders from './pages/games/snakes-and-ladders/SnakesAndLadders.jsx'
+import Battleship from './pages/games/battleship/Battleship.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -58,6 +61,9 @@ const ROUTE_HEADERS = {
   '/games/would-you-rather': { title: 'Would You Rather', back: '/games' },
   '/games/tic-tac-toe': { title: 'Tic Tac Toe', back: '/games' },
   '/games/pictionary': { title: 'Pictionary', back: '/games' },
+  '/games/dots-and-boxes': { title: 'Dots and Boxes', back: '/games' },
+  '/games/snakes-and-ladders': { title: 'Snakes and Ladders', back: '/games' },
+  '/games/battleship': { title: 'Battleship', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -250,6 +256,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Pictionary />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/dots-and-boxes"
+          element={
+            <ProtectedRoute>
+              <DotsAndBoxes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/snakes-and-ladders"
+          element={
+            <ProtectedRoute>
+              <SnakesAndLadders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/battleship"
+          element={
+            <ProtectedRoute>
+              <Battleship />
             </ProtectedRoute>
           }
         />

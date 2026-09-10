@@ -52,6 +52,7 @@ import {
   Dice5,
   LayoutGrid,
   Anchor,
+  Dot,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -110,6 +111,7 @@ const ICONS = {
   'dice-5': Dice5,
   'layout-grid': LayoutGrid,
   anchor: Anchor,
+  dot: Dot,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

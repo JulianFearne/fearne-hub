@@ -1,0 +1,131 @@
+/* src/pages/games/battleship/battleship.css
+   Scoped under .bsh, never leaks into the hub shell. */
+
+.bsh {
+  --bsh-forest: var(--primary);
+  --bsh-forest-dark: var(--primary-press);
+  --bsh-cream: var(--ink-on-primary);
+  --bsh-card: var(--surface-card);
+  --bsh-gold: var(--secondary);
+  --bsh-terracotta: var(--danger);
+  --bsh-ink: var(--ink-1);
+  --bsh-line: var(--border);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.bsh-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.bsh-back {
+  text-decoration: none;
+  color: var(--bsh-forest);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.bsh-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.bsh-panel {
+  background: var(--bsh-card);
+  border: 1px solid var(--bsh-line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.bsh-handoff,
+.bsh-over {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+.bsh-handoff-title,
+.bsh-over-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--bsh-ink);
+}
+.bsh-hint {
+  margin: 0 0 0.5rem;
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.bsh-fleetbar {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--bsh-ink);
+}
+
+.bsh-status {
+  margin: 0;
+  font-weight: 600;
+  color: var(--bsh-ink);
+  text-align: center;
+}
+
+.bsh-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+  width: 100%;
+  max-width: 320px;
+}
+.bsh-cell {
+  aspect-ratio: 1;
+  border: 1px solid var(--bsh-line);
+  background: var(--surface-card);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--bsh-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bsh-cell:hover:not(:disabled) {
+  border-color: var(--bsh-forest);
+}
+.bsh-cell:disabled {
+  cursor: default;
+}
+.bsh-cell.miss {
+  color: var(--bsh-ink);
+  opacity: 0.5;
+}
+.bsh-cell.hit {
+  background: var(--bsh-terracotta);
+  border-color: var(--bsh-terracotta);
+  color: var(--white);
+}
+
+.bsh-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: 1px solid var(--bsh-forest);
+  background: var(--surface-card);
+  color: var(--bsh-forest);
+  cursor: pointer;
+}
+.bsh-btn.primary {
+  background: var(--bsh-forest);
+  color: var(--bsh-cream);
+}
+.bsh-btn.primary:hover {
+  background: var(--bsh-forest-dark);
+}

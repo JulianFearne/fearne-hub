@@ -4,20 +4,21 @@
    terracotta for player one. */
 
 .connect-four-page {
-  --c4-green: #2f5d3a;
-  --c4-green-deep: #274c30;
-  --c4-cream: #f6efe0;
-  --c4-cream-soft: #efe6d3;
-  --c4-gold: #d4a017;
-  --c4-red: #c0492b;
-  --c4-ink: #2a2a26;
-  --c4-line: rgba(42, 42, 38, 0.16);
+  --c4-green: var(--primary);
+  --c4-green-deep: var(--primary-press);
+  --c4-cream: var(--surface-card);
+  --c4-cream-ink: var(--ink-on-primary);
+  --c4-cream-soft: var(--surface-sunken);
+  --c4-gold: var(--secondary);
+  --c4-red: var(--danger);
+  --c4-ink: var(--ink-1);
+  --c4-line: var(--border);
 
   max-width: 640px;
   margin: 0 auto;
   padding: 1rem 1rem 3rem;
   color: var(--c4-ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-text);
 }
 
 .c4-header {
@@ -28,7 +29,7 @@
 }
 
 .c4-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 600;
   margin: 0;
@@ -87,7 +88,7 @@
   font-size: 1.7rem;
 }
 .c4-modecard-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 600;
 }
@@ -128,13 +129,13 @@
 .c4-chip.active {
   background: var(--c4-green);
   border-color: var(--c4-green);
-  color: var(--c4-cream);
+  color: var(--c4-cream-ink);
 }
 
 /* Status line */
 .c4-status {
   text-align: center;
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
   padding: 0.5rem 0 0.75rem;
@@ -227,7 +228,7 @@
   gap: 0.35rem;
 }
 .c4-score strong {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
 }
 .c4-dot {
@@ -266,7 +267,7 @@
 .c4-btn.primary {
   background: var(--c4-green);
   border-color: var(--c4-green);
-  color: var(--c4-cream);
+  color: var(--c4-cream-ink);
 }
 .c4-btn.ghost {
   background: transparent;
@@ -293,7 +294,7 @@
 }
 .c4-code-input {
   font: inherit;
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
   letter-spacing: 0.3em;
   text-align: center;
@@ -302,7 +303,7 @@
   padding: 0.4rem 0.5rem;
   border-radius: 10px;
   border: 1px solid var(--c4-line);
-  background: #fff;
+  background: var(--surface-card);
   color: var(--c4-ink);
 }
 .c4-error {
@@ -322,7 +323,7 @@
   padding: 1rem 0;
 }
 .c4-waiting-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.15rem;
   margin: 0;
 }
@@ -335,7 +336,7 @@
   opacity: 0.6;
 }
 .c4-code-value {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 2.4rem;
   font-weight: 600;
   letter-spacing: 0.25em;

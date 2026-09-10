@@ -1,8 +1,6 @@
-/* Entry point. Order matters: legacy.css first (a font import Workouts
-   and Animal Place Thing still need), then the new design system —
-   tokens + reset + the component layer win the cascade for anything
-   they both touch (body, headings). See legacy.css for what's pending. */
-@import './legacy.css';
+/* Entry point — tokens + reset + the component layer, then per-feature
+   CSS. Every page is on the design system now; legacy.css (the old
+   corkboard chrome + Fraunces/Inter import) is gone. */
 @import './tokens/fonts.css';
 @import './tokens/colors.css';
 @import './tokens/typography.css';

@@ -97,6 +97,43 @@ list, per `ShoppingLists.jsx`).
 
 Shared/family-readable and writable.
 
+## `chores`
+
+Read/written by `src/pages/choresData.js`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid / bigint | PK |
+| `title` | text | |
+| `assigned_to` | uuid | nullable, references `auth.users.id` — `null` means "anyone" |
+| `frequency` | text | `once` \| `daily` \| `weekly` |
+| `created_by` | uuid | references `auth.users.id` |
+| `created_at` | timestamptz | |
+
+Shared/family-readable and writable, same as shopping lists (any approved
+user can create one); only the creator or an `admin` can delete one
+(enforced client-side in `Chores.jsx` via `canDelete`, should also be
+enforced by RLS).
+
+## `chore_completions`
+
+Tracks which "period" of a chore has been done, rather than a mutable `done`
+boolean — see `currentPeriodKey()` in `choresData.js`. This is what makes
+daily/weekly chores reset themselves with no cron job: yesterday's
+completion just doesn't match today's period key.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid / bigint | PK |
+| `chore_id` | uuid / bigint | references `chores.id` |
+| `completed_by` | uuid | references `auth.users.id` |
+| `period_key` | text | today's ISO date (`daily`), this week's Monday ISO date (`weekly`), or the literal `'once'` |
+| `completed_at` | timestamptz | defaults to now |
+
+Unique constraint on `(chore_id, period_key)` — `completeChore()` upserts on
+that conflict target (marking complete again just updates who/when did it).
+Shared/family-readable and writable.
+
 ## `workout_programs`
 
 Read/written by `src/lib/workoutApi.js`. A program's full definition (chains,

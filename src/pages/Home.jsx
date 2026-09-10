@@ -8,6 +8,7 @@ const shortcuts = [
   { to: '/recipes', title: 'Recipes', blurb: 'Browse, cook, add your own', icon: 'soup' },
   { to: '/planner', title: "This week's meals", blurb: '7 days, planned out', icon: 'calendar-days' },
   { to: '/shopping', title: 'Shopping lists', blurb: 'Tick off, or combine a shop', icon: 'shopping-basket' },
+  { to: '/chores', title: 'Chores', blurb: "Who's doing what, and by when", icon: 'list-checks' },
   { to: '/workouts', title: 'Workouts', blurb: 'Log a session, see your progress', icon: 'dumbbell' },
   { to: '/games', title: 'Games', blurb: 'Connect Four, Sudoku, Hangman, and more', icon: 'gamepad-2' },
 ]

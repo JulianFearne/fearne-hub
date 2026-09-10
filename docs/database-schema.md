@@ -16,7 +16,7 @@ programs, games) readable by any approved user.
 ## `profiles`
 
 One row per user, keyed to `auth.users`. Read/written by
-`AuthContext.jsx` and `Admin.jsx`.
+`AuthContext.jsx`, `Admin.jsx` and `src/pages/accountData.js` / `Settings.jsx`.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -24,10 +24,20 @@ One row per user, keyed to `auth.users`. Read/written by
 | `email` | text | |
 | `role` | text | `admin` \| `adult` \| `kid` |
 | `approved` | boolean | gates access via `ProtectedRoute` |
+| `display_name` | text | nullable; nickname shown instead of email around the hub — see `displayName()` in `accountData.js` |
+| `avatar_url` | text | nullable; public URL into the `avatars` storage bucket, with a `?v=` cache-busting param appended on every upload |
+| `notify_push` | boolean | not null, default `false`; opted in to push notifications |
+| `notify_email` | boolean | not null, default `false`; opted in to email notifications |
 | `created_at` | timestamptz | |
 
-A user's own profile should be readable by them; `admin`-role users need read
-+ update access to every profile (approve sign-ups, change roles).
+A user's own profile should be readable by them, and updatable by them for
+the account-settings columns (`display_name`, `avatar_url`, `notify_push`,
+`notify_email`) — but **not** for `role` or `approved`, which must stay
+admin-only even though the row is theirs. See the `profiles_protect_privileged`
+trigger in the consolidated SQL, which is what actually enforces that split
+(a broad "own row" RLS policy alone can't distinguish which columns changed).
+`admin`-role users need read + update access to every profile regardless
+(approve sign-ups, change roles).
 
 ## `recipes`
 
@@ -160,6 +170,36 @@ recurrence is encoded as a native `RRULE:FREQ=YEARLY` so the destination
 calendar keeps it repeating. This is a one-off download, not a
 live-syncing subscription; see the note in the README if a subscribable
 feed URL is ever wanted instead.
+
+## `push_subscriptions`
+
+One row per browser/device a user has subscribed to push notifications on.
+Read/written by `src/pages/pushData.js`; sent to by the `notify` Edge
+Function (`supabase/functions/notify/index.ts`) using the service role key.
+See [`push-notifications.md`](push-notifications.md) for the full feature.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid / bigint | PK |
+| `user_id` | uuid | references `auth.users.id` |
+| `endpoint` | text | the browser push service URL — unique per subscription |
+| `p256dh` | text | subscription public key, from `PushSubscription.toJSON().keys` |
+| `auth` | text | subscription auth secret, from the same |
+| `created_at` | timestamptz | |
+
+Unique constraint on `endpoint` — `subscribeToPush()` upserts on that
+conflict target (re-subscribing the same browser just refreshes the row).
+Own-row read/write only; the `notify` function bypasses RLS entirely via the
+service role key, which is expected for a trusted server-side function.
+
+## Storage: `avatars` bucket
+
+Profile pictures, uploaded by `uploadAvatar()` in `accountData.js`. Public
+bucket (avatars aren't sensitive) with one object per user at a fixed path
+`<user id>/avatar` — re-uploading overwrites it via `upsert: true`, so there's
+never more than one file per user. Storage policies must restrict writes to
+`(storage.foldername(name))[1] = auth.uid()::text` so a user can only
+overwrite their own avatar; reads are public. See the consolidated SQL.
 
 ## `workout_programs`
 

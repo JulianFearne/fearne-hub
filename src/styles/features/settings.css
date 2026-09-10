@@ -1,0 +1,4 @@
+/* Account settings. Scoped under .fh-settings. */
+.fh-settings__avatarcard{display:flex;align-items:center;gap:var(--sp-6);margin-bottom:var(--sp-7)}
+.fh-settings__namerow{display:flex;gap:var(--sp-4);align-items:flex-end;margin-bottom:var(--sp-8);flex-wrap:wrap}
+.fh-settings__namerow .fh-field{flex:1;min-width:200px}

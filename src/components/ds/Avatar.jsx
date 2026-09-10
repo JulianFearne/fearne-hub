@@ -15,7 +15,7 @@ function initials(name = '') {
     .join('')
 }
 
-export default function Avatar({ name, size = 'md', here, className = '', style, ...rest }) {
+export default function Avatar({ name, src, size = 'md', here, className = '', style, ...rest }) {
   const colorIndex = memberColorIndex(name)
   const classes = ['fh-avatar', `fh-avatar--${size}`, className].filter(Boolean).join(' ')
   return (
@@ -24,7 +24,7 @@ export default function Avatar({ name, size = 'md', here, className = '', style,
       style={{ background: `var(--member-${colorIndex})`, ...style }}
       {...rest}
     >
-      {initials(name)}
+      {src ? <img src={src} alt="" /> : initials(name)}
       {here && <span className="fh-avatar__here" aria-label="online" />}
     </span>
   )

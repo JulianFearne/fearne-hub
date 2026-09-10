@@ -41,13 +41,20 @@ the client in `src/supabaseClient.js`.
 - **Calendar** — one-off or yearly-repeating events (birthdays included),
   an "export .ics" button for a one-time import into Outlook/Google/Apple
   Calendar, and a "Coming up" widget on the Home screen.
+- **Account settings** — a nickname and profile picture shown instead of
+  your email around the hub, plus push/email notification opt-in.
+- **Push & email notifications** — opt-in alerts (e.g. a chore assigned to
+  you), sent by a separately-deployed Supabase Edge Function. See
+  [`docs/push-notifications.md`](docs/push-notifications.md) — this is the
+  one feature that needs a deploy step beyond the app itself.
 - **Workouts** — upload or build a bodyweight-style "progression chain"
   workout, track sets against it, and see history, per-chain progress
   charts, and an optional body-weight tracker (adults/admins only). See
   [`docs/workout-program-format.md`](docs/workout-program-format.md).
-- **Games** — "Animal Place Thing", a realtime multiplayer categories game
-  (Object/Name/Animal/Place/Food) played with a join code, scored live via
-  Supabase Realtime.
+- **Games** — Connect Four, Sudoku, Hangman, Freecell, Would You Rather,
+  and two realtime multiplayer games played with a join code: "Animal
+  Place Thing" (categories) and Go Fish, both scored live via Supabase
+  Realtime.
 - **Admin** — approve sign-ups and manage everyone's role
   (`admin` / `adult` / `kid`).
 
@@ -78,6 +85,8 @@ src/
     ShoppingLists.jsx                     list management (shares mealPlanData.js)
     Chores.jsx / choresData.js           chores + Supabase queries
     Calendar.jsx / calendarData.js       events, birthdays, .ics export
+    Settings.jsx / accountData.js        nickname, avatar upload
+    pushData.js                           push subscribe/unsubscribe (Settings.jsx)
     WorkoutHub.jsx                        choose / upload / build a workout program
     WorkoutTracker.jsx                    live set-logging against the loaded program
     WorkoutHistory.jsx                    sessions, per-chain progress charts, weight log
@@ -86,13 +95,18 @@ src/
   lib/
     workoutSchema.js         validates/normalises uploaded or built workout JSON
     workoutApi.js             every Supabase call for the workout feature
+    notify.js                  fire-and-forget call to the `notify` Edge Function
   data/
     programs/calisthenics-bta.json   built-in starter workout, seeded on first load
   styles/                     global.css + per-feature CSS files
+supabase/
+  functions/notify/index.ts   Edge Function: sends push/email — deployed separately,
+                               see docs/push-notifications.md
 docs/
   database-schema.md          Supabase tables this app expects, inferred from the code
   workout-program-format.md   JSON format for workout programs (upload or hand-write)
   recipe-import-format.md     JSON format for bulk recipe import
+  push-notifications.md       VAPID keys, secrets, and deploying the notify function
 public/
   CNAME         custom domain for GitHub Pages
   404.html      SPA routing workaround for GitHub Pages (see comments inside)

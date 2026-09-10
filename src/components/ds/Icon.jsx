@@ -44,6 +44,10 @@ import {
   Sun,
   Moon,
   MonitorSmartphone,
+  Settings,
+  Bell,
+  Mail,
+  Camera,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -94,6 +98,10 @@ const ICONS = {
   sun: Sun,
   moon: Moon,
   'monitor-smartphone': MonitorSmartphone,
+  settings: Settings,
+  bell: Bell,
+  mail: Mail,
+  camera: Camera,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

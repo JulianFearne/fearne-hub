@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { displayName } from './accountData'
 import { fetchEvents, nextOccurrence, toISODate, formatEventDate, formatEventTime } from './calendarData'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
 import Button from '../components/ds/Button.jsx'
@@ -36,13 +37,13 @@ function useUpcomingEvents(limit = 3) {
 }
 
 export default function Home() {
-  const { user } = useAuth()
-  const firstName = user?.email ? user.email.split('@')[0] : 'there'
+  const { user, profile } = useAuth()
+  const name = profile ? displayName(profile, user?.email) : 'there'
   const upcoming = useUpcomingEvents()
 
   return (
     <div>
-      <p className="fh-home__greet">Hey {firstName}.</p>
+      <p className="fh-home__greet">Hey {name}.</p>
       <p className="fh-home__sub">Everything the family's building lives here.</p>
 
       <Card variant="feature" className="fh-home__feature">

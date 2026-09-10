@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext.jsx'
+import { displayName } from './accountData'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
 import Button from '../components/ds/Button.jsx'
 import Icon from '../components/ds/Icon.jsx'
@@ -87,10 +88,10 @@ export default function Admin() {
           <div className="fh-rows">
             {everyone.map((p) => (
               <div key={p.id} className="fh-row fh-row--static">
-                <Avatar name={p.email} size="md" />
+                <Avatar name={displayName(p)} src={p.avatar_url} size="md" />
                 <span className="fh-row__body">
                   <span className="fh-row__label">
-                    {p.email}
+                    {displayName(p)}
                     {p.id === user?.id && <span style={{ color: 'var(--ink-3)' }}> (you)</span>}
                   </span>
                   <span className="fh-row__meta">

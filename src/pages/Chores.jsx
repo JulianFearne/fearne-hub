@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { displayName } from './accountData'
+import { notify } from '../lib/notify'
 import {
   FREQUENCIES,
   currentPeriodKey,
@@ -48,7 +50,7 @@ export default function Chores() {
       .finally(() => setLoading(false))
   }
 
-  const memberEmail = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m.email])), [members])
+  const memberName = useMemo(() => Object.fromEntries(members.map((m) => [m.id, displayName(m)])), [members])
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -57,6 +59,14 @@ export default function Chores() {
     try {
       const created = await createChore({ title: title.trim(), assigned_to: assignedTo, frequency })
       setChores((prev) => [...prev, created])
+      if (created.assigned_to && created.assigned_to !== user?.id) {
+        notify({
+          userId: created.assigned_to,
+          title: 'New chore',
+          body: created.title,
+          url: '/chores',
+        })
+      }
       setTitle('')
       setAssignedTo('')
       setFrequency('daily')
@@ -145,7 +155,7 @@ export default function Chores() {
             <option value="">Anyone</option>
             {members.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.email}
+                {displayName(m)}
               </option>
             ))}
           </Select>
@@ -180,7 +190,7 @@ export default function Chores() {
             <ChoreRow
               key={chore.id}
               chore={chore}
-              memberEmail={memberEmail}
+              memberName={memberName}
               user={user}
               isAdmin={isAdmin}
               onToggle={handleToggle}
@@ -198,7 +208,7 @@ export default function Chores() {
               <ChoreRow
                 key={chore.id}
                 chore={chore}
-                memberEmail={memberEmail}
+                memberName={memberName}
                 user={user}
                 isAdmin={isAdmin}
                 onToggle={handleToggle}
@@ -212,9 +222,9 @@ export default function Chores() {
   )
 }
 
-function ChoreRow({ chore, memberEmail, user, isAdmin, onToggle, onDelete }) {
+function ChoreRow({ chore, memberName, user, isAdmin, onToggle, onDelete }) {
   const canDelete = isAdmin || chore.created_by === user?.id
-  const assigneeLabel = chore.assigned_to ? memberEmail[chore.assigned_to] ?? '…' : 'Anyone'
+  const assigneeLabel = chore.assigned_to ? memberName[chore.assigned_to] ?? '…' : 'Anyone'
 
   return (
     <TickRow

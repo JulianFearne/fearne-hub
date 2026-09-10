@@ -162,7 +162,7 @@ textarea.fh-input{min-height:96px;resize:vertical;line-height:var(--lh-normal)}
 /* ---- Wordmark -------------------------------------------------------- */
 .fh-wordmark{display:inline-flex;align-items:center;gap:.2em;font:var(--fw-black) var(--fs-body-lg)/1 var(--font-display);letter-spacing:-.03em;color:var(--ink-1);text-decoration:none}
 .fh-wordmark span{color:var(--primary)}
-.fh-wordmark__mark{width:1em;height:1em;color:var(--primary)}
+.fh-wordmark__mark{width:1.25em;height:1.25em;color:var(--primary)}
 .fh-wordmark--onFeature{color:var(--ink-on-feature)}
 .fh-wordmark--onFeature span{color:var(--secondary)}
 .fh-wordmark--onFeature .fh-wordmark__mark{color:var(--secondary)}

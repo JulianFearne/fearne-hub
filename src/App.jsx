@@ -11,6 +11,7 @@ import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Chores from './pages/Chores.jsx'
+import Calendar from './pages/Calendar.jsx'
 import GamesHub from './pages/games/GamesHub.jsx'
 import ConnectFour from './pages/games/connect-four/ConnectFour.jsx'
 import Hangman from './pages/games/hangman/Hangman.jsx'
@@ -42,6 +43,7 @@ const ROUTE_HEADERS = {
   '/planner': { title: "This week's meals", back: '/', wide: true },
   '/shopping': { title: 'Shopping lists', tab: true },
   '/chores': { title: 'Chores', back: '/' },
+  '/calendar': { title: 'Calendar', back: '/' },
   '/games': { title: 'Games', tab: true },
   '/games/connect-four': { title: 'Connect Four', back: '/games' },
   '/games/hangman': { title: 'Hangman', back: '/games' },
@@ -151,6 +153,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Chores />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <Calendar />
             </ProtectedRoute>
           }
         />

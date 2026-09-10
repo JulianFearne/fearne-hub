@@ -51,7 +51,7 @@
 
 /* ---- ListRow ------------------------------------------------------- */
 .fh-rows{background:var(--surface-card);border:var(--bw-hair) solid var(--border);border-radius:var(--r-panel);overflow:hidden}
-.fh-row{display:flex;align-items:center;gap:var(--sp-5);width:100%;min-height:var(--tap-min);padding:var(--sp-5) var(--sp-6);background:transparent;border:0;border-bottom:var(--bw-hair) solid var(--border);text-align:left;color:inherit;cursor:pointer;font:var(--type-body);transition:background var(--dur-2) var(--ease-out)}
+.fh-row{display:flex;align-items:center;gap:var(--sp-5);width:100%;min-height:var(--tap-min);padding:var(--sp-5) var(--sp-6);background:transparent;border:0;border-bottom:var(--bw-hair) solid var(--border);text-align:left;color:inherit;text-decoration:none;cursor:pointer;font:var(--type-body);transition:background var(--dur-2) var(--ease-out)}
 .fh-row:last-child{border-bottom:0}
 .fh-row:hover{background:var(--surface-sunken)}
 .fh-row--static{cursor:default}

@@ -134,6 +134,33 @@ Unique constraint on `(chore_id, period_key)` — `completeChore()` upserts on
 that conflict target (marking complete again just updates who/when did it).
 Shared/family-readable and writable.
 
+## `calendar_events`
+
+Read/written by `src/pages/calendarData.js`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid / bigint | PK |
+| `title` | text | |
+| `event_date` | date | ISO `YYYY-MM-DD`; for `recurrence = 'yearly'` only the month/day repeats — the stored year is irrelevant |
+| `event_time` | time | nullable; `null` means all-day |
+| `recurrence` | text | `none` \| `yearly` |
+| `created_by` | uuid | references `auth.users.id` |
+| `created_at` | timestamptz | |
+
+Shared/family-readable and writable, same as shopping lists and chores; only
+the creator or an `admin` can delete one (enforced client-side in
+`Calendar.jsx` via the same `canDelete`-style check as `Chores.jsx`, should
+also be enforced by RLS).
+
+`Calendar.jsx` also offers a "Export .ics" button that builds a one-time
+`.ics` snapshot client-side (`buildICS()`/`downloadICS()` in
+`calendarData.js`) for importing into Outlook/Google/Apple Calendar —
+recurrence is encoded as a native `RRULE:FREQ=YEARLY` so the destination
+calendar keeps it repeating. This is a one-off download, not a
+live-syncing subscription; see the note in the README if a subscribable
+feed URL is ever wanted instead.
+
 ## `workout_programs`
 
 Read/written by `src/lib/workoutApi.js`. A program's full definition (chains,

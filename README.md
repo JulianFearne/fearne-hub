@@ -38,6 +38,9 @@ the client in `src/supabaseClient.js`.
 - **Chores** — assign one-off, daily or weekly chores to a family member (or
   leave them open to anyone), tick them off, and watch recurring ones reset
   themselves each day/week.
+- **Calendar** — one-off or yearly-repeating events (birthdays included),
+  an "export .ics" button for a one-time import into Outlook/Google/Apple
+  Calendar, and a "Coming up" widget on the Home screen.
 - **Workouts** — upload or build a bodyweight-style "progression chain"
   workout, track sets against it, and see history, per-chain progress
   charts, and an optional body-weight tracker (adults/admins only). See
@@ -74,6 +77,7 @@ src/
     MealPlanner.jsx / mealPlanData.js    weekly planner + shopping list helpers
     ShoppingLists.jsx                     list management (shares mealPlanData.js)
     Chores.jsx / choresData.js           chores + Supabase queries
+    Calendar.jsx / calendarData.js       events, birthdays, .ics export
     WorkoutHub.jsx                        choose / upload / build a workout program
     WorkoutTracker.jsx                    live set-logging against the loaded program
     WorkoutHistory.jsx                    sessions, per-chain progress charts, weight log

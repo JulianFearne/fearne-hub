@@ -2,15 +2,15 @@
    Scoped under .freecell — never leaks into the hub shell. */
 
 .freecell {
-  --fc-forest: #22402f;
-  --fc-forest-dark: #182e21;
-  --fc-cream: #f5f0e1;
-  --fc-card-bg: #fdfbf5;
-  --fc-gold: #d6a419;
-  --fc-terracotta: #c85c3a;
-  --fc-ink: #26231d;
-  --fc-line: rgba(38, 35, 29, 0.15);
-  --fc-red: #b3261e;
+  --fc-forest: var(--primary);
+  --fc-forest-dark: var(--primary-press);
+  --fc-cream: var(--ink-on-primary);
+  --fc-card-bg: var(--surface-card);
+  --fc-gold: var(--secondary);
+  --fc-terracotta: var(--danger);
+  --fc-ink: var(--ink-1);
+  --fc-line: var(--border);
+  --fc-red: var(--danger);
   max-width: 720px;
   margin: 0 auto;
 }
@@ -28,7 +28,7 @@
   font-size: 0.9rem;
 }
 .fc-title {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   margin: 0;
 }
 
@@ -37,7 +37,7 @@
   border: 1px solid var(--fc-line);
   border-radius: 14px;
   padding: 1.25rem;
-  box-shadow: 0 3px 10px rgba(38, 35, 29, 0.12);
+  box-shadow: var(--shadow-1);
   display: grid;
   gap: 1rem;
 }
@@ -101,7 +101,7 @@
 
 .fc-card {
   border: 1px solid var(--fc-line);
-  background: #fff;
+  background: var(--surface-card);
   border-radius: 6px;
   height: 3.4rem;
   display: flex;
@@ -148,7 +148,7 @@
   padding: 0.5rem 1.1rem;
   font-weight: 600;
   border: 1px solid var(--fc-forest);
-  background: #fff;
+  background: var(--surface-card);
   color: var(--fc-forest);
   cursor: pointer;
   font-size: 0.85rem;
@@ -172,7 +172,7 @@
 }
 
 .fc-won-banner {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--fc-forest-dark);

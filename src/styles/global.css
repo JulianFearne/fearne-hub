@@ -16,3 +16,5 @@
 @import './features/planner.css';
 @import './features/shopping.css';
 @import './features/chores.css';
+@import './features/calendar.css';
+@import './features/settings.css';

@@ -11,12 +11,15 @@ import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
 import Recipes from './pages/Recipes.jsx'
 import Chores from './pages/Chores.jsx'
+import Calendar from './pages/Calendar.jsx'
+import Settings from './pages/Settings.jsx'
 import GamesHub from './pages/games/GamesHub.jsx'
 import ConnectFour from './pages/games/connect-four/ConnectFour.jsx'
 import Hangman from './pages/games/hangman/Hangman.jsx'
 import Sudoku from './pages/games/sudoku/Sudoku.jsx'
 import Freecell from './pages/games/freecell/Freecell.jsx'
 import GoFish from './pages/games/go-fish/GoFish.jsx'
+import WouldYouRather from './pages/games/would-you-rather/WouldYouRather.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -42,12 +45,15 @@ const ROUTE_HEADERS = {
   '/planner': { title: "This week's meals", back: '/', wide: true },
   '/shopping': { title: 'Shopping lists', tab: true },
   '/chores': { title: 'Chores', back: '/' },
+  '/calendar': { title: 'Calendar', back: '/' },
+  '/settings': { title: 'Settings', back: '/' },
   '/games': { title: 'Games', tab: true },
   '/games/connect-four': { title: 'Connect Four', back: '/games' },
   '/games/hangman': { title: 'Hangman', back: '/games' },
   '/games/sudoku': { title: 'Sudoku', back: '/games' },
   '/games/freecell': { title: 'Freecell', back: '/games' },
   '/games/go-fish': { title: 'Go Fish', back: '/games' },
+  '/games/would-you-rather': { title: 'Would You Rather', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -65,6 +71,7 @@ function HubShell({ children }) {
       <ThemeToggle />
       {location.pathname === '/' && (
         <>
+          <IconButton icon="settings" label="Settings" onClick={() => navigate('/settings')} />
           {isAdmin && <IconButton icon="shield" label="Admin" onClick={() => navigate('/admin')} />}
           <IconButton icon="log-out" label="Sign out" onClick={() => signOut()} />
         </>
@@ -155,6 +162,22 @@ export default function App() {
           }
         />
         <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <Calendar />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/games"
           element={
             <ProtectedRoute>
@@ -199,6 +222,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <GoFish />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/would-you-rather"
+          element={
+            <ProtectedRoute>
+              <WouldYouRather />
             </ProtectedRoute>
           }
         />

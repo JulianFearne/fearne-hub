@@ -1,0 +1,4 @@
+/* Calendar. Scoped under .fh-cal. */
+.fh-cal__toolbar{display:flex;justify-content:space-between;gap:var(--sp-5);margin-bottom:var(--sp-7);flex-wrap:wrap}
+.fh-cal__group{margin-bottom:var(--sp-7)}
+.fh-cal__date{font:var(--fw-semibold) var(--fs-meta)/1.2 var(--font-text);color:var(--ink-3);margin-bottom:var(--sp-4)}

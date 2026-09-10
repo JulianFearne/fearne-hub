@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import fernMark from '../../assets/fern-mark.svg'
 
 // "fearne." set in Gabarito 800, full stop in the accent colour, the fern
-// mark to the right of the wordmark. Never given to Onest, never redrawn.
+// mark to the left of the wordmark. Never given to Onest, never redrawn.
 export default function Wordmark({ onFeature, as, className = '', ...rest }) {
   const As = as || Link
   const linkProps = As === Link ? { to: '/' } : {}
@@ -24,8 +24,8 @@ export default function Wordmark({ onFeature, as, className = '', ...rest }) {
   }
   return (
     <As className={classes} {...linkProps} {...rest}>
-      <span>fearne.</span>
       <span className="fh-wordmark__mark" style={maskStyle} aria-hidden="true" />
+      <span>fearne.</span>
     </As>
   )
 }

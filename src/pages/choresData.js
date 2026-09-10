@@ -74,7 +74,7 @@ export async function uncompleteChore(choreId, frequency) {
 export async function fetchFamilyMembers() {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email')
+    .select('id, email, display_name')
     .eq('approved', true)
     .order('email', { ascending: true })
   if (error) throw error

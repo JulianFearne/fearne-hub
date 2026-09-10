@@ -1,0 +1,64 @@
+{
+  "family": {
+    "emoji": "🏡",
+    "label": "Family",
+    "prompts": [
+      { "a": "Only eat pizza for a year", "b": "Never eat pizza again" },
+      { "a": "Always have to sing instead of talk", "b": "Always have to whisper" },
+      { "a": "Have a pet dragon the size of a dog", "b": "Have a pet dog the size of a dragon" },
+      { "a": "Live in a treehouse", "b": "Live on a houseboat" },
+      { "a": "Never be able to use a phone again", "b": "Never be able to watch TV again" },
+      { "a": "Always have messy hair", "b": "Always have food on your face" },
+      { "a": "Be the best cook in the family", "b": "Be the funniest person in the family" },
+      { "a": "Go on holiday to the mountains", "b": "Go on holiday to the beach" },
+      { "a": "Have unlimited pancakes for breakfast forever", "b": "Have unlimited roast dinner forever" },
+      { "a": "Be able to talk to animals", "b": "Be able to talk to plants" }
+    ]
+  },
+  "silly": {
+    "emoji": "🤪",
+    "label": "Silly",
+    "prompts": [
+      { "a": "Have spaghetti for hair", "b": "Have jelly for bones" },
+      { "a": "Sneeze confetti every time", "b": "Hiccup a duck quack every time" },
+      { "a": "Wear a clown nose forever", "b": "Wear flippers forever" },
+      { "a": "Smell like cheese", "b": "Smell like wet dog" },
+      { "a": "Only be able to walk backwards", "b": "Only be able to hop everywhere" },
+      { "a": "Have a nose that grows when you fib, like Pinocchio", "b": "Cry glitter instead of tears" },
+      { "a": "Fart loudly every time you laugh", "b": "Burp the alphabet every morning" },
+      { "a": "Have fingers as long as your arms", "b": "Have a tongue as long as your leg" },
+      { "a": "Wear odd socks every day for the rest of your life", "b": "Wear your clothes inside out every day" },
+      { "a": "Have to quack instead of saying \"yes\"", "b": "Have to moo instead of saying \"no\"" }
+    ]
+  },
+  "deep": {
+    "emoji": "💭",
+    "label": "Deep",
+    "prompts": [
+      { "a": "Know how you're going to die", "b": "Know when you're going to die" },
+      { "a": "Be able to read minds", "b": "Be able to see the future" },
+      { "a": "Have unlimited money but no free time", "b": "Have unlimited free time but no money" },
+      { "a": "Always know when someone is lying to you", "b": "Always be able to get away with lying" },
+      { "a": "Relive the best day of your life on a loop", "b": "Always be surprised by what happens next" },
+      { "a": "Be famous but often criticised", "b": "Be unknown but always respected by those who know you" },
+      { "a": "Never forget anything", "b": "Be able to forget anything you choose" },
+      { "a": "Change one thing about the past", "b": "Know one thing about the future" }
+    ]
+  },
+  "kids": {
+    "emoji": "🧒",
+    "label": "Kids",
+    "prompts": [
+      { "a": "Be able to fly", "b": "Be invisible" },
+      { "a": "Have a slide instead of stairs at home", "b": "Have a ball pit instead of a sofa" },
+      { "a": "Eat ice cream for every meal", "b": "Eat sweets for every meal" },
+      { "a": "Ride a unicorn to school", "b": "Ride a dinosaur to school" },
+      { "a": "Have super strength", "b": "Have super speed" },
+      { "a": "Live in a castle", "b": "Live in a treehouse" },
+      { "a": "Never have homework again", "b": "Get to choose your own bedtime forever" },
+      { "a": "Have a pet that can talk", "b": "Have a pet that can do magic tricks" },
+      { "a": "Be the best at football", "b": "Be the best at video games" },
+      { "a": "Always win at board games", "b": "Always get to pick the movie" }
+    ]
+  }
+}

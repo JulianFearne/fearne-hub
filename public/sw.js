@@ -75,3 +75,40 @@ self.addEventListener('fetch', (event) => {
     })(),
   );
 });
+
+// Web Push: shows a notification for whatever JSON payload the `notify`
+// Edge Function sent ({ title, body, url }), and routes a click on it to
+// that url in an existing tab if one's open, else a new one.
+self.addEventListener('push', (event) => {
+  let payload = { title: 'Fearne Hub', body: '' };
+  try {
+    payload = event.data ? event.data.json() : payload;
+  } catch {
+    payload.body = event.data ? event.data.text() : '';
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'Fearne Hub', {
+      body: payload.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: payload.url || '/' },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    (async () => {
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const existing = clientsList.find((c) => c.url.startsWith(self.location.origin));
+      if (existing) {
+        existing.navigate(url);
+        existing.focus();
+      } else {
+        self.clients.openWindow(url);
+      }
+    })(),
+  );
+});

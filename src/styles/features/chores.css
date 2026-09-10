@@ -1,0 +1,5 @@
+/* Chores. Scoped under .fh-chores (currently just the toolbar/form — the
+   list itself reuses the generic .fh-rows / .fh-tick-row components). */
+.fh-chores__toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-5);margin-bottom:var(--sp-6);flex-wrap:wrap}
+.fh-chores__form{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6);flex-wrap:wrap}
+.fh-chores__form .fh-input{flex:1;min-width:160px}

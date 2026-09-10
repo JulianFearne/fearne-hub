@@ -8,6 +8,18 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#22402f" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+    <script>
+      // Apply any saved theme choice before first paint, so there's no
+      // light-then-dark flash while React boots.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('fh-theme')
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.setAttribute('data-theme', stored)
+          }
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

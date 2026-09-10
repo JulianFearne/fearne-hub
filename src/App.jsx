@@ -4,11 +4,13 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import HubHeader from './components/ds/HubHeader.jsx'
 import TabBar from './components/ds/TabBar.jsx'
 import IconButton from './components/ds/IconButton.jsx'
+import ThemeToggle from './components/ds/ThemeToggle.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import PendingApproval from './pages/PendingApproval.jsx'
 import Admin from './pages/Admin.jsx'
 import Recipes from './pages/Recipes.jsx'
+import Chores from './pages/Chores.jsx'
 import GamesHub from './pages/games/GamesHub.jsx'
 import ConnectFour from './pages/games/connect-four/ConnectFour.jsx'
 import Hangman from './pages/games/hangman/Hangman.jsx'
@@ -39,6 +41,7 @@ const ROUTE_HEADERS = {
   '/import': { title: 'Import recipes', back: '/recipes' },
   '/planner': { title: "This week's meals", back: '/', wide: true },
   '/shopping': { title: 'Shopping lists', tab: true },
+  '/chores': { title: 'Chores', back: '/' },
   '/games': { title: 'Games', tab: true },
   '/games/connect-four': { title: 'Connect Four', back: '/games' },
   '/games/hangman': { title: 'Hangman', back: '/games' },
@@ -57,13 +60,17 @@ function HubShell({ children }) {
   const navigate = useNavigate()
   const meta = ROUTE_HEADERS[location.pathname] ?? { title: 'Fearne Hub', back: '/' }
 
-  const actions =
-    location.pathname === '/' ? (
-      <>
-        {isAdmin && <IconButton icon="shield" label="Admin" onClick={() => navigate('/admin')} />}
-        <IconButton icon="log-out" label="Sign out" onClick={() => signOut()} />
-      </>
-    ) : null
+  const actions = (
+    <>
+      <ThemeToggle />
+      {location.pathname === '/' && (
+        <>
+          {isAdmin && <IconButton icon="shield" label="Admin" onClick={() => navigate('/admin')} />}
+          <IconButton icon="log-out" label="Sign out" onClick={() => signOut()} />
+        </>
+      )}
+    </>
+  )
 
   return (
     <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}`}>
@@ -136,6 +143,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ShoppingLists />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chores"
+          element={
+            <ProtectedRoute>
+              <Chores />
             </ProtectedRoute>
           }
         />

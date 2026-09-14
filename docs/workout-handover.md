@@ -138,9 +138,14 @@ and rewritten with a warning.
 
 Deployed and working: library, upload, builder, tracker, rest timer, history, weight.
 
-Schema v2 was written but may not be committed yet. Check whether
-`src/lib/workoutSchema.js` exports `SCHEMA_VERSION = 2`. If it says 1, the v2 files
-and the `workout-schema-v2.sql` migration are still pending.
+Schema v2 landed: `src/lib/workoutSchema.js` exports `SCHEMA_VERSION = 2`, and
+`_reference/workout-schema-v2.sql` adds `current_load_kg`, `load_kg` and `side` to the
+existing tables (run it once against Supabase if it hasn't been run yet). Rep ranges,
+load mode, per-side tracking and the start-position modal's starting-load field are all
+in, along with `src/data/programs/barbell-5x5.json` (squat, bench, row, press, deadlift,
+seeded alongside the calisthenics programme) and a prompt-ready standalone copy of the
+format spec at `docs/workout-import-prompt.md`, for handing to a fresh Claude chat with
+no repo access.
 
 The rest timer requests a screen wake lock and vibrates on completion. Both degrade
 silently where unsupported.
@@ -149,20 +154,34 @@ silently where unsupported.
 
 ## 8. Known gaps and likely next work
 
-1. **No barbell programme file exists yet.** Julian was building one when the v2 gaps
-   surfaced. Generating it from `docs/workout-program-format.md` is the obvious next task.
-2. **The builder form is v1-shaped.** It cannot express rep ranges, load mode or per-side.
+Everything here is optional and worked-around-able: nothing blocks using the barbell
+programme day to day.
+
+**Tier 1, still worth doing:**
+
+1. **The builder form is v1-shaped.** It cannot express rep ranges, load mode or per-side.
    Upload handles all three, so the form is the weak link. Worth extending.
-3. **Deload and reset.** No way to drop the working weight after a bad run or a break.
+2. **Deload and reset.** No way to drop the working weight after a bad run or a break.
    A "reduce by 10%" action on a load chain would fit.
-4. **No session notes UI.** The column exists and `finishSession` accepts notes, but
+3. **No session notes UI.** The column exists and `finishSession` accepts notes, but
    nothing collects them.
-5. **No export.** Recipes have a JSON export pipeline; workouts do not.
-6. **Volume and tonnage.** Sets, reps and load are all stored, so `sum(reps × load)`
+4. **No export.** Recipes have a JSON export pipeline; workouts do not.
+5. **Volume and tonnage.** Sets, reps and load are all stored, so `sum(reps × load)`
    per session is available and not yet surfaced.
-7. **`WorkoutHub` start-position modal does not collect starting loads.** `enrollInProgram`
-   accepts a `startLoads` argument that the UI never passes, so load chains begin at
-   whatever the file declares.
+
+**Tier 2-3, lower priority:**
+
+6. **No periodisation or deload cycle.** Progression is one steady state; a Week 4 deload
+   is a manual habit rather than anything the schema drives.
+7. **No day/split assignment.** `sessions_per_week` is still informational only; a real
+   A/B/C split has to be logged freeform rather than the app tracking which day is next.
+8. **No supersets.**
+9. **No distance unit.** Carries and similar are mapped onto seconds, not metres.
+10. **No RIR/RPE field.**
+11. **No video-link field** on an exercise.
+
+Resolved this round: the barbell programme file now exists, and the start-position
+modal collects starting loads (`enrollInProgram`'s `startLoads` argument is wired up).
 
 ---
 

@@ -215,7 +215,7 @@ JSON blob rather than normalised into rows.
 | `description` | text | nullable |
 | `author_id` | uuid | references `auth.users.id` |
 | `source` | text | `'builtin'` \| `'custom'` \| `'upload'` |
-| `schema_version` | int | currently always `1` |
+| `schema_version` | int | `1` or `2`; `validateProgram()` upgrades `1` files to `2` in place, so newly-saved rows are always `2` |
 | `definition` | jsonb | the full validated program object |
 | `created_at` | timestamptz | |
 
@@ -253,9 +253,12 @@ Per-user, per-program, per-chain position on the ladder.
 | `chain_id` | text | matches a chain's `id` inside the program's `definition.chains` |
 | `current_index` | int | index into that chain's `exercises` array |
 | `streak` | int | consecutive sessions hitting target at the current index |
+| `current_load_kg` | numeric | nullable; the chain's current working weight, only meaningful when the chain's `progression.mode` is `"load"` |
 
 Unique constraint on `(user_id, program_id, chain_id)` — everything upserts
-on that conflict target. Own-row read/write only.
+on that conflict target. Own-row read/write only. See
+[`_reference/workout-schema-v2.sql`](../_reference/workout-schema-v2.sql) for
+the migration that added `current_load_kg` to an existing table.
 
 ## `workout_sessions`
 
@@ -291,12 +294,18 @@ exercise), linked to a session.
 | `exercise_name` | text | denormalised, so history reads correctly even if the program definition changes later |
 | `unit` | text | `'reps'` \| `'seconds'` |
 | `amounts` | jsonb / int[] | one number per set logged |
-| `hit_target` | boolean | |
-| `advanced` | boolean | true if this set pushed the chain up a rung |
+| `load_kg` | numeric | nullable; the working weight this set was logged at, only set for chains in load mode |
+| `side` | text | nullable; `'left'` \| `'right'` for a `per_side` chain, otherwise `null` |
+| `hit_target` | boolean | true unless this row was a miss (below the rep floor, or too few sets) |
+| `advanced` | boolean | true if this set pushed the chain up a rung, or (load mode) increased the working weight |
 | `performed_at` | timestamptz | defaults to now |
 
-Own-row read/write only. Used both for the session detail view and the
-per-chain progress chart (`listSetsForChain`).
+A `per_side` chain writes **two** rows per logged set (one `side: 'left'`,
+one `side: 'right'`) for the same session/chain/exercise_index, rather than
+one row with two amounts. Own-row read/write only. Used both for the session
+detail view and the per-chain progress chart (`listSetsForChain`). See
+[`_reference/workout-schema-v2.sql`](../_reference/workout-schema-v2.sql) for
+the migration that added `load_kg` and `side` to an existing table.
 
 ## `body_weight_logs`
 

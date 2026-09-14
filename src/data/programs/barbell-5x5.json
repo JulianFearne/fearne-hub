@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "name": "Barbell 5x5",
+  "description": "A classic novice linear progression: squat, bench, row, press and deadlift. Three sessions a week. Beat the streak twice in a row on a lift and the weight goes up.",
+  "author": "Fearne Hub",
+  "sessions_per_week": 3,
+  "rest_seconds": 180,
+  "targets": { "sets": 5, "reps": 5, "streak": 2 },
+
+  "record_sections": [
+    {
+      "id": "warmup",
+      "label": "Warm-up",
+      "color": "#c9a227",
+      "select": "multi",
+      "options": [
+        "Empty bar",
+        "Ramp-up sets to working weight",
+        "Hip and shoulder mobility",
+        "Foam roll"
+      ]
+    }
+  ],
+
+  "chains": [
+    {
+      "id": "squat",
+      "section": "Legs",
+      "label": "Squat",
+      "sub": "Back squat, ATG or parallel",
+      "color": "#1f3d2b",
+      "start_load_kg": 20,
+      "progression": { "mode": "load", "increment_kg": 2.5 },
+      "exercises": [
+        { "name": "Back squat", "reps": 5 }
+      ]
+    },
+    {
+      "id": "bench",
+      "section": "Push",
+      "label": "Bench Press",
+      "sub": "Flat barbell bench",
+      "color": "#e8743b",
+      "start_load_kg": 20,
+      "progression": { "mode": "load", "increment_kg": 2.5 },
+      "exercises": [
+        { "name": "Bench press", "reps": 5 }
+      ]
+    },
+    {
+      "id": "row",
+      "section": "Pull",
+      "label": "Barbell Row",
+      "sub": "Pendlay or bent-over row",
+      "color": "#3b9ee8",
+      "start_load_kg": 20,
+      "progression": { "mode": "load", "increment_kg": 2.5 },
+      "exercises": [
+        { "name": "Barbell row", "reps": 5 }
+      ]
+    },
+    {
+      "id": "press",
+      "section": "Push",
+      "label": "Overhead Press",
+      "sub": "Standing strict press",
+      "color": "#c9a227",
+      "start_load_kg": 15,
+      "progression": { "mode": "load", "increment_kg": 1.25 },
+      "exercises": [
+        { "name": "Overhead press", "reps": 5 }
+      ]
+    },
+    {
+      "id": "deadlift",
+      "section": "Legs",
+      "label": "Deadlift",
+      "sub": "Conventional, one top set",
+      "color": "#a05bd6",
+      "rest_seconds": 240,
+      "start_load_kg": 20,
+      "targets": { "sets": 1, "reps": 5 },
+      "progression": { "mode": "load", "increment_kg": 2.5 },
+      "exercises": [
+        { "name": "Deadlift", "reps": 5 }
+      ]
+    }
+  ]
+}

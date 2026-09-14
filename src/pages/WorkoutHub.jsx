@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { validateProgram } from "../lib/workoutSchema";
+import { validateProgram, describeTarget } from "../lib/workoutSchema";
 import {
   listPrograms,
   createProgram,
@@ -15,6 +15,9 @@ import {
   getCurrentUser,
 } from "../lib/workoutApi";
 import builtinProgram from "../data/programs/calisthenics-bta.json";
+import barbellProgram from "../data/programs/barbell-5x5.json";
+
+const BUILTIN_PROGRAMS = [builtinProgram, barbellProgram];
 import "../styles/workout.css";
 
 const TABS = [
@@ -46,7 +49,7 @@ export default function WorkoutHub() {
       const user = await getCurrentUser();
       setUserId(user?.id ?? null);
       try {
-        await seedBuiltinProgram(builtinProgram);
+        await Promise.all(BUILTIN_PROGRAMS.map((p) => seedBuiltinProgram(p)));
       } catch {
         /* seeding is best-effort, never block the page */
       }
@@ -62,9 +65,9 @@ export default function WorkoutHub() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const handleLoad = async (program, startPositions) => {
+  const handleLoad = async (program, startPositions, startLoads) => {
     try {
-      await enrollInProgram(program.id, startPositions || {});
+      await enrollInProgram(program.id, startPositions || {}, startLoads || {});
       navigate("/workouts/tracker");
     } catch (e) {
       setError(e.message || "Could not load that workout.");
@@ -146,7 +149,7 @@ export default function WorkoutHub() {
         <StartPositionModal
           program={pendingProgram}
           onCancel={() => setPendingProgram(null)}
-          onConfirm={(positions) => handleLoad(pendingProgram, positions)}
+          onConfirm={(positions, loads) => handleLoad(pendingProgram, positions, loads)}
         />
       )}
 
@@ -188,7 +191,7 @@ function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
               <span className="fh-workout-pill">{steps} steps</span>
               {def.targets && (
                 <span className="fh-workout-pill">
-                  {def.targets.sets}×{def.targets.reps}, {def.targets.streak} in a row
+                  {describeTarget({ ...def.targets, unit: "reps" })}, {def.targets.streak} in a row
                 </span>
               )}
               {def.sessions_per_week && <span className="fh-workout-pill">{def.sessions_per_week}/week</span>}
@@ -263,7 +266,7 @@ function UploadPanel({ onSaved }) {
     <div className="fh-workout-card">
       <h2>Upload a workout file</h2>
       <p className="fh-workout-card__sub" style={{ marginBottom: 14 }}>
-        JSON in the Fearne workout format. See docs/fh-workout-program-format.md, or ask Claude to
+        JSON in the Fearne workout format. See docs/workout-program-format.md, or ask Claude to
         generate one using that spec.
       </p>
 
@@ -491,7 +494,19 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
   const def = program.definition || program;
   const chains = def.chains || [];
   const [positions, setPositions] = useState(() => Object.fromEntries(chains.map((c) => [c.id, 0])));
+  const [loads, setLoads] = useState(() =>
+    Object.fromEntries(
+      chains.filter((c) => c.progression?.mode === "load").map((c) => [c.id, c.start_load_kg ?? 0])
+    )
+  );
   const [openChain, setOpenChain] = useState(chains[0]?.id ?? null);
+
+  const confirm = () => {
+    const numericLoads = Object.fromEntries(
+      Object.entries(loads).map(([id, v]) => [id, Math.max(0, Number(v) || 0)])
+    );
+    onConfirm(positions, numericLoads);
+  };
 
   return (
     <div className="fh-workout-overlay" onClick={onCancel}>
@@ -500,28 +515,47 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
         <h2 style={{ marginBottom: 4 }}>{def.name}</h2>
         <p className="fh-workout-card__sub" style={{ marginBottom: 16 }}>
           You do not have to start at the bottom. Pick the hardest version you can already do
-          comfortably in each chain.
+          comfortably in each chain, and set a starting weight for anything that tracks load.
         </p>
 
         {chains.map((c) => {
+          const isLoad = c.progression?.mode === "load";
+          const canReposition = c.exercises.length > 1;
           const isOpen = openChain === c.id;
           const cur = positions[c.id] ?? 0;
           return (
             <div key={c.id} className="fh-workout-card" style={{ background: "var(--surface-sunken)", marginBottom: 8 }}>
               <div
                 className="fh-workout-card__top"
-                style={{ cursor: "pointer", marginBottom: isOpen ? 10 : 0 }}
-                onClick={() => setOpenChain(isOpen ? null : c.id)}
+                style={{ cursor: canReposition ? "pointer" : "default", marginBottom: (isOpen && canReposition) || isLoad ? 10 : 0 }}
+                onClick={() => canReposition && setOpenChain(isOpen ? null : c.id)}
               >
                 <div>
                   <div className="fh-workout-card__label" style={{ "--w-accent": c.color }}>{c.label}</div>
                   <div className="fh-workout-card__sub">{c.exercises[cur]?.name ?? c.exercises[cur]}</div>
                 </div>
-                <span className="fh-workout-pill">{isOpen ? "close" : `${cur + 1}/${c.exercises.length}`}</span>
+                {canReposition && (
+                  <span className="fh-workout-pill">{isOpen ? "close" : `${cur + 1}/${c.exercises.length}`}</span>
+                )}
               </div>
 
-              {isOpen && (
-                <div className="fh-workout-ladder">
+              {isLoad && (
+                <div style={{ maxWidth: 160 }}>
+                  <label htmlFor={`load-${c.id}`}>Starting weight (kg)</label>
+                  <input
+                    id={`load-${c.id}`}
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    inputMode="decimal"
+                    value={loads[c.id] ?? 0}
+                    onChange={(e) => setLoads((p) => ({ ...p, [c.id]: e.target.value }))}
+                  />
+                </div>
+              )}
+
+              {isOpen && canReposition && (
+                <div className="fh-workout-ladder" style={{ marginTop: isLoad ? 10 : 0 }}>
                   {c.exercises.map((ex, i) => {
                     const nm = ex?.name ?? ex;
                     const state = i === cur ? "current" : i < cur ? "done" : "todo";
@@ -548,7 +582,7 @@ function StartPositionModal({ program, onCancel, onConfirm }) {
           <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onCancel}>
             Cancel
           </button>
-          <button className="fh-workout-btn fh-workout-btn--primary" style={{ flex: 2 }} onClick={() => onConfirm(positions)}>
+          <button className="fh-workout-btn fh-workout-btn--primary" style={{ flex: 2 }} onClick={confirm}>
             Load and start
           </button>
         </div>

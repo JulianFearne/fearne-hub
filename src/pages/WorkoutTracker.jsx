@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { effectiveTarget, effectiveRest } from "../lib/workoutSchema";
+import { effectiveTarget, effectiveRest, describeTarget } from "../lib/workoutSchema";
 import {
   getActiveEnrollment,
   getProgress,
@@ -74,7 +74,8 @@ export default function WorkoutTracker() {
     setError(null);
     try {
       const sid = await ensureSession();
-      const cur = progress[chain.id] ?? { idx: 0, streak: 0 };
+      const cur = progress[chain.id] ?? { idx: 0, streak: 0, loadKg: chain.start_load_kg ?? 0 };
+      const mode = chain.progression?.mode === "load" ? "load" : "ladder";
 
       const res = await logSet({
         program,
@@ -84,15 +85,35 @@ export default function WorkoutTracker() {
         sessionId: sid,
         currentIdx: cur.idx,
         currentStreak: cur.streak,
+        currentLoadKg: cur.loadKg ?? 0,
       });
 
-      setProgress((p) => ({ ...p, [chain.id]: { idx: res.newIndex, streak: res.streak } }));
+      setProgress((p) => ({
+        ...p,
+        [chain.id]: { idx: res.newIndex, streak: res.streak, loadKg: mode === "load" ? res.newLoadKg : cur.loadKg },
+      }));
       setModal(null);
 
       const target = effectiveTarget(program, chain, chain.exercises[cur.idx]);
-      if (res.advanced) showToast(`${chain.label}: levelled up to ${res.newExercise.name}`);
-      else if (res.hitTarget) showToast(`${chain.label}: ${res.streak} of ${target.streak} toward the next rung`);
+      if (res.advanced && mode === "load") showToast(`${chain.label}: working weight up to ${res.newLoadKg}kg`);
+      else if (res.advanced) showToast(`${chain.label}: levelled up to ${res.newExercise.name}`);
+      else if (res.allCeiling) showToast(`${chain.label}: ${res.streak} of ${target.streak} toward the next step`);
+      else if (res.hitTarget) showToast(`${chain.label}: logged, on target`);
       else showToast(`${chain.label}: logged, streak back to zero`);
+
+      if (chain.per_side && amounts && Array.isArray(amounts.left) && Array.isArray(amounts.right)) {
+        const sum = (arr) => arr.reduce((n, v) => n + (parseInt(v, 10) || 0), 0);
+        const l = sum(amounts.left);
+        const r = sum(amounts.right);
+        const gap = Math.max(l, r) > 0 ? Math.abs(l - r) / Math.max(l, r) : 0;
+        if (gap > 0.15) {
+          const weaker = l < r ? "left" : "right";
+          setTimeout(
+            () => showToast(`${chain.label}: ${Math.round(gap * 100)}% left/right gap, ${weaker} side is behind`),
+            3300
+          );
+        }
+      }
 
       setRest({ seconds: effectiveRest(program, chain), label: chain.label });
     } catch (e) {
@@ -106,7 +127,7 @@ export default function WorkoutTracker() {
   const handleReposition = async (chain, index) => {
     try {
       await setChainPosition(programId, chain.id, index);
-      setProgress((p) => ({ ...p, [chain.id]: { idx: index, streak: 0 } }));
+      setProgress((p) => ({ ...p, [chain.id]: { ...(p[chain.id] || {}), idx: index, streak: 0 } }));
       setModal(null);
       showToast(`${chain.label} moved to ${chain.exercises[index].name}`);
     } catch (e) {
@@ -174,8 +195,8 @@ export default function WorkoutTracker() {
             <div className="fh-workout-kicker">Now training</div>
             <h1>{program.name}</h1>
             <p className="fh-workout-sub">
-              {program.targets.sets}×{program.targets.reps} for {program.targets.streak} workouts running
-              moves you up a rung.
+              {describeTarget({ ...program.targets, unit: "reps" })} for {program.targets.streak} workouts running
+              moves a chain on: to the next rung, or up in weight for load chains.
             </p>
           </div>
           <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => navigate("/workouts")}>
@@ -211,9 +232,10 @@ export default function WorkoutTracker() {
           <div key={section}>
             <div className="fh-workout-section-heading">{section}</div>
             {bySection[section].map((chain) => {
-              const cur = progress[chain.id] ?? { idx: 0, streak: 0 };
+              const cur = progress[chain.id] ?? { idx: 0, streak: 0, loadKg: chain.start_load_kg ?? 0 };
               const exercise = chain.exercises[cur.idx];
               const target = effectiveTarget(program, chain, exercise);
+              const mode = chain.progression?.mode === "load" ? "load" : "ladder";
               const total = chain.exercises.length;
               const pct = Math.round(((cur.idx + 1) / total) * 100);
               const maxed = cur.idx >= total - 1;
@@ -244,9 +266,9 @@ export default function WorkoutTracker() {
 
                   <div className="fh-workout-exercise-name">{exercise.name}</div>
                   <div className="fh-workout-step">
-                    step {cur.idx + 1} of {total} · target {target.sets}×{target.reps}
-                    {target.unit === "seconds" ? "s hold" : ""}
-                    {maxed && " · top of the chain"}
+                    {mode === "load"
+                      ? <>target {describeTarget(target)} at {cur.loadKg ?? 0}kg</>
+                      : <>step {cur.idx + 1} of {total} · target {describeTarget(target)}{maxed && " · top of the chain"}</>}
                   </div>
                   {exercise.note && <p className="fh-workout-card__sub" style={{ marginBottom: 8 }}>{exercise.note}</p>}
 
@@ -305,6 +327,7 @@ export default function WorkoutTracker() {
           program={program}
           chain={activeChain}
           idx={(progress[activeChain.id] ?? { idx: 0 }).idx}
+          loadKg={(progress[activeChain.id] ?? {}).loadKg ?? activeChain.start_load_kg ?? 0}
           busy={busy}
           onCancel={() => setModal(null)}
           onSave={(amounts) => handleLog(activeChain, amounts)}
@@ -337,20 +360,39 @@ export default function WorkoutTracker() {
 /* Log modal                                                                   */
 /* ========================================================================== */
 
-function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
+function LogModal({ program, chain, idx, loadKg, busy, onCancel, onSave }) {
   const exercise = chain.exercises[idx];
   const target = effectiveTarget(program, chain, exercise);
   const isHold = target.unit === "seconds";
+  const mode = chain.progression?.mode === "load" ? "load" : "ladder";
 
-  const [amounts, setAmounts] = useState(() => Array(target.sets).fill(""));
+  const makeBlank = () => Array(target.sets).fill("");
+  const [left, setLeft] = useState(makeBlank);
+  const [right, setRight] = useState(() => (chain.per_side ? makeBlank() : null));
   const firstRef = useRef(null);
 
   useEffect(() => { firstRef.current?.focus(); }, []);
 
-  const setAt = (i, v) => setAmounts((p) => p.map((x, j) => (j === i ? v : x)));
+  const setAt = (setter, i, v) => setter((p) => p.map((x, j) => (j === i ? v : x)));
 
-  const filled = amounts.filter((v) => v !== "" && !Number.isNaN(parseInt(v, 10)));
-  const willHit = filled.length >= target.sets && filled.every((v) => parseInt(v, 10) >= target.reps);
+  const filledOf = (arr) => (arr || []).filter((v) => v !== "" && !Number.isNaN(parseInt(v, 10)));
+  const reachesCeiling = (arr) => {
+    const filled = filledOf(arr);
+    return filled.length >= target.sets && filled.every((v) => parseInt(v, 10) >= target.repMax);
+  };
+  const belowFloor = (arr) => filledOf(arr).some((v) => parseInt(v, 10) < target.repMin);
+
+  const leftFilled = filledOf(left);
+  const rightFilled = chain.per_side ? filledOf(right) : [];
+  // a per-side log can be saved with just one side filled in (the other
+  // reads as a miss and gates the streak, same as a weaker side would)
+  const canSave = chain.per_side ? leftFilled.length > 0 || rightFilled.length > 0 : leftFilled.length > 0;
+  const anyFilled = leftFilled.length > 0 || rightFilled.length > 0;
+  const sideWillMiss = (arr) => filledOf(arr).length === 0 || belowFloor(arr);
+  const willMiss = chain.per_side ? sideWillMiss(left) || sideWillMiss(right) : belowFloor(left);
+  const willCeiling = chain.per_side ? reachesCeiling(left) && reachesCeiling(right) : reachesCeiling(left);
+
+  const save = () => onSave(chain.per_side ? { left, right } : left);
 
   return (
     <div className="fh-workout-overlay" onClick={onCancel}>
@@ -360,32 +402,30 @@ function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
         </div>
         <h2 style={{ margin: "6px 0 3px" }}>{exercise.name}</h2>
         <p className="fh-workout-card__sub">
-          Target {target.sets} × {target.reps}{isHold ? " seconds" : " reps"}
+          Target {describeTarget(target)}
+          {mode === "load" && ` at ${loadKg ?? 0}kg`}
         </p>
 
-        <div className="fh-workout-sets-row">
-          {amounts.map((v, i) => (
-            <div key={i}>
-              <label htmlFor={`set-${i}`}>Set {i + 1}</label>
-              <input
-                id={`set-${i}`}
-                ref={i === 0 ? firstRef : null}
-                type="number"
-                min="0"
-                inputMode="numeric"
-                placeholder={isHold ? "secs" : "reps"}
-                value={v}
-                onChange={(e) => setAt(i, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
+        {chain.per_side ? (
+          <>
+            <div className="fh-workout-section-heading" style={{ margin: "14px 0 6px" }}>Left</div>
+            <SetsRow amounts={left} isHold={isHold} idPrefix="l" firstRef={firstRef} onChange={(i, v) => setAt(setLeft, i, v)} />
+            <div className="fh-workout-section-heading" style={{ margin: "14px 0 6px" }}>Right</div>
+            <SetsRow amounts={right} isHold={isHold} idPrefix="r" onChange={(i, v) => setAt(setRight, i, v)} />
+          </>
+        ) : (
+          <SetsRow amounts={left} isHold={isHold} idPrefix="s" firstRef={firstRef} onChange={(i, v) => setAt(setLeft, i, v)} />
+        )}
 
-        {filled.length > 0 && (
-          <div className={`fh-workout-alert ${willHit ? "fh-workout-alert--ok" : "fh-workout-alert--warn"}`}>
-            {willHit
-              ? "That hits the target. One more step toward levelling up."
-              : "Below target, so the streak resets. Still worth logging."}
+        {anyFilled && (
+          <div className={`fh-workout-alert ${willMiss ? "fh-workout-alert--warn" : "fh-workout-alert--ok"}`}>
+            {willMiss
+              ? "Below target, so the streak resets. Still worth logging."
+              : willCeiling
+                ? mode === "load"
+                  ? "At the top of the range. One more like this and the weight goes up."
+                  : "That hits the target. One more step toward levelling up."
+                : "Between the two, so this counts and the streak holds where it is."}
           </div>
         )}
 
@@ -396,13 +436,35 @@ function LogModal({ program, chain, idx, busy, onCancel, onSave }) {
           <button
             className="fh-workout-btn fh-workout-btn--primary"
             style={{ flex: 2 }}
-            onClick={() => onSave(amounts)}
-            disabled={busy || filled.length === 0}
+            onClick={save}
+            disabled={busy || !canSave}
           >
             {busy ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SetsRow({ amounts, isHold, idPrefix, firstRef, onChange }) {
+  return (
+    <div className="fh-workout-sets-row">
+      {amounts.map((v, i) => (
+        <div key={i}>
+          <label htmlFor={`${idPrefix}-set-${i}`}>Set {i + 1}</label>
+          <input
+            id={`${idPrefix}-set-${i}`}
+            ref={i === 0 ? firstRef : null}
+            type="number"
+            min="0"
+            inputMode="numeric"
+            placeholder={isHold ? "secs" : "reps"}
+            value={v}
+            onChange={(e) => onChange(i, e.target.value)}
+          />
+        </div>
+      ))}
     </div>
   );
 }

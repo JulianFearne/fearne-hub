@@ -161,7 +161,9 @@ function SessionsPanel() {
                     <div className="body">
                       <div className="name">{r.exercise_name}</div>
                       <div className="meta">
+                        {r.side && `${r.side === "left" ? "L" : "R"} · `}
                         {r.amounts.join(" / ")} {r.unit === "seconds" ? "sec" : "reps"}
+                        {r.load_kg != null && ` @ ${r.load_kg}kg`}
                         {r.advanced && " · levelled up"}
                         {!r.advanced && r.hit_target && " · target hit"}
                       </div>
@@ -194,6 +196,8 @@ function ProgressPanel({ program, programId }) {
   const [loading, setLoading] = useState(false);
 
   const chain = program?.chains?.find((c) => c.id === chainId);
+  const mode = chain?.progression?.mode === "load" ? "load" : "ladder";
+  const perSide = !!chain?.per_side;
 
   useEffect(() => {
     if (!programId || !chainId) return;
@@ -209,6 +213,16 @@ function ProgressPanel({ program, programId }) {
 
   const levelUps = rows.filter((r) => r.advanced);
   const best = rows.reduce((m, r) => Math.max(m, ...r.amounts), 0);
+  const leftRows = perSide ? rows.filter((r) => r.side === "left") : [];
+  const rightRows = perSide ? rows.filter((r) => r.side === "right") : [];
+  const lastLeft = leftRows[leftRows.length - 1];
+  const lastRight = rightRows[rightRows.length - 1];
+  const gapPct = lastLeft && lastRight
+    ? Math.round(
+        (Math.abs(Math.max(...lastLeft.amounts) - Math.max(...lastRight.amounts)) /
+          Math.max(Math.max(...lastLeft.amounts), Math.max(...lastRight.amounts), 1)) * 100
+      )
+    : null;
 
   return (
     <>
@@ -229,45 +243,87 @@ function ProgressPanel({ program, programId }) {
           <div className="fh-workout-stat-row">
             <div className="fh-workout-stat">
               <div className="val">{rows.length}</div>
-              <div className="cap">Sessions</div>
+              <div className="cap">Logged sets</div>
             </div>
             <div className="fh-workout-stat">
               <div className="val">{levelUps.length}</div>
-              <div className="cap">Level ups</div>
+              <div className="cap">{mode === "load" ? "Weight jumps" : "Level ups"}</div>
             </div>
             <div className="fh-workout-stat">
               <div className="val">{best}</div>
               <div className="cap">Best set</div>
             </div>
+            {perSide && gapPct != null && (
+              <div className="fh-workout-stat">
+                <div className="val">{gapPct}%</div>
+                <div className="cap">Left/right gap</div>
+              </div>
+            )}
           </div>
 
-          <div className="fh-workout-card">
-            <h3 style={{ marginBottom: 10 }}>Best set each session</h3>
-            <LineChart
-              points={rows.map((r) => ({
-                x: new Date(r.performed_at).getTime(),
-                y: Math.max(...r.amounts),
-                flag: r.advanced,
-              }))}
-              unit={rows[0]?.unit === "seconds" ? "s" : ""}
-              accent={chain?.color || "var(--primary)"}
-            />
-            <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
-              Gold dots are the sessions where you moved up a rung. Dips are normal: the number
-              resets when the exercise gets harder.
-            </p>
-          </div>
+          {perSide ? (
+            <div className="fh-workout-card">
+              <h3 style={{ marginBottom: 10 }}>Left vs right, best set each session</h3>
+              <MultiLineChart
+                unit={rows[0]?.unit === "seconds" ? "s" : ""}
+                series={[
+                  { label: "Left", color: "#3b9ee8", points: leftRows.map((r) => ({ x: new Date(r.performed_at).getTime(), y: Math.max(...r.amounts) })) },
+                  { label: "Right", color: "#e8743b", points: rightRows.map((r) => ({ x: new Date(r.performed_at).getTime(), y: Math.max(...r.amounts) })) },
+                ]}
+              />
+              <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
+                The two lines closing in on each other is the point of tracking each side separately.
+              </p>
+            </div>
+          ) : (
+            <div className="fh-workout-card">
+              <h3 style={{ marginBottom: 10 }}>Best set each session</h3>
+              <LineChart
+                points={rows.map((r) => ({
+                  x: new Date(r.performed_at).getTime(),
+                  y: Math.max(...r.amounts),
+                  flag: r.advanced,
+                }))}
+                unit={rows[0]?.unit === "seconds" ? "s" : ""}
+                accent={chain?.color || "var(--primary)"}
+              />
+              <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
+                Gold dots are the sessions where {mode === "load" ? "the weight went up" : "you moved up a rung"}.
+                Dips are normal: the number resets when {mode === "load" ? "the weight gets heavier" : "the exercise gets harder"}.
+              </p>
+            </div>
+          )}
 
-          <div className="fh-workout-section-heading">Rungs climbed</div>
+          {mode === "load" && (
+            <div className="fh-workout-card">
+              <h3 style={{ marginBottom: 10 }}>Working weight</h3>
+              <LineChart
+                points={rows
+                  .filter((r) => r.load_kg != null)
+                  .map((r) => ({ x: new Date(r.performed_at).getTime(), y: Number(r.load_kg), flag: r.advanced }))}
+                unit="kg"
+                accent={chain?.color || "var(--primary)"}
+              />
+              <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
+                A staircase is expected here: flat while the streak builds, a step up each time it resets.
+              </p>
+            </div>
+          )}
+
+          <div className="fh-workout-section-heading">{mode === "load" ? "Weight jumps" : "Rungs climbed"}</div>
           {levelUps.length === 0 ? (
-            <p className="fh-workout-card__sub">No level ups on this chain yet. Keep at it.</p>
+            <p className="fh-workout-card__sub">
+              {mode === "load" ? "No weight jumps on this chain yet. Keep at it." : "No level ups on this chain yet. Keep at it."}
+            </p>
           ) : (
             levelUps.slice().reverse().map((r, i) => (
               <div key={i} className="fh-workout-log-row">
                 <span className="dot" style={{ background: "var(--secondary)" }} />
                 <div className="body">
                   <div className="name">{r.exercise_name}</div>
-                  <div className="meta">cleared with {r.amounts.join(" / ")}</div>
+                  <div className="meta">
+                    {mode === "load" ? `cleared at ${r.load_kg}kg, moving up` : `cleared with ${r.amounts.join(" / ")}`}
+                  </div>
                 </div>
                 <div className="when">{fmtDate(r.performed_at, true)}</div>
               </div>
@@ -466,6 +522,56 @@ function LineChart({ points, unit = "", accent = "var(--primary)" }) {
       ))}
       <text x={PAD} y={16} fontSize="11" fill="var(--ink-3)">{maxY}{unit}</text>
       <text x={PAD} y={H - PAD - 4} fontSize="11" fill="var(--ink-3)">{minY}{unit}</text>
+    </svg>
+  );
+}
+
+/* ========================================================================== */
+/* Two-series SVG line chart, for left vs right                               */
+/* ========================================================================== */
+
+function MultiLineChart({ series, unit = "" }) {
+  const all = series.flatMap((s) => s.points);
+  if (!all.length) return null;
+
+  const W = 640, H = 180, PAD = 28;
+
+  if (series.every((s) => s.points.length < 2)) {
+    return <p className="fh-workout-card__sub">Not enough paired sessions yet. The chart appears once each side has two.</p>;
+  }
+
+  const xs = all.map((p) => p.x);
+  const ys = all.map((p) => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const spanX = maxX - minX || 1;
+  const spanY = maxY - minY || 1;
+  const padY = spanY * 0.15;
+
+  const sx = (x) => PAD + ((x - minX) / spanX) * (W - PAD * 2);
+  const sy = (y) => H - PAD - ((y - (minY - padY)) / (spanY + padY * 2)) * (H - PAD * 2);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Left vs right progress chart">
+      <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--border)" strokeWidth="1" />
+      {series.map((s) => {
+        if (s.points.length < 2) return null;
+        const d = s.points.map((p, i) => `${i === 0 ? "M" : "L"} ${sx(p.x).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(" ");
+        return (
+          <g key={s.label}>
+            <path d={d} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            {s.points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="2.5" fill={s.color} />)}
+          </g>
+        );
+      })}
+      <text x={PAD} y={16} fontSize="11" fill="var(--ink-3)">{maxY}{unit}</text>
+      <text x={PAD} y={H - PAD - 4} fontSize="11" fill="var(--ink-3)">{minY}{unit}</text>
+      {series.map((s, i) => (
+        <g key={s.label} transform={`translate(${W - PAD - 90}, ${16 + i * 16})`}>
+          <circle cx="0" cy="-4" r="3.5" fill={s.color} />
+          <text x="8" y="0" fontSize="11" fill="var(--ink-3)">{s.label}</text>
+        </g>
+      ))}
     </svg>
   );
 }

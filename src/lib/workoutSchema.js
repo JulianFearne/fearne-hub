@@ -2,16 +2,23 @@
 // Fearne Hub :: validate and normalise an uploaded workout program.
 // Pure functions, no Supabase imports, so this is easy to unit test.
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const MAX_BYTES = 256 * 1024;
 
 const ID_RE = /^[a-z0-9_]+$/;
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const FALLBACK_COLOR = "#6abf69";
+const PROGRESSION_MODES = new Set(["ladder", "load"]);
 
 const clampInt = (v, lo, hi) => {
   const n = Number.parseInt(v, 10);
   if (Number.isNaN(n)) return null;
+  return Math.min(hi, Math.max(lo, n));
+};
+
+const clampNumber = (v, lo, hi) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
   return Math.min(hi, Math.max(lo, n));
 };
 
@@ -38,8 +45,10 @@ export function validateProgram(raw) {
   }
 
   // ---- schema version -------------------------------------------------------
-  if (raw.schema_version !== SCHEMA_VERSION) {
-    errors.push(`schema_version must be ${SCHEMA_VERSION} (got ${JSON.stringify(raw.schema_version)}).`);
+  if (raw.schema_version !== 1 && raw.schema_version !== 2) {
+    errors.push(`schema_version must be 1 or 2 (got ${JSON.stringify(raw.schema_version)}).`);
+  } else if (raw.schema_version === 1) {
+    warnings.push("schema_version 1 was upgraded to 2 (rep ranges, load progression and per-side tracking are now available).");
   }
 
   // ---- name / description ---------------------------------------------------
@@ -65,6 +74,23 @@ export function validateProgram(raw) {
 
   let sessionsPerWeek = clampInt(raw.sessions_per_week, 1, 7);
   if (sessionsPerWeek === null) sessionsPerWeek = 3;
+
+  // ---- day rotation (optional) -----------------------------------------------
+  // Purely a display/filter hint for the tracker (e.g. "A"/"B"/"Push"); chains
+  // reference these by their own `day` field. If omitted, the tracker falls
+  // back to whatever distinct day labels the chains themselves use.
+  let days = [];
+  if (raw.days != null) {
+    if (!Array.isArray(raw.days)) {
+      warnings.push("days was not an array and was ignored.");
+    } else {
+      days = raw.days
+        .filter((d) => typeof d === "string" && d.trim())
+        .map((d) => d.trim().slice(0, 40))
+        .slice(0, 10);
+      if (raw.days.length > 10) warnings.push("days: only the first 10 were kept.");
+    }
+  }
 
   // ---- id uniqueness across chains + record sections ------------------------
   const seenIds = new Set();
@@ -143,6 +169,22 @@ export function validateProgram(raw) {
         ? normaliseTargets(ch.targets, errors, `${where}.targets`, false)
         : null;
 
+      const progression = normaliseProgression(ch.progression, where, warnings);
+
+      let startLoadKg = clampNumber(ch.start_load_kg, 0, 500);
+      if (startLoadKg === null) startLoadKg = 0;
+
+      const day = typeof ch.day === "string" ? ch.day.trim().slice(0, 40) : "";
+
+      let supersetGroup = "";
+      if (ch.superset_group != null) {
+        if (typeof ch.superset_group === "string" && ID_RE.test(ch.superset_group)) {
+          supersetGroup = ch.superset_group;
+        } else {
+          warnings.push(`${where}: superset_group "${ch.superset_group}" must match a-z, 0-9 and underscores only; ignored.`);
+        }
+      }
+
       chains.push({
         id: ch.id,
         section,
@@ -152,9 +194,21 @@ export function validateProgram(raw) {
         rest_seconds: chainRest,          // null means inherit
         targets: chainTargets,            // null means inherit
         exercises,
+        progression,                      // { mode: "ladder"|"load", incrementKg: number|null }
+        per_side: ch.per_side === true,
+        start_load_kg: startLoadKg,       // only meaningful in load mode
+        day,                              // "" means every day / unscheduled
+        superset_group: supersetGroup,    // "" means not part of a superset
       });
     });
   }
+
+  // a superset_group naming exactly one chain isn't wrong, just pointless
+  const groupCounts = {};
+  chains.forEach((c) => { if (c.superset_group) groupCounts[c.superset_group] = (groupCounts[c.superset_group] || 0) + 1; });
+  Object.entries(groupCounts).forEach(([g, n]) => {
+    if (n === 1) warnings.push(`superset_group "${g}" is only used by one chain, so it won't pair with anything.`);
+  });
 
   if (errors.length) return { ok: false, errors, warnings, program: null };
 
@@ -170,6 +224,7 @@ export function validateProgram(raw) {
       sessions_per_week: sessionsPerWeek,
       rest_seconds: restSeconds,
       targets,
+      days,
       record_sections: recordSections,
       chains,
     },
@@ -178,23 +233,79 @@ export function validateProgram(raw) {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * `reps` can be a single number (repMin === repMax) or a { min, max } range,
+ * so rep-range chains and plain single-target chains share one field.
+ */
+function normaliseRepRange(v, lo, hi, errors, where) {
+  if (v == null) return null;
+  if (typeof v === "number" || typeof v === "string") {
+    const n = clampInt(v, lo, hi);
+    if (n === null) return null;
+    return { min: n, max: n };
+  }
+  if (typeof v === "object" && !Array.isArray(v)) {
+    const min = clampInt(v.min, lo, hi);
+    const max = clampInt(v.max, lo, hi);
+    if (min === null || max === null) return null;
+    if (min > max) {
+      errors.push(`${where}: reps.min must not be greater than reps.max.`);
+      return null;
+    }
+    return { min, max };
+  }
+  return null;
+}
+
 function normaliseTargets(t, errors, where, required) {
   if (t == null) {
     if (required) errors.push(`${where} is required.`);
-    return required ? { sets: 3, reps: 12, streak: 3 } : null;
+    return required ? { sets: 3, repMin: 12, repMax: 12, streak: 3 } : null;
   }
   if (typeof t !== "object" || Array.isArray(t)) {
     errors.push(`${where} must be an object.`);
-    return required ? { sets: 3, reps: 12, streak: 3 } : null;
+    return required ? { sets: 3, repMin: 12, repMax: 12, streak: 3 } : null;
   }
+
   const sets = clampInt(t.sets, 1, 10);
-  const reps = clampInt(t.reps, 1, 100);
-  const streak = clampInt(t.streak, 1, 10);
-  if (sets === null || reps === null || streak === null) {
-    errors.push(`${where} needs numeric sets, reps and streak.`);
-    return required ? { sets: 3, reps: 12, streak: 3 } : null;
+  const range = normaliseRepRange(t.reps, 1, 100, errors, where);
+  if (sets === null || range === null) {
+    errors.push(`${where} needs a numeric sets and reps (or a reps.min/reps.max range).`);
+    return required ? { sets: 3, repMin: 12, repMax: 12, streak: 3 } : null;
   }
-  return { sets, reps, streak };
+
+  // A chain can override sets/reps but never streak: streak is always
+  // resolved from the programme's top-level targets (see effectiveTarget).
+  if (!required) return { sets, repMin: range.min, repMax: range.max };
+
+  const streak = clampInt(t.streak, 1, 10);
+  if (streak === null) {
+    errors.push(`${where}.streak must be numeric (1-10).`);
+    return { sets, repMin: range.min, repMax: range.max, streak: 3 };
+  }
+  return { sets, repMin: range.min, repMax: range.max, streak };
+}
+
+function normaliseProgression(p, where, warnings) {
+  if (p == null) return { mode: "ladder", incrementKg: null };
+  if (typeof p !== "object" || Array.isArray(p)) {
+    warnings.push(`${where}.progression was not an object; using ladder mode.`);
+    return { mode: "ladder", incrementKg: null };
+  }
+
+  let mode = "ladder";
+  if (p.mode != null) {
+    if (PROGRESSION_MODES.has(p.mode)) mode = p.mode;
+    else warnings.push(`${where}.progression.mode "${p.mode}" is not recognised; using ladder.`);
+  }
+  if (mode !== "load") return { mode, incrementKg: null };
+
+  let incrementKg = clampNumber(p.increment_kg, 0.25, 50);
+  if (incrementKg === null) {
+    incrementKg = 2.5;
+    warnings.push(`${where}.progression.increment_kg was missing or invalid; defaulting to 2.5kg.`);
+  }
+  return { mode, incrementKg };
 }
 
 function normaliseExercises(list, where, errors, warnings) {
@@ -211,7 +322,7 @@ function normaliseExercises(list, where, errors, warnings) {
     if (typeof ex === "string") {
       const nm = ex.trim();
       if (!nm) { warnings.push(`${at} was blank and skipped.`); return; }
-      out.push({ name: nm.slice(0, 120), unit: "reps", reps: null, sets: null, note: "" });
+      out.push({ name: nm.slice(0, 120), unit: "reps", repMin: null, repMax: null, sets: null, note: "" });
       return;
     }
 
@@ -223,13 +334,40 @@ function normaliseExercises(list, where, errors, warnings) {
     const nm = typeof ex.name === "string" ? ex.name.trim() : "";
     if (!nm) { warnings.push(`${at} had no name and was skipped.`); return; }
 
-    const unit = ex.unit === "seconds" ? "seconds" : "reps";
+    let unit = "reps";
+    if (ex.unit === "seconds" || ex.unit === "metres") {
+      unit = ex.unit;
+    } else if (ex.unit === "weight") {
+      // Load is tracked separately (per-chain progression), not as a third unit:
+      // a weighted plank is still a seconds hold plus a load, not "weight" reps.
+      unit = "reps";
+      warnings.push(`${at}: unit "weight" isn't a unit here, load is tracked on the chain; using reps.`);
+    }
+
+    const hi = unit === "seconds" ? 3600 : unit === "metres" ? 5000 : 100;
+    const range = ex.reps != null ? normaliseRepRange(ex.reps, 1, hi, errors, at) : null;
+    if (ex.reps != null && range === null) {
+      warnings.push(`${at}: reps override was invalid and was ignored.`);
+    }
+
+    let videoUrl = "";
+    if (typeof ex.video_url === "string" && ex.video_url.trim()) {
+      const v = ex.video_url.trim();
+      if ((v.startsWith("http://") || v.startsWith("https://")) && v.length <= 300) {
+        videoUrl = v;
+      } else {
+        warnings.push(`${at}: video_url must be an http(s) URL of 300 characters or fewer; ignored.`);
+      }
+    }
+
     out.push({
       name: nm.slice(0, 120),
       unit,
-      reps: clampInt(ex.reps, 1, unit === "seconds" ? 3600 : 100),
+      repMin: range ? range.min : null,
+      repMax: range ? range.max : null,
       sets: clampInt(ex.sets, 1, 10),
       note: typeof ex.note === "string" ? ex.note.trim().slice(0, 200) : "",
+      video_url: videoUrl,
     });
   });
 
@@ -245,17 +383,30 @@ function pickColor(c, where, warnings) {
 
 // ---------------------------------------------------------------------------
 // Resolve the effective target for a given exercise, walking the override chain:
-// exercise -> chain -> program
+// exercise -> chain -> program. Streak always comes from the programme's own
+// targets: a chain can override sets/reps but never streak (see
+// normaliseTargets), so reading it from `base` here would silently lose it
+// whenever a chain provides its own targets override.
 export function effectiveTarget(program, chain, exercise) {
   const base = chain?.targets || program.targets;
   return {
     sets: exercise?.sets ?? base.sets,
-    reps: exercise?.reps ?? base.reps,
-    streak: base.streak,
+    repMin: exercise?.repMin ?? base.repMin,
+    repMax: exercise?.repMax ?? base.repMax,
+    streak: program.targets.streak,
     unit: exercise?.unit ?? "reps",
   };
 }
 
 export function effectiveRest(program, chain) {
   return chain?.rest_seconds ?? program.rest_seconds ?? 90;
+}
+
+/** Short human string for a resolved target, e.g. "3×5", "3×6-8s" or "3×20-40m". */
+export function describeTarget(target) {
+  const suffix = target.unit === "seconds" ? "s" : target.unit === "metres" ? "m" : "";
+  const repPart = target.repMin === target.repMax
+    ? `${target.repMin}${suffix}`
+    : `${target.repMin}-${target.repMax}${suffix}`;
+  return `${target.sets}×${repPart}`;
 }

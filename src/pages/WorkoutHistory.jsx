@@ -162,8 +162,9 @@ function SessionsPanel() {
                       <div className="name">{r.exercise_name}</div>
                       <div className="meta">
                         {r.side && `${r.side === "left" ? "L" : "R"} · `}
-                        {r.amounts.join(" / ")} {r.unit === "seconds" ? "sec" : "reps"}
+                        {r.amounts.join(" / ")} {r.unit === "seconds" ? "sec" : r.unit === "metres" ? "m" : "reps"}
                         {r.load_kg != null && ` @ ${r.load_kg}kg`}
+                        {r.rpe != null && ` · RPE ${r.rpe}`}
                         {r.advanced && " · levelled up"}
                         {!r.advanced && r.hit_target && " · target hit"}
                       </div>
@@ -265,7 +266,7 @@ function ProgressPanel({ program, programId }) {
             <div className="fh-workout-card">
               <h3 style={{ marginBottom: 10 }}>Left vs right, best set each session</h3>
               <MultiLineChart
-                unit={rows[0]?.unit === "seconds" ? "s" : ""}
+                unit={rows[0]?.unit === "seconds" ? "s" : rows[0]?.unit === "metres" ? "m" : ""}
                 series={[
                   { label: "Left", color: "#3b9ee8", points: leftRows.map((r) => ({ x: new Date(r.performed_at).getTime(), y: Math.max(...r.amounts) })) },
                   { label: "Right", color: "#e8743b", points: rightRows.map((r) => ({ x: new Date(r.performed_at).getTime(), y: Math.max(...r.amounts) })) },
@@ -284,7 +285,7 @@ function ProgressPanel({ program, programId }) {
                   y: Math.max(...r.amounts),
                   flag: r.advanced,
                 }))}
-                unit={rows[0]?.unit === "seconds" ? "s" : ""}
+                unit={rows[0]?.unit === "seconds" ? "s" : rows[0]?.unit === "metres" ? "m" : ""}
                 accent={chain?.color || "var(--primary)"}
               />
               <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>

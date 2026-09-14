@@ -48,6 +48,7 @@ none of the v2 features. `schema_version` in a saved program is always `2`.
 | `targets` | object | yes | Program-wide default target: `{ sets, reps, streak }`. |
 | `rest_seconds` | number | no | Default rest between sets, 10–600. Defaults to `90`. |
 | `sessions_per_week` | number | no | 1–7. Defaults to `3`. Informational only. |
+| `days` | array of strings | no | Ordered rotation labels (e.g. `["A", "B"]`), used by the day tabs and the "next up" hint in the tracker. Max 10. If omitted, the tracker derives the same list from whatever distinct `day` values the chains use. |
 | `record_sections` | array | no | See [Record sections](#record-sections). Defaults to `[]`. |
 | `chains` | array | yes | See [Chains](#chains). Must be non-empty. |
 
@@ -122,6 +123,8 @@ floor and a ceiling to progress sensibly:
 | `progression` | object | no | `{ mode: "ladder" \| "load", increment_kg }`. Defaults to `{ mode: "ladder" }`. `increment_kg` is required for `"load"` (1–500, defaults to 2.5kg with a warning if missing/invalid). |
 | `start_load_kg` | number | no | 0–500. The working weight new enrolments start at for a load chain, if the start-position screen doesn't collect one. Ignored for ladder chains. |
 | `per_side` | boolean | no | Defaults to `false`. See [Per-side chains](#per-side-chains). |
+| `day` | string | no | Up to 40 characters, e.g. `"A"`, `"Push"`. Which day this chain belongs to. See [Day assignment](#day-assignment). Omitted or `""` means every day. |
+| `superset_group` | string | no | Same id rules as `id` (`a-z0-9_`). Chains sharing a group are logged back-to-back as one superset. See [Supersets](#supersets). |
 | `exercises` | array | yes | Non-empty, ordered easiest first. Max 80 (extra are dropped with a warning). A load chain is usually a single exercise, since progression happens by adding weight rather than moving along the array. |
 
 ### Exercises
@@ -134,10 +137,11 @@ Each entry in `exercises` can be either:
   | Field | Type | Notes |
   |---|---|---|
   | `name` | string | required, truncated to 120 characters |
-  | `unit` | `"reps"` \| `"seconds"` | defaults to `"reps"`; use `"seconds"` for holds/planks. `"weight"` is accepted and rewritten to `"reps"` with a warning: load is tracked on the chain (`progression`/`load_kg`), not as a third unit, because a weighted plank is a seconds hold *and* a load at the same time. |
-  | `reps` | number or `{ min, max }` | overrides the chain/program target for this exercise (1–100 for reps, 1–3600 for seconds) |
+  | `unit` | `"reps"` \| `"seconds"` \| `"metres"` | defaults to `"reps"`; use `"seconds"` for holds/planks, `"metres"` for a carry or a sled push logged by distance. `"weight"` is accepted and rewritten to `"reps"` with a warning: load is tracked on the chain (`progression`/`load_kg`), not as a third unit, because a weighted plank is a seconds hold *and* a load at the same time. |
+  | `reps` | number or `{ min, max }` | overrides the chain/program target for this exercise (1–100 for reps, 1–3600 for seconds, 1–5000 for metres) |
   | `sets` | number | overrides the chain/program target for this exercise, 1–10 |
   | `note` | string | short tip shown under the exercise name, truncated to 200 characters |
+  | `video_url` | string | optional link to a form video, shown as a small "form video" link next to the exercise name. Must start with `http://` or `https://` and be 300 characters or fewer, otherwise it's dropped with a warning. |
 
 ### Load chains
 
@@ -169,6 +173,29 @@ progression. This is intentional: the point of tracking left/right
 separately is watching asymmetry close, and letting the strong side carry
 the weak one defeats that. Don't change this to "either side" without being
 asked.
+
+### Day assignment
+
+Give a chain a `day` (e.g. `"A"`, `"B"`, or a free label like `"Push"`) to
+say which day of a split it belongs to. A chain with no `day` shows up on
+every day. The tracker shows day tabs whenever a programme uses two or more
+distinct day labels (from the top-level `days` array if given, otherwise
+collected from the chains themselves), and remembers the last day trained
+per person per programme (in the browser, not the database) to suggest
+which one is next.
+
+There's no way to put a chain on more than one day: a lift trained on both
+A and B days in a classic split needs either two chain entries (one per
+day) or to be left with no `day` at all so it shows up on both.
+
+### Supersets
+
+Give two or more chains the same `superset_group` to have them logged back
+to back: completing one opens the log form for the next immediately,
+skipping the usual per-exercise rest, then rests once after the whole group
+is done (using the longest `rest_seconds` among the group). A group can
+span sections (e.g. a push chain and a core chain), and a chain whose
+partner is filtered out by the day tab just renders on its own.
 
 ## Record sections
 
@@ -222,3 +249,10 @@ credit. Bank a credit for `target.streak` sessions in a row and the chain
 advances one rung (ladder) or the working weight goes up (load); streak
 resets to zero. A miss on any session resets the streak to zero without
 moving the rung or the weight.
+
+Two more things live entirely at logging time, not in the JSON format:
+**RPE** (rate of perceived exertion, 1–10 in half-point steps) can
+optionally be recorded alongside any logged set, and a load chain's
+**deload** button (in the tracker) drops its working weight by 10% and
+resets its streak, for after a bad run or a break. Neither needs anything
+in the programme file.

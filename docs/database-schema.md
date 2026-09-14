@@ -292,10 +292,11 @@ exercise), linked to a session.
 | `chain_id` | text | |
 | `exercise_index` | int | position in the chain at the time of logging |
 | `exercise_name` | text | denormalised, so history reads correctly even if the program definition changes later |
-| `unit` | text | `'reps'` \| `'seconds'` |
+| `unit` | text | `'reps'` \| `'seconds'` \| `'metres'` |
 | `amounts` | jsonb / int[] | one number per set logged |
 | `load_kg` | numeric | nullable; the working weight this set was logged at, only set for chains in load mode |
 | `side` | text | nullable; `'left'` \| `'right'` for a `per_side` chain, otherwise `null` |
+| `rpe` | numeric | nullable, 1-10 in half-point steps; optional, entered at logging time |
 | `hit_target` | boolean | true unless this row was a miss (below the rep floor, or too few sets) |
 | `advanced` | boolean | true if this set pushed the chain up a rung, or (load mode) increased the working weight |
 | `performed_at` | timestamptz | defaults to now |
@@ -305,7 +306,13 @@ one `side: 'right'`) for the same session/chain/exercise_index, rather than
 one row with two amounts. Own-row read/write only. Used both for the session
 detail view and the per-chain progress chart (`listSetsForChain`). See
 [`_reference/workout-schema-v2.sql`](../_reference/workout-schema-v2.sql) for
-the migration that added `load_kg` and `side` to an existing table.
+the migration that added `load_kg` and `side`, and
+[`_reference/workout-schema-v3.sql`](../_reference/workout-schema-v3.sql) for
+`rpe`.
+
+Day assignment (`day`), supersets (`superset_group`), the `"metres"` unit
+and `video_url` are all fields inside the `definition` jsonb on
+`workout_programs`, so none of them need a database column of their own.
 
 ## `body_weight_logs`
 

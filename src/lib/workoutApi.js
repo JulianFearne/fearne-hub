@@ -199,9 +199,37 @@ export async function setChainPosition(programId, chainId, index) {
   if (error) throw error;
 }
 
+/**
+ * Drop a load chain's working weight after a bad run or a break, and reset
+ * its streak. Fixed at 10%, rounded to the nearest half kilo.
+ */
+export async function deloadChain(programId, chainId, currentLoadKg, percent = 10) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("You need to be signed in.");
+
+  const newLoadKg = Math.round((Number(currentLoadKg) || 0) * (1 - percent / 100) * 2) / 2;
+
+  const { error } = await supabase
+    .from("workout_progress")
+    .upsert(
+      { user_id: user.id, program_id: programId, chain_id: chainId, current_load_kg: newLoadKg, streak: 0 },
+      { onConflict: "user_id,program_id,chain_id" }
+    );
+  if (error) throw error;
+  return newLoadKg;
+}
+
 // ---------------------------------------------------------------------------
 // Logging sets, and the progression rule
 // ---------------------------------------------------------------------------
+
+/** RPE (rate of perceived exertion), 1-10 in half-point steps. Optional. */
+function clampRpe(v) {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(Math.min(10, Math.max(1, n)) * 2) / 2;
+}
 
 /**
  * Log one exercise's sets and apply the progression rule.
@@ -225,7 +253,7 @@ export async function setChainPosition(programId, chainId, index) {
  * @returns {{advanced: boolean, streak: number, newIndex: number, newLoadKg: number|null,
  *            newExercise: object|null, hitTarget: boolean, allCeiling: boolean}}
  */
-export async function logSet({ program, programId, chain, amounts, sessionId = null, currentIdx, currentStreak, currentLoadKg = null }) {
+export async function logSet({ program, programId, chain, amounts, sessionId = null, currentIdx, currentStreak, currentLoadKg = null, rpe = null }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("You need to be signed in.");
 
@@ -285,6 +313,7 @@ export async function logSet({ program, programId, chain, amounts, sessionId = n
   // the weight actually lifted this session is the *current* working weight,
   // not the (possibly just-incremented) new one
   const loadForRow = mode === "load" ? currentLoadKg : null;
+  const cleanRpe = clampRpe(rpe);
 
   const { error: setErr } = await supabase.from("workout_sets").insert(
     insertRows.map((r) => ({
@@ -298,6 +327,7 @@ export async function logSet({ program, programId, chain, amounts, sessionId = n
       amounts: r.clean,
       side: r.side,
       load_kg: loadForRow,
+      rpe: cleanRpe,
       hit_target: !r.miss,
       advanced,
     }))
@@ -390,7 +420,7 @@ export async function listSetsForChain(programId, chainId, limit = 100) {
 
   const { data, error } = await supabase
     .from("workout_sets")
-    .select("exercise_index, exercise_name, amounts, unit, hit_target, advanced, performed_at, load_kg, side")
+    .select("exercise_index, exercise_name, amounts, unit, hit_target, advanced, performed_at, load_kg, side, rpe")
     .eq("user_id", user.id)
     .eq("program_id", programId)
     .eq("chain_id", chainId)

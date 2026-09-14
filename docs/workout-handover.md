@@ -140,12 +140,22 @@ Deployed and working: library, upload, builder, tracker, rest timer, history, we
 
 Schema v2 landed: `src/lib/workoutSchema.js` exports `SCHEMA_VERSION = 2`, and
 `_reference/workout-schema-v2.sql` adds `current_load_kg`, `load_kg` and `side` to the
-existing tables (run it once against Supabase if it hasn't been run yet). Rep ranges,
-load mode, per-side tracking and the start-position modal's starting-load field are all
-in, along with `src/data/programs/barbell-5x5.json` (squat, bench, row, press, deadlift,
-seeded alongside the calisthenics programme) and a prompt-ready standalone copy of the
-format spec at `docs/workout-import-prompt.md`, for handing to a fresh Claude chat with
-no repo access.
+existing tables (run it once against Supabase if it hasn't been run yet, then
+`_reference/workout-schema-v3.sql` for `rpe`, same idea). Rep ranges, load mode,
+per-side tracking and the start-position modal's starting-load field are all in, along
+with `src/data/programs/barbell-5x5.json` (squat, bench, row, press, deadlift, seeded
+alongside the calisthenics programme) and a prompt-ready standalone copy of the format
+spec at `docs/workout-import-prompt.md`, for handing to a fresh Claude chat with no repo
+access.
+
+On top of that, the whole Tier 2-3 list from the previous round is done: chains can
+carry a `day` (with day tabs and a "next up" hint in the tracker, remembered client-side
+per programme), `superset_group` (logged back to back with one shared rest), a
+`"metres"` unit for distance work, and an optional `video_url`. Logging a set can record
+an optional RPE. A load chain has a manual "deload" button (-10%, resets the streak),
+which also covers the old "deload and reset" gap. `barbell-5x5.json` now uses all of
+these: a two-day (A/B) split, a face-pulls/plank superset, and a metres-based farmer's
+carry.
 
 The rest timer requests a screen wake lock and vibrates on completion. Both degrade
 silently where unsupported.
@@ -157,31 +167,22 @@ silently where unsupported.
 Everything here is optional and worked-around-able: nothing blocks using the barbell
 programme day to day.
 
-**Tier 1, still worth doing:**
-
-1. **The builder form is v1-shaped.** It cannot express rep ranges, load mode or per-side.
-   Upload handles all three, so the form is the weak link. Worth extending.
-2. **Deload and reset.** No way to drop the working weight after a bad run or a break.
-   A "reduce by 10%" action on a load chain would fit.
-3. **No session notes UI.** The column exists and `finishSession` accepts notes, but
+1. **The builder form is v1-shaped.** It cannot express rep ranges, load mode, per-side,
+   day assignment, supersets, a metres unit or video links. Upload handles all of them,
+   so the form is the weak link. Worth extending, but it's a chunk of UI work on its own.
+2. **No session notes UI.** The column exists and `finishSession` accepts notes, but
    nothing collects them.
-4. **No export.** Recipes have a JSON export pipeline; workouts do not.
-5. **Volume and tonnage.** Sets, reps and load are all stored, so `sum(reps × load)`
+3. **No export.** Recipes have a JSON export pipeline; workouts do not.
+4. **Volume and tonnage.** Sets, reps and load are all stored, so `sum(reps × load)`
    per session is available and not yet surfaced.
+5. **No automatic periodisation.** The manual deload button covers "drop the weight
+   after a bad run"; there's still nothing that plans a deload week on a schedule (e.g.
+   every 4th week) the way a coached programme might.
 
-**Tier 2-3, lower priority:**
-
-6. **No periodisation or deload cycle.** Progression is one steady state; a Week 4 deload
-   is a manual habit rather than anything the schema drives.
-7. **No day/split assignment.** `sessions_per_week` is still informational only; a real
-   A/B/C split has to be logged freeform rather than the app tracking which day is next.
-8. **No supersets.**
-9. **No distance unit.** Carries and similar are mapped onto seconds, not metres.
-10. **No RIR/RPE field.**
-11. **No video-link field** on an exercise.
-
-Resolved this round: the barbell programme file now exists, and the start-position
-modal collects starting loads (`enrollInProgram`'s `startLoads` argument is wired up).
+Resolved across the last two rounds: the barbell programme file, the start-position
+modal's starting-load field, day assignment with day tabs and a "next up" hint,
+supersets, a manual deload action, a metres unit, RPE logging, and video links on
+exercises.
 
 ---
 
@@ -203,6 +204,14 @@ rule counts logged entries, not calendar days.
 - [ ] Finish a workout, confirm it appears in History with its sets
 - [ ] Left vs right tab charts both lines once two paired sessions exist
 - [ ] Body weight tab shows the adult-only message on a kid account
+- [ ] Load the barbell programme with the two-day split, day tabs show A/B and filter chains
+- [ ] "Next up" hint suggests the other day after logging on one
+- [ ] Log the face-pulls/plank superset: saving the first opens the second immediately,
+      one rest timer appears after both, not two
+- [ ] Deload a load chain, confirm the weight drops 10% and the streak resets
+- [ ] Log the farmer's carry (metres unit) and confirm the distance placeholder/labels read "metres", not "reps"
+- [ ] Log a set with an RPE value, confirm it shows in the session's History row
+- [ ] Add a `video_url` to an exercise, confirm the "form video" link appears in the tracker and the move/pick list
 
 ---
 

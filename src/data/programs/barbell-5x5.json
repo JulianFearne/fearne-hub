@@ -1,11 +1,12 @@
 {
   "schema_version": 2,
   "name": "Barbell 5x5",
-  "description": "A classic novice linear progression: squat, bench, row, press and deadlift. Three sessions a week. Beat the streak twice in a row on a lift and the weight goes up.",
+  "description": "A classic novice linear progression: squat, bench, row, press and deadlift, split across two alternating days (A, B, A / B, A, B) with some shoulder and grip accessories. Beat the streak twice in a row on a lift and the weight goes up.",
   "author": "Fearne Hub",
   "sessions_per_week": 3,
   "rest_seconds": 180,
   "targets": { "sets": 5, "reps": 5, "streak": 2 },
+  "days": ["A", "B"],
 
   "record_sections": [
     {
@@ -29,6 +30,7 @@
       "label": "Squat",
       "sub": "Back squat, ATG or parallel",
       "color": "#1f3d2b",
+      "day": "A",
       "start_load_kg": 20,
       "progression": { "mode": "load", "increment_kg": 2.5 },
       "exercises": [
@@ -41,6 +43,7 @@
       "label": "Bench Press",
       "sub": "Flat barbell bench",
       "color": "#e8743b",
+      "day": "A",
       "start_load_kg": 20,
       "progression": { "mode": "load", "increment_kg": 2.5 },
       "exercises": [
@@ -53,10 +56,37 @@
       "label": "Barbell Row",
       "sub": "Pendlay or bent-over row",
       "color": "#3b9ee8",
+      "day": "A",
       "start_load_kg": 20,
       "progression": { "mode": "load", "increment_kg": 2.5 },
       "exercises": [
         { "name": "Barbell row", "reps": 5 }
+      ]
+    },
+    {
+      "id": "face_pulls",
+      "section": "Pull",
+      "label": "Face Pulls",
+      "sub": "Rear delt and rotator cuff health",
+      "color": "#7ab8f5",
+      "day": "A",
+      "superset_group": "shoulder_health",
+      "targets": { "sets": 3, "reps": { "min": 12, "max": 15 } },
+      "exercises": [
+        { "name": "Cable or band face pull" }
+      ]
+    },
+    {
+      "id": "plank",
+      "section": "Core",
+      "label": "Plank",
+      "sub": "Paired with face pulls",
+      "color": "#a05bd6",
+      "day": "A",
+      "superset_group": "shoulder_health",
+      "targets": { "sets": 3, "reps": 30 },
+      "exercises": [
+        { "name": "Plank", "unit": "seconds" }
       ]
     },
     {
@@ -65,6 +95,7 @@
       "label": "Overhead Press",
       "sub": "Standing strict press",
       "color": "#c9a227",
+      "day": "B",
       "start_load_kg": 15,
       "progression": { "mode": "load", "increment_kg": 1.25 },
       "exercises": [
@@ -76,13 +107,28 @@
       "section": "Legs",
       "label": "Deadlift",
       "sub": "Conventional, one top set",
-      "color": "#a05bd6",
+      "color": "#1f3d2b",
+      "day": "B",
       "rest_seconds": 240,
       "start_load_kg": 20,
       "targets": { "sets": 1, "reps": 5 },
       "progression": { "mode": "load", "increment_kg": 2.5 },
       "exercises": [
         { "name": "Deadlift", "reps": 5 }
+      ]
+    },
+    {
+      "id": "farmers_carry",
+      "section": "Core",
+      "label": "Farmer's Carry",
+      "sub": "Grip and core, after deadlifts",
+      "color": "#e8743b",
+      "day": "B",
+      "start_load_kg": 20,
+      "progression": { "mode": "load", "increment_kg": 2 },
+      "targets": { "sets": 3, "reps": { "min": 20, "max": 40 } },
+      "exercises": [
+        { "name": "Farmer's carry", "unit": "metres" }
       ]
     }
   ]

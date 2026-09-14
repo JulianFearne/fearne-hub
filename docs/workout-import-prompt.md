@@ -41,6 +41,15 @@ ceiling to bank a credit — the weaker side gates progression, on purpose,
 so it's worth watching asymmetry close rather than letting the strong side
 carry the weak one.
 
+**Day assignment** (`day`) marks which day of a split a chain belongs to
+(e.g. `"A"`, `"B"`); a chain with no `day` shows up every day. A lift
+trained on more than one day (e.g. squat on both A and B) needs a separate
+chain entry per day, or no `day` at all.
+
+**Supersets** (`superset_group`) pair two or more chains (same string value)
+to be logged back to back with one shared rest afterward, instead of resting
+between them.
+
 ## JSON shape
 
 ```json
@@ -94,6 +103,7 @@ carry the weak one.
 | `targets` | object | yes | Programme-wide default. See below. |
 | `rest_seconds` | number | no | 10-600. Default 90. |
 | `sessions_per_week` | number | no | 1-7. Default 3. Informational only. |
+| `days` | array of strings | no | Ordered rotation labels, e.g. `["A", "B"]`. Max 10. If omitted, derived from the chains' own `day` values. |
 | `record_sections` | array | no | Default `[]`. See below. |
 | `chains` | array | yes | Non-empty. See below. |
 
@@ -119,6 +129,8 @@ carry the weak one.
 | `progression` | object | no | `{ "mode": "ladder" \| "load", "increment_kg": n }`. Defaults to ladder. `increment_kg` required for load mode (0.25-50). |
 | `start_load_kg` | number | no | 0-500. Starting working weight for a load chain. |
 | `per_side` | boolean | no | Default `false`. Left/right tracked separately, see progression rule above. |
+| `day` | string | no | Up to 40 characters, e.g. `"A"`. Omitted means every day. |
+| `superset_group` | string | no | Same id rules as `id`. Chains sharing a value are logged back to back. |
 | `exercises` | array | yes | Non-empty, easiest first, max 80. A load chain is usually one exercise. |
 
 ### Exercises
@@ -128,10 +140,11 @@ Either a plain string, or an object:
 | Field | Type | Notes |
 |---|---|---|
 | `name` | string | required, up to 120 characters |
-| `unit` | `"reps"` \| `"seconds"` | defaults to `"reps"`; use `"seconds"` for holds/planks. Don't use `"weight"` — load lives on the chain's `progression`/`start_load_kg`, not as a unit. |
-| `reps` | number or `{ min, max }` | overrides sets/reps target for this exercise |
+| `unit` | `"reps"` \| `"seconds"` \| `"metres"` | defaults to `"reps"`; `"seconds"` for holds/planks, `"metres"` for carries/distance work. Don't use `"weight"` — load lives on the chain's `progression`/`start_load_kg`, not as a unit. |
+| `reps` | number or `{ min, max }` | overrides sets/reps target for this exercise (1-100 reps, 1-3600 seconds, 1-5000 metres) |
 | `sets` | number | overrides sets target for this exercise, 1-10 |
 | `note` | string | short tip, up to 200 characters |
+| `video_url` | string | optional form-video link. Must start with `http://` or `https://`, up to 300 characters. |
 
 ### Record sections
 
@@ -187,3 +200,39 @@ Either a plain string, or an object:
   "exercises": [{ "name": "Single-arm dumbbell row" }]
 }
 ```
+
+**Day-assigned, part of a superset, distance-based:**
+
+```json
+{
+  "id": "farmers_carry",
+  "section": "Core",
+  "label": "Farmer's Carry",
+  "color": "#e8743b",
+  "day": "B",
+  "start_load_kg": 20,
+  "progression": { "mode": "load", "increment_kg": 2 },
+  "targets": { "sets": 3, "reps": { "min": 20, "max": 40 } },
+  "exercises": [{ "name": "Farmer's carry", "unit": "metres", "video_url": "https://example.com/farmers-carry" }]
+}
+```
+
+```json
+{
+  "id": "face_pulls",
+  "section": "Pull",
+  "label": "Face Pulls",
+  "color": "#7ab8f5",
+  "day": "A",
+  "superset_group": "shoulder_health",
+  "targets": { "sets": 3, "reps": { "min": 12, "max": 15 } },
+  "exercises": [{ "name": "Cable or band face pull" }]
+}
+```
+
+## Two things logged at the time, not in the file
+
+**RPE** (1-10, optional) can be recorded against any logged set, and a load
+chain has a **deload** action (drop the working weight 10%, reset the
+streak) available in the tracker. Neither needs anything in the JSON, they
+just happen once the programme is loaded.

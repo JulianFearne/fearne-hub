@@ -75,6 +75,23 @@ export function validateProgram(raw) {
   let sessionsPerWeek = clampInt(raw.sessions_per_week, 1, 7);
   if (sessionsPerWeek === null) sessionsPerWeek = 3;
 
+  // ---- day rotation (optional) -----------------------------------------------
+  // Purely a display/filter hint for the tracker (e.g. "A"/"B"/"Push"); chains
+  // reference these by their own `day` field. If omitted, the tracker falls
+  // back to whatever distinct day labels the chains themselves use.
+  let days = [];
+  if (raw.days != null) {
+    if (!Array.isArray(raw.days)) {
+      warnings.push("days was not an array and was ignored.");
+    } else {
+      days = raw.days
+        .filter((d) => typeof d === "string" && d.trim())
+        .map((d) => d.trim().slice(0, 40))
+        .slice(0, 10);
+      if (raw.days.length > 10) warnings.push("days: only the first 10 were kept.");
+    }
+  }
+
   // ---- id uniqueness across chains + record sections ------------------------
   const seenIds = new Set();
   const claimId = (id, where) => {
@@ -157,6 +174,17 @@ export function validateProgram(raw) {
       let startLoadKg = clampNumber(ch.start_load_kg, 0, 500);
       if (startLoadKg === null) startLoadKg = 0;
 
+      const day = typeof ch.day === "string" ? ch.day.trim().slice(0, 40) : "";
+
+      let supersetGroup = "";
+      if (ch.superset_group != null) {
+        if (typeof ch.superset_group === "string" && ID_RE.test(ch.superset_group)) {
+          supersetGroup = ch.superset_group;
+        } else {
+          warnings.push(`${where}: superset_group "${ch.superset_group}" must match a-z, 0-9 and underscores only; ignored.`);
+        }
+      }
+
       chains.push({
         id: ch.id,
         section,
@@ -169,9 +197,18 @@ export function validateProgram(raw) {
         progression,                      // { mode: "ladder"|"load", incrementKg: number|null }
         per_side: ch.per_side === true,
         start_load_kg: startLoadKg,       // only meaningful in load mode
+        day,                              // "" means every day / unscheduled
+        superset_group: supersetGroup,    // "" means not part of a superset
       });
     });
   }
+
+  // a superset_group naming exactly one chain isn't wrong, just pointless
+  const groupCounts = {};
+  chains.forEach((c) => { if (c.superset_group) groupCounts[c.superset_group] = (groupCounts[c.superset_group] || 0) + 1; });
+  Object.entries(groupCounts).forEach(([g, n]) => {
+    if (n === 1) warnings.push(`superset_group "${g}" is only used by one chain, so it won't pair with anything.`);
+  });
 
   if (errors.length) return { ok: false, errors, warnings, program: null };
 
@@ -187,6 +224,7 @@ export function validateProgram(raw) {
       sessions_per_week: sessionsPerWeek,
       rest_seconds: restSeconds,
       targets,
+      days,
       record_sections: recordSections,
       chains,
     },
@@ -297,8 +335,8 @@ function normaliseExercises(list, where, errors, warnings) {
     if (!nm) { warnings.push(`${at} had no name and was skipped.`); return; }
 
     let unit = "reps";
-    if (ex.unit === "seconds") {
-      unit = "seconds";
+    if (ex.unit === "seconds" || ex.unit === "metres") {
+      unit = ex.unit;
     } else if (ex.unit === "weight") {
       // Load is tracked separately (per-chain progression), not as a third unit:
       // a weighted plank is still a seconds hold plus a load, not "weight" reps.
@@ -306,10 +344,20 @@ function normaliseExercises(list, where, errors, warnings) {
       warnings.push(`${at}: unit "weight" isn't a unit here, load is tracked on the chain; using reps.`);
     }
 
-    const hi = unit === "seconds" ? 3600 : 100;
+    const hi = unit === "seconds" ? 3600 : unit === "metres" ? 5000 : 100;
     const range = ex.reps != null ? normaliseRepRange(ex.reps, 1, hi, errors, at) : null;
     if (ex.reps != null && range === null) {
       warnings.push(`${at}: reps override was invalid and was ignored.`);
+    }
+
+    let videoUrl = "";
+    if (typeof ex.video_url === "string" && ex.video_url.trim()) {
+      const v = ex.video_url.trim();
+      if ((v.startsWith("http://") || v.startsWith("https://")) && v.length <= 300) {
+        videoUrl = v;
+      } else {
+        warnings.push(`${at}: video_url must be an http(s) URL of 300 characters or fewer; ignored.`);
+      }
     }
 
     out.push({
@@ -319,6 +367,7 @@ function normaliseExercises(list, where, errors, warnings) {
       repMax: range ? range.max : null,
       sets: clampInt(ex.sets, 1, 10),
       note: typeof ex.note === "string" ? ex.note.trim().slice(0, 200) : "",
+      video_url: videoUrl,
     });
   });
 
@@ -353,9 +402,9 @@ export function effectiveRest(program, chain) {
   return chain?.rest_seconds ?? program.rest_seconds ?? 90;
 }
 
-/** Short human string for a resolved target, e.g. "3×5" or "3×6-8s". */
+/** Short human string for a resolved target, e.g. "3×5", "3×6-8s" or "3×20-40m". */
 export function describeTarget(target) {
-  const suffix = target.unit === "seconds" ? "s" : "";
+  const suffix = target.unit === "seconds" ? "s" : target.unit === "metres" ? "m" : "";
   const repPart = target.repMin === target.repMax
     ? `${target.repMin}${suffix}`
     : `${target.repMin}-${target.repMax}${suffix}`;

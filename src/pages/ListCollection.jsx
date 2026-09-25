@@ -16,6 +16,7 @@ import {
   fetchListItems,
   addListItem,
   addListItems,
+  updateListItem,
   toggleListItem,
   deleteListItem,
   uncheckAllItems,
@@ -23,6 +24,7 @@ import {
 } from './listsData'
 import { fetchFamilyMembers } from './choresData'
 import { displayName } from './accountData'
+import { formatEventDate, toISODate } from './calendarData'
 import { notify } from '../lib/notify'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
 import Badge from '../components/ds/Badge.jsx'
@@ -30,8 +32,17 @@ import Button from '../components/ds/Button.jsx'
 import IconButton from '../components/ds/IconButton.jsx'
 import Icon from '../components/ds/Icon.jsx'
 import Sheet from '../components/ds/Sheet.jsx'
-import { Input, Select } from '../components/ds/Field.jsx'
+import { Field, Input, Select } from '../components/ds/Field.jsx'
 import TickRow from '../components/ds/TickRow.jsx'
+
+// Open items with a due date first, soonest first; undated ones keep
+// the order they were added in.
+function byDueDate(a, b) {
+  if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date)
+  if (a.due_date) return -1
+  if (b.due_date) return 1
+  return 0
+}
 
 const PERMISSION_LABEL = { owner: 'Owner', ...Object.fromEntries(PERMISSIONS.map((p) => [p.id, p.label])) }
 
@@ -288,13 +299,36 @@ function KindLists({ kind }) {
 
 function ListDetail({ list, kind, access, members, onBack, onListChange }) {
   const k = LIST_KINDS[kind]
+  const { user, profile } = useAuth()
   const editable = canEdit(access)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [newItem, setNewItem] = useState('')
   const [newAmount, setNewAmount] = useState('')
+  const [newAssignee, setNewAssignee] = useState('')
+  const [newDue, setNewDue] = useState('')
   const [showShare, setShowShare] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+
+  // Only people who can see the list can be given something on it.
+  const people = members.filter(
+    (m) => m.id === list.created_by || list.list_shares?.some((s) => s.user_id === m.id)
+  )
+  const nameOf = (id) => {
+    const m = members.find((x) => x.id === id)
+    return m ? displayName(m) : null
+  }
+
+  function tellAssignee(item) {
+    if (!item.assigned_to || item.assigned_to === user.id) return
+    notify({
+      userId: item.assigned_to,
+      title: `${displayName(profile, user.email)} gave you a job`,
+      body: `${item.name} (${list.name})`,
+      url: `/lists/${kind}`,
+    })
+  }
 
   useEffect(() => {
     fetchListItems(list.id)
@@ -307,10 +341,18 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
     e.preventDefault()
     if (!newItem.trim()) return
     try {
-      const saved = await addListItem(list.id, { name: newItem.trim(), amount: newAmount.trim() || null })
+      const saved = await addListItem(list.id, {
+        name: newItem.trim(),
+        amount: newAmount.trim() || null,
+        assigned_to: newAssignee || null,
+        due_date: newDue || null,
+      })
       setItems((prev) => [...prev, saved])
+      tellAssignee(saved)
       setNewItem('')
       setNewAmount('')
+      setNewAssignee('')
+      setNewDue('')
     } catch (err) {
       setError(err.message)
     }
@@ -335,6 +377,13 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
     }
   }
 
+  async function handleSaveItem(item, fields) {
+    const saved = await updateListItem(item.id, fields)
+    setItems((prev) => prev.map((i) => (i.id === item.id ? saved : i)))
+    if (saved.assigned_to !== item.assigned_to) tellAssignee(saved)
+    setEditingItem(null)
+  }
+
   async function handleUncheckAll() {
     setItems((prev) => prev.map((i) => ({ ...i, checked: false })))
     try {
@@ -353,10 +402,11 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
     }
   }
 
-  const unchecked = k.splitDone ? items.filter((i) => !i.checked) : items
+  let unchecked = k.splitDone ? items.filter((i) => !i.checked) : items
+  if (k.dueDates) unchecked = [...unchecked].sort(byDueDate)
   const checked = k.splitDone ? items.filter((i) => i.checked) : []
   const checkedCount = items.filter((i) => i.checked).length
-  const itemProps = { editable, onToggle: handleToggle, onDelete: handleDelete }
+  const itemProps = { editable, nameOf, onToggle: handleToggle, onDelete: handleDelete, onEdit: setEditingItem }
 
   return (
     <div>
@@ -391,6 +441,23 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
           <Button type="submit" icon="plus">
             Add
           </Button>
+          {(k.assignees || k.dueDates) && (
+            <div className="fh-lists__extras">
+              {k.assignees && (
+                <Select value={newAssignee} onChange={(e) => setNewAssignee(e.target.value)} aria-label="Who's doing it">
+                  <option value="">Anyone</option>
+                  {people.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {displayName(m)}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              {k.dueDates && (
+                <Input type="date" value={newDue} onChange={(e) => setNewDue(e.target.value)} aria-label="Due date" />
+              )}
+            </div>
+          )}
         </form>
       )}
 
@@ -442,6 +509,10 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
         </>
       )}
 
+      {editingItem && (
+        <ItemSheet item={editingItem} k={k} people={people} onClose={() => setEditingItem(null)} onSave={handleSaveItem} />
+      )}
+
       {showShare && (
         <ShareSheet list={list} kind={kind} members={members} onClose={() => setShowShare(false)} onListChange={onListChange} />
       )}
@@ -449,18 +520,117 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
   )
 }
 
-function ListItem({ item, editable, onToggle, onDelete }) {
+function ListItem({ item, editable, nameOf, onToggle, onDelete, onEdit }) {
+  const assignee = item.assigned_to && nameOf(item.assigned_to)
+  const overdue = item.due_date && !item.checked && item.due_date < toISODate(new Date())
   return (
     <TickRow
       checked={item.checked}
       onToggle={() => onToggle(item)}
       disabled={!editable}
       qty={item.amount}
-      trail={editable && <IconButton icon="x" label={`Remove ${item.name}`} onClick={() => onDelete(item.id)} />}
+      trail={
+        editable && (
+          <>
+            <IconButton icon="pencil" label={`Edit ${item.name}`} onClick={() => onEdit(item)} />
+            <IconButton icon="x" label={`Remove ${item.name}`} onClick={() => onDelete(item.id)} />
+          </>
+        )
+      }
     >
       {item.name}
       {item.recipe_title && <span style={{ color: 'var(--ink-3)', font: 'var(--type-caption)' }}> ({item.recipe_title})</span>}
+      {(assignee || item.due_date) && (
+        <span className="fh-lists__itemmeta">
+          {assignee}
+          {assignee && item.due_date && ' · '}
+          {item.due_date && (
+            <span className={overdue ? 'fh-lists__overdue' : undefined}>
+              {overdue ? 'Overdue: ' : 'Due '}
+              {formatEventDate(item.due_date)}
+            </span>
+          )}
+        </span>
+      )}
     </TickRow>
+  )
+}
+
+// Edit one item's details. Which fields show depends on the kind of list.
+function ItemSheet({ item, k, people, onClose, onSave }) {
+  const [name, setName] = useState(item.name)
+  const [amount, setAmount] = useState(item.amount || '')
+  const [assignee, setAssignee] = useState(item.assigned_to || '')
+  const [due, setDue] = useState(item.due_date || '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    setError(null)
+    const fields = { name: name.trim() }
+    if (k.amounts) fields.amount = amount.trim() || null
+    if (k.assignees) fields.assigned_to = assignee || null
+    if (k.dueDates) fields.due_date = due || null
+    try {
+      await onSave(item, fields)
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Sheet
+      title="Edit item"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="quiet" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form="fh-item-form" loading={saving} disabled={!name.trim()}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
+      <form id="fh-item-form" onSubmit={handleSubmit} className="fh-lists__form">
+        <Field label="Name" htmlFor="fh-item-name">
+          <Input id="fh-item-name" value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+        {k.amounts && (
+          <Field label="Amount" htmlFor="fh-item-amount">
+            <Input id="fh-item-amount" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Optional" />
+          </Field>
+        )}
+        {k.assignees && (
+          <Field label="Who's doing it" htmlFor="fh-item-assignee">
+            <Select id="fh-item-assignee" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+              <option value="">Anyone</option>
+              {people.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {displayName(m)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
+        {k.dueDates && (
+          <Field label="Due date" htmlFor="fh-item-due">
+            <Input id="fh-item-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+          </Field>
+        )}
+      </form>
+    </Sheet>
   )
 }
 

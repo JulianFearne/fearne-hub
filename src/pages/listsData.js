@@ -9,6 +9,8 @@ import { supabase } from '../supabaseClient'
 //   splitDone  ticked items drop into their own group below the rest
 //   clearDone  a button to delete every ticked item at once
 //   resetAll   a button to untick everything, for lists you reuse
+//   assignees  items can be given to someone who has access to the list
+//   dueDates   items can have a due date; open items sort soonest first
 export const LIST_KINDS = {
   shopping: {
     title: 'Shopping lists',
@@ -36,6 +38,8 @@ export const LIST_KINDS = {
     doneLabel: 'Done',
     splitDone: true,
     clearDone: true,
+    assignees: true,
+    dueDates: true,
   },
   checklist: {
     title: 'Checklists',
@@ -134,10 +138,13 @@ export async function fetchListItems(listId) {
   return data
 }
 
-export async function addListItem(listId, { name, amount = null, source = 'manual', recipe_title = null }) {
+export async function addListItem(
+  listId,
+  { name, amount = null, source = 'manual', recipe_title = null, assigned_to = null, due_date = null }
+) {
   const { data, error } = await supabase
     .from('list_items')
-    .insert([{ list_id: listId, name, amount, source, recipe_title }])
+    .insert([{ list_id: listId, name, amount, source, recipe_title, assigned_to, due_date }])
     .select()
     .single()
   if (error) throw error
@@ -147,6 +154,13 @@ export async function addListItem(listId, { name, amount = null, source = 'manua
 export async function addListItems(listId, items) {
   const rows = items.map((i) => ({ list_id: listId, ...i }))
   const { data, error } = await supabase.from('list_items').insert(rows).select()
+  if (error) throw error
+  return data
+}
+
+// Edits an item's name / amount / assignee / due date.
+export async function updateListItem(id, fields) {
+  const { data, error } = await supabase.from('list_items').update(fields).eq('id', id).select().single()
   if (error) throw error
   return data
 }

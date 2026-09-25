@@ -4,7 +4,9 @@ import { LIST_KINDS, fetchLists, listKindFor } from './listsData'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
 import Icon from '../components/ds/Icon.jsx'
 
-// The Lists tab: one tile per kind of list, each opening its own section.
+// The Lists tab: one tile per kind of list, each opening its own section,
+// plus Chores. Chores keep their own data and page (they repeat, reset
+// themselves and are family-wide), they're just grouped here.
 export default function Lists() {
   const [counts, setCounts] = useState(null)
   const [error, setError] = useState(null)
@@ -46,6 +48,15 @@ export default function Lists() {
             </Card>
           )
         })}
+        <Card as={Link} to="/chores" tile>
+          <span className="fh-recipes__mark">
+            <Icon name="list-checks" size={18} />
+          </span>
+          <div>
+            <CardTitle>Chores</CardTitle>
+            <CardMeta>Daily and weekly jobs that reset themselves</CardMeta>
+          </div>
+        </Card>
       </div>
     </div>
   )

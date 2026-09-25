@@ -1,5 +1,5 @@
 -- _reference/lists-sharing-schema.sql
--- Fearne Hub :: per-list sharing.
+-- Fearne Hub :: per-list sharing, plus assignees and due dates on items.
 --
 -- Lists stop being visible to the whole family. The person who creates a
 -- list (lists.created_by) owns it; everyone else only sees it if it has been
@@ -76,6 +76,13 @@ end $$;
 create index if not exists list_shares_user_idx on public.list_shares (user_id);
 
 grant select, insert, update, delete on public.list_shares to authenticated;
+
+-- ---------- assignees and due dates ----------
+-- Used by to-do lists; nullable, so other kinds of list just ignore them.
+
+alter table public.list_items
+  add column if not exists assigned_to uuid references auth.users (id) on delete set null,
+  add column if not exists due_date date;
 
 -- ---------- replace the old family-wide policies ----------
 

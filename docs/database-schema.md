@@ -106,7 +106,8 @@ rename or delete it. See
 ## `list_items`
 
 Formerly `shopping_list_items`. The same columns serve every kind of list;
-`amount`, `source` and `recipe_title` are only used by shopping lists.
+`amount`, `source` and `recipe_title` are only used by shopping lists;
+`assigned_to` and `due_date` only by to-do lists.
 Readable by anyone who can view the list; added to, ticked and removed by
 the owner or an `edit` / `manage` share.
 
@@ -119,6 +120,8 @@ the owner or an `edit` / `manage` share.
 | `checked` | boolean | default `false` |
 | `source` | text | `'manual'` or `'meal'` (set by `ingredientsFromEntries()` when pulled from the Meal Planner) |
 | `recipe_title` | text | nullable; set when `source = 'meal'`, shown as provenance next to the item |
+| `assigned_to` | uuid | nullable, references `auth.users.id` (on delete set null); used by to-do lists, `null` means "anyone" |
+| `due_date` | date | nullable; used by to-do lists, open items sort soonest first and past dates show as overdue |
 | `created_at` | timestamptz | |
 
 Shared/family-readable and writable.

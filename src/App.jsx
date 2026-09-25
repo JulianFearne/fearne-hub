@@ -54,7 +54,7 @@ const ROUTE_HEADERS = {
   '/planner': { title: "This week's meals", back: '/', wide: true },
   '/lists': { title: 'Lists', tab: true },
   ...Object.fromEntries(Object.entries(LIST_KINDS).map(([kind, k]) => [`/lists/${kind}`, { title: k.title, back: '/lists' }])),
-  '/chores': { title: 'Chores', back: '/' },
+  '/chores': { title: 'Chores', back: '/lists' },
   '/calendar': { title: 'Calendar', back: '/' },
   '/settings': { title: 'Settings', back: '/' },
   '/games': { title: 'Games', tab: true },

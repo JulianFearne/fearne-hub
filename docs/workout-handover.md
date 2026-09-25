@@ -179,10 +179,12 @@ programme day to day.
    after a bad run"; there's still nothing that plans a deload week on a schedule (e.g.
    every 4th week) the way a coached programme might.
 
-Resolved across the last two rounds: the barbell programme file, the start-position
+Resolved across the last three rounds: the barbell programme file, the start-position
 modal's starting-load field, day assignment with day tabs and a "next up" hint,
-supersets, a manual deload action, a metres unit, RPE logging, and video links on
-exercises.
+supersets, a manual deload action, a metres unit, RPE logging, video links on
+exercises, and programme deletion: an admin can now delete any programme
+(builtin or someone else's, via a widened `DELETE` policy), and everyone else gets
+a "request delete" action instead of nothing (`_reference/workout-schema-v4.sql`).
 
 ---
 

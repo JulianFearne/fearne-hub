@@ -29,7 +29,7 @@ export async function canLogWeight() {
 export async function listPrograms() {
   const { data, error } = await supabase
     .from("workout_programs")
-    .select("id, name, description, author_id, source, definition, created_at")
+    .select("id, name, description, author_id, source, definition, created_at, delete_requested_by, delete_requested_at")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -71,6 +71,17 @@ export async function createProgram(definition, source = "custom") {
 
 export async function deleteProgram(id) {
   const { error } = await supabase.from("workout_programs").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/**
+ * Flag a programme for deletion without deleting it. Works on any
+ * programme, including a builtin one or someone else's, since only an
+ * admin can actually delete those - see request_program_delete() in
+ * _reference/workout-schema-v4.sql.
+ */
+export async function requestDeleteProgram(id) {
+  const { error } = await supabase.rpc("request_program_delete", { p_program_id: id });
   if (error) throw error;
 }
 

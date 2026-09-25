@@ -254,13 +254,28 @@ JSON blob rather than normalised into rows.
 | `schema_version` | int | `1` or `2`; `validateProgram()` upgrades `1` files to `2` in place, so newly-saved rows are always `2` |
 | `definition` | jsonb | the full validated program object |
 | `created_at` | timestamptz | |
+| `delete_requested_by` | uuid | nullable, references `auth.users.id`; set by `request_program_delete()` when a non-owner asks for a programme to be removed |
+| `delete_requested_at` | timestamptz | nullable, alongside `delete_requested_by` |
 
 Shared/family-readable so everyone can pick any program from the library.
-The built-in program (`src/data/programs/calisthenics-bta.json`) is seeded
-once via `seedBuiltinProgram()`, matched on `source = 'builtin' AND name = …`
-so it's never duplicated. Only the author can delete a program they created
-(`mine = p.author_id === userId` in `WorkoutHub.jsx`; builtin programs can't
-be deleted from the UI at all).
+The built-in programs (`src/data/programs/calisthenics-bta.json`,
+`barbell-5x5.json`) are seeded once each via `seedBuiltinProgram()`, matched
+on `source = 'builtin' AND name = …` so neither is ever duplicated.
+
+**Deleting a programme.** The author of a programme, or anyone with
+`role = 'admin'`, can delete it outright (`DELETE` policy:
+`auth.uid() = author_id or is_admin()`) — this is what lets an admin remove
+a builtin programme or someone else's, which the author-only rule used to
+block entirely. Anyone else gets a "request delete" action instead
+(`request_program_delete(p_program_id)`, a `SECURITY DEFINER` RPC) that only
+ever sets `delete_requested_by`/`delete_requested_at`; it's deliberately not
+a normal `UPDATE`, since a broad "any approved user can update
+workout_programs" policy would let someone rewrite another person's
+programme, not just flag it. `is_admin()` mirrors the existing
+`is_adult()`/`is_approved()` pattern. See
+[`_reference/workout-schema-v4.sql`](../_reference/workout-schema-v4.sql)
+for the migration that added all of this to an existing table (review it
+before running: it widens the DELETE policy, not just adds columns).
 
 ## `workout_enrollments`
 

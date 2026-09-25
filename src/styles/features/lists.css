@@ -9,3 +9,7 @@
 .fh-lists__grouplabel{font:var(--fw-semibold) var(--fs-meta)/1.2 var(--font-text);color:var(--ink-3)}
 .fh-lists__add{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
 .fh-lists__add .fh-input{flex:1}
+.fh-lists__head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-lists__head .fh-home__greet{margin:0;min-width:0;overflow-wrap:anywhere}
+.fh-lists__sharelabel{margin:var(--sp-6) 0 var(--sp-4)}
+.fh-lists__hint{font:var(--type-caption);color:var(--ink-3);margin-top:var(--sp-5)}

@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import {
   LIST_KINDS,
+  PERMISSIONS,
+  accessFor,
+  canEdit,
+  canManage,
   fetchLists,
   createList,
+  renameList,
   deleteList,
+  setListShare,
+  removeListShare,
   fetchListItems,
   addListItem,
   addListItems,
@@ -13,15 +21,23 @@ import {
   uncheckAllItems,
   deleteCheckedItems,
 } from './listsData'
+import { fetchFamilyMembers } from './choresData'
+import { displayName } from './accountData'
+import { notify } from '../lib/notify'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
+import Badge from '../components/ds/Badge.jsx'
 import Button from '../components/ds/Button.jsx'
 import IconButton from '../components/ds/IconButton.jsx'
 import Icon from '../components/ds/Icon.jsx'
-import { Input } from '../components/ds/Field.jsx'
+import Sheet from '../components/ds/Sheet.jsx'
+import { Input, Select } from '../components/ds/Field.jsx'
 import TickRow from '../components/ds/TickRow.jsx'
 
+const PERMISSION_LABEL = { owner: 'Owner', ...Object.fromEntries(PERMISSIONS.map((p) => [p.id, p.label])) }
+
 // Every list of one kind (shopping, to-do, checklist...) at /lists/:kind.
-// What each kind can do is driven by its entry in LIST_KINDS.
+// What each kind can do is driven by its entry in LIST_KINDS; what the
+// current user can do to each list is driven by its sharing (accessFor).
 export default function ListCollection() {
   const { kind } = useParams()
   if (!LIST_KINDS[kind]) return <Navigate to="/lists" replace />
@@ -31,7 +47,9 @@ export default function ListCollection() {
 
 function KindLists({ kind }) {
   const k = LIST_KINDS[kind]
+  const { user } = useAuth()
   const [lists, setLists] = useState([])
+  const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
@@ -41,6 +59,9 @@ function KindLists({ kind }) {
 
   useEffect(() => {
     load()
+    fetchFamilyMembers()
+      .then(setMembers)
+      .catch(() => {})
   }, [])
 
   function load() {
@@ -49,6 +70,11 @@ function KindLists({ kind }) {
       .then(setLists)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
+  }
+
+  function nameOf(userId) {
+    const m = members.find((x) => x.id === userId)
+    return m ? displayName(m) : 'someone'
   }
 
   async function handleCreate(e) {
@@ -71,6 +97,27 @@ function KindLists({ kind }) {
     } catch (err) {
       setError(err.message)
     }
+  }
+
+  async function handleLeaveList(id) {
+    try {
+      await removeListShare(id, user.id)
+      setLists((prev) => prev.filter((l) => l.id !== id))
+      if (activeId === id) setActiveId(null)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  // After a rename or a sharing change. If the change took away the
+  // current user's own access (a manager removing themselves), drop it.
+  function handleListChange(updated) {
+    if (!accessFor(updated, user.id)) {
+      setLists((prev) => prev.filter((l) => l.id !== updated.id))
+      setActiveId(null)
+      return
+    }
+    setLists((prev) => prev.map((l) => (l.id === updated.id ? updated : l)))
   }
 
   function toggleCombineSelect(id) {
@@ -104,10 +151,27 @@ function KindLists({ kind }) {
     }
   }
 
+  function sharingMeta(list, access) {
+    if (access === 'owner') {
+      const n = list.list_shares?.length || 0
+      return n ? `Shared with ${n} ${n === 1 ? 'person' : 'people'}` : 'Only you'
+    }
+    return `From ${nameOf(list.created_by)}`
+  }
+
   const activeList = lists.find((l) => l.id === activeId)
 
   if (activeList) {
-    return <ListDetail list={activeList} kind={kind} onBack={() => setActiveId(null)} />
+    return (
+      <ListDetail
+        list={activeList}
+        kind={kind}
+        access={accessFor(activeList, user.id)}
+        members={members}
+        onBack={() => setActiveId(null)}
+        onListChange={handleListChange}
+      />
+    )
   }
 
   return (
@@ -160,48 +224,61 @@ function KindLists({ kind }) {
           )}
 
           <div className="fh-lists__grid">
-            {lists.map((l) => (
-              <Card
-                key={l.id}
-                as="div"
-                tile
-                role="button"
-                tabIndex={0}
-                style={{ position: 'relative' }}
-                onClick={() => (combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') (combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id))
-                }}
-              >
-                {combineMode && (
-                  <span className="fh-lists__combinebox">
-                    <span className="fh-tick__box" style={selectedForCombine.includes(l.id) ? { background: 'var(--success)', borderColor: 'var(--success)', color: 'var(--white)' } : undefined}>
-                      {selectedForCombine.includes(l.id) && <Icon name="check" size={16} />}
+            {lists.map((l) => {
+              const access = accessFor(l, user.id)
+              return (
+                <Card
+                  key={l.id}
+                  as="div"
+                  tile
+                  role="button"
+                  tabIndex={0}
+                  style={{ position: 'relative' }}
+                  onClick={() => (combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') (combineMode ? toggleCombineSelect(l.id) : setActiveId(l.id))
+                  }}
+                >
+                  {combineMode && (
+                    <span className="fh-lists__combinebox">
+                      <span className="fh-tick__box" style={selectedForCombine.includes(l.id) ? { background: 'var(--success)', borderColor: 'var(--success)', color: 'var(--white)' } : undefined}>
+                        {selectedForCombine.includes(l.id) && <Icon name="check" size={16} />}
+                      </span>
                     </span>
-                  </span>
-                )}
-                <span className="fh-recipes__mark">
-                  <Icon name={k.icon} size={18} />
-                </span>
-                <div>
-                  <CardTitle>{l.name}</CardTitle>
-                  {!combineMode && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon="trash-2"
-                      style={{ marginTop: 'var(--sp-3)', color: 'var(--danger)' }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteList(l.id)
-                      }}
-                    >
-                      Delete list
-                    </Button>
                   )}
-                </div>
-              </Card>
-            ))}
+                  <span className="fh-recipes__mark">
+                    <Icon name={k.icon} size={18} />
+                  </span>
+                  <div>
+                    <CardTitle>{l.name}</CardTitle>
+                    <CardMeta>
+                      {sharingMeta(l, access)}
+                      {access !== 'owner' && (
+                        <>
+                          {' '}
+                          <Badge>{PERMISSION_LABEL[access]}</Badge>
+                        </>
+                      )}
+                    </CardMeta>
+                    {!combineMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={canManage(access) ? 'trash-2' : 'log-out'}
+                        style={{ marginTop: 'var(--sp-3)', color: 'var(--danger)' }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (canManage(access)) handleDeleteList(l.id)
+                          else handleLeaveList(l.id)
+                        }}
+                      >
+                        {canManage(access) ? 'Delete list' : 'Leave list'}
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
           </div>
         </>
       )}
@@ -209,13 +286,15 @@ function KindLists({ kind }) {
   )
 }
 
-function ListDetail({ list, kind, onBack }) {
+function ListDetail({ list, kind, access, members, onBack, onListChange }) {
   const k = LIST_KINDS[kind]
+  const editable = canEdit(access)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [newItem, setNewItem] = useState('')
   const [newAmount, setNewAmount] = useState('')
+  const [showShare, setShowShare] = useState(false)
 
   useEffect(() => {
     fetchListItems(list.id)
@@ -277,6 +356,7 @@ function ListDetail({ list, kind, onBack }) {
   const unchecked = k.splitDone ? items.filter((i) => !i.checked) : items
   const checked = k.splitDone ? items.filter((i) => i.checked) : []
   const checkedCount = items.filter((i) => i.checked).length
+  const itemProps = { editable, onToggle: handleToggle, onDelete: handleDelete }
 
   return (
     <div>
@@ -284,7 +364,16 @@ function ListDetail({ list, kind, onBack }) {
         All {k.title.toLowerCase()}
       </Button>
 
-      <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)', marginBottom: 'var(--sp-6)' }}>{list.name}</p>
+      <div className="fh-lists__head">
+        <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)' }}>{list.name}</p>
+        {canManage(access) ? (
+          <Button variant="quiet" icon="users" onClick={() => setShowShare(true)}>
+            Share
+          </Button>
+        ) : (
+          <Badge>{PERMISSION_LABEL[access]}</Badge>
+        )}
+      </div>
 
       {error && (
         <div className="fh-notice fh-notice--danger">
@@ -293,15 +382,17 @@ function ListDetail({ list, kind, onBack }) {
         </div>
       )}
 
-      <form onSubmit={handleAdd} className="fh-lists__add">
-        <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder={k.itemPlaceholder} />
-        {k.amounts && (
-          <Input value={newAmount} onChange={(e) => setNewAmount(e.target.value)} placeholder="Amount (optional)" style={{ flex: '0 0 140px' }} />
-        )}
-        <Button type="submit" icon="plus">
-          Add
-        </Button>
-      </form>
+      {editable && (
+        <form onSubmit={handleAdd} className="fh-lists__add">
+          <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder={k.itemPlaceholder} />
+          {k.amounts && (
+            <Input value={newAmount} onChange={(e) => setNewAmount(e.target.value)} placeholder="Amount (optional)" style={{ flex: '0 0 140px' }} />
+          )}
+          <Button type="submit" icon="plus">
+            Add
+          </Button>
+        </form>
+      )}
 
       {loading && <p className="fh-loading">Loading…</p>}
 
@@ -311,11 +402,11 @@ function ListDetail({ list, kind, onBack }) {
             <Icon name={k.icon} size={22} />
           </span>
           <p className="fh-empty__title">This list is empty</p>
-          <p className="fh-empty__body">{k.emptyItemsBody}</p>
+          {editable && <p className="fh-empty__body">{k.emptyItemsBody}</p>}
         </div>
       )}
 
-      {!loading && k.resetAll && checkedCount > 0 && (
+      {!loading && editable && k.resetAll && checkedCount > 0 && (
         <div className="fh-lists__actions">
           <Button variant="quiet" icon="rotate-ccw" onClick={handleUncheckAll}>
             Untick all ({checkedCount})
@@ -326,7 +417,7 @@ function ListDetail({ list, kind, onBack }) {
       {!loading && unchecked.length > 0 && (
         <div className="fh-rows">
           {unchecked.map((item) => (
-            <ListItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
+            <ListItem key={item.id} item={item} {...itemProps} />
           ))}
         </div>
       )}
@@ -337,7 +428,7 @@ function ListDetail({ list, kind, onBack }) {
             <p className="fh-lists__grouplabel">
               {k.doneLabel} ({checked.length})
             </p>
-            {k.clearDone && (
+            {editable && k.clearDone && (
               <Button variant="ghost" size="sm" icon="trash-2" onClick={handleClearDone}>
                 Clear
               </Button>
@@ -345,25 +436,152 @@ function ListDetail({ list, kind, onBack }) {
           </div>
           <div className="fh-rows">
             {checked.map((item) => (
-              <ListItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
+              <ListItem key={item.id} item={item} {...itemProps} />
             ))}
           </div>
         </>
+      )}
+
+      {showShare && (
+        <ShareSheet list={list} kind={kind} members={members} onClose={() => setShowShare(false)} onListChange={onListChange} />
       )}
     </div>
   )
 }
 
-function ListItem({ item, onToggle, onDelete }) {
+function ListItem({ item, editable, onToggle, onDelete }) {
   return (
     <TickRow
       checked={item.checked}
       onToggle={() => onToggle(item)}
+      disabled={!editable}
       qty={item.amount}
-      trail={<IconButton icon="x" label={`Remove ${item.name}`} onClick={() => onDelete(item.id)} />}
+      trail={editable && <IconButton icon="x" label={`Remove ${item.name}`} onClick={() => onDelete(item.id)} />}
     >
       {item.name}
       {item.recipe_title && <span style={{ color: 'var(--ink-3)', font: 'var(--type-caption)' }}> ({item.recipe_title})</span>}
     </TickRow>
+  )
+}
+
+// Rename the list and choose who else can see it, and at what level.
+// Changes save as they're made; there's no separate save for sharing.
+function ShareSheet({ list, kind, members, onClose, onListChange }) {
+  const { user, profile } = useAuth()
+  const [name, setName] = useState(list.name)
+  const [savingName, setSavingName] = useState(false)
+  const [busyId, setBusyId] = useState(null)
+  const [error, setError] = useState(null)
+
+  const shares = list.list_shares || []
+  const owner = members.find((m) => m.id === list.created_by)
+  const others = members.filter((m) => m.id !== list.created_by)
+
+  async function handleRename(e) {
+    e.preventDefault()
+    if (!name.trim() || name.trim() === list.name) return
+    setSavingName(true)
+    setError(null)
+    try {
+      await renameList(list.id, name.trim())
+      onListChange({ ...list, name: name.trim() })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSavingName(false)
+    }
+  }
+
+  async function handlePermission(member, permission) {
+    setBusyId(member.id)
+    setError(null)
+    const had = shares.some((s) => s.user_id === member.id)
+    try {
+      if (permission) {
+        await setListShare(list.id, member.id, permission)
+        const next = had
+          ? shares.map((s) => (s.user_id === member.id ? { ...s, permission } : s))
+          : [...shares, { user_id: member.id, permission }]
+        onListChange({ ...list, list_shares: next })
+        if (!had && member.id !== user.id) {
+          notify({
+            userId: member.id,
+            title: `${displayName(profile, user.email)} shared a list with you`,
+            body: list.name,
+            url: `/lists/${kind}`,
+          })
+        }
+      } else {
+        await removeListShare(list.id, member.id)
+        onListChange({ ...list, list_shares: shares.filter((s) => s.user_id !== member.id) })
+        if (member.id === user.id) onClose()
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  return (
+    <Sheet title="Share list" onClose={onClose}>
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleRename} className="fh-lists__toolbar">
+        <Input value={name} onChange={(e) => setName(e.target.value)} aria-label="List name" />
+        <Button type="submit" variant="quiet" loading={savingName} disabled={!name.trim() || name.trim() === list.name}>
+          Rename
+        </Button>
+      </form>
+
+      <p className="fh-lists__grouplabel fh-lists__sharelabel">Who has access</p>
+      <div className="fh-rows">
+        <div className="fh-row fh-row--static">
+          <span className="fh-row__body">
+            <span className="fh-row__label">{owner ? displayName(owner) : 'Owner'}</span>
+          </span>
+          <span className="fh-row__trail">
+            <Badge>Owner</Badge>
+          </span>
+        </div>
+        {others.map((m) => {
+          const current = shares.find((s) => s.user_id === m.id)?.permission ?? ''
+          return (
+            <div key={m.id} className="fh-row fh-row--static">
+              <span className="fh-row__body">
+                <span className="fh-row__label">
+                  {displayName(m)}
+                  {m.id === user.id && ' (you)'}
+                </span>
+              </span>
+              <span className="fh-row__trail">
+                <Select
+                  value={current}
+                  disabled={busyId === m.id}
+                  aria-label={`Access for ${displayName(m)}`}
+                  onChange={(e) => handlePermission(m, e.target.value)}
+                >
+                  <option value="">No access</option>
+                  {PERMISSIONS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label}
+                    </option>
+                  ))}
+                </Select>
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      <p className="fh-lists__hint">
+        {PERMISSIONS.map((p) => `${p.label}: ${p.hint.toLowerCase()}.`).join(' ')}
+      </p>
+    </Sheet>
   )
 }

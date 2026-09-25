@@ -72,6 +72,8 @@
 .fh-tick__trail{flex:none;display:flex;align-items:center}
 .fh-tick-row--trail:has(.fh-tick[aria-checked="true"]) .fh-tick__trail{visibility:hidden}
 .fh-tick:hover{background:var(--surface-sunken)}
+.fh-tick:disabled{cursor:default}
+.fh-tick:disabled:hover{background:transparent}
 .fh-tick__box{width:30px;height:30px;flex-shrink:0;border:var(--bw-strong) solid var(--border-strong);border-radius:10px;display:grid;place-items:center;color:transparent;background:var(--surface-card);transition:background var(--dur-2) var(--ease-out),border-color var(--dur-2) var(--ease-out),transform var(--dur-1) var(--ease-snap)}
 .fh-tick[aria-checked="true"] .fh-tick__box{background:var(--success);border-color:var(--success);color:var(--white);animation:fh-pop var(--dur-4) var(--ease-snap)}
 @keyframes fh-pop{0%{transform:scale(1)}35%{transform:scale(1.18)}100%{transform:scale(1)}}

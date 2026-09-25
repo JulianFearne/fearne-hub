@@ -16,8 +16,9 @@ import {
 } from "../lib/workoutApi";
 import builtinProgram from "../data/programs/calisthenics-bta.json";
 import barbellProgram from "../data/programs/barbell-5x5.json";
+import strengthShapeProgram from "../data/programs/strength-and-shape.json";
 
-const BUILTIN_PROGRAMS = [builtinProgram, barbellProgram];
+const BUILTIN_PROGRAMS = [builtinProgram, barbellProgram, strengthShapeProgram];
 import "../styles/workout.css";
 
 const TABS = [

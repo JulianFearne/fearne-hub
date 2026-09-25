@@ -1,0 +1,726 @@
+{
+  "schema_version": 2,
+  "name": "Strength and Shape: Postpartum Foundations",
+  "description": "Three full-body days (A, B, C) for fat loss and a lean, toned look after a C-section with diastasis recti, with joint-sparing choices for palindromic RA. Strength work in paired sets keeps the pace up and holds on to muscle while diet does the fat loss; a short low-impact finisher and daily steps add to it. Hit the top of the range on every set, cleanly, two weeks running to move up. Get a pelvic health physio check first.",
+  "author": "Fearne Hub",
+  "sessions_per_week": 3,
+  "rest_seconds": 60,
+  "targets": {
+    "sets": 3,
+    "reps": {
+      "min": 8,
+      "max": 12
+    },
+    "streak": 2
+  },
+  "days": [
+    "A",
+    "B",
+    "C"
+  ],
+  "record_sections": [
+    {
+      "id": "reconnect",
+      "label": "Breathe and connect (2 min, every session)",
+      "color": "#c9a227",
+      "select": "multi",
+      "options": [
+        "360 breathing lying on back, 5 slow breaths",
+        "Exhale, gently lift pelvic floor and draw lower belly in, 5 reps",
+        "3 glute bridges practising exhale on effort"
+      ]
+    },
+    {
+      "id": "warmup",
+      "label": "Warm-up (5 to 7 min)",
+      "color": "#6abf69",
+      "select": "multi",
+      "options": [
+        "March on the spot or brisk walk, 2 min",
+        "Cat-cow",
+        "Hip circles",
+        "Arm circles and shoulder rolls",
+        "Band pull-aparts",
+        "Gentle wrist circles, no weight on hands",
+        "Ankle rocks",
+        "Bodyweight good mornings",
+        "One easy set of the first exercise"
+      ]
+    },
+    {
+      "id": "joint_check",
+      "label": "Joint check",
+      "color": "#6b3e5e",
+      "select": "single",
+      "options": [
+        "All good",
+        "Stiff but fine",
+        "Flare: skipped exercises that load that joint",
+        "Flare: mobility only today"
+      ]
+    },
+    {
+      "id": "core_check",
+      "label": "Core check",
+      "color": "#6b3e5e",
+      "select": "single",
+      "options": [
+        "No doming, pressure or leaking",
+        "Doming seen: dropped a rung",
+        "Heaviness, leaking or scar pain: stopped and noted"
+      ]
+    },
+    {
+      "id": "finisher",
+      "label": "Low-impact finisher (6 to 10 min)",
+      "color": "#b5651d",
+      "select": "single",
+      "options": [
+        "Step-up intervals: 30s brisk step-ups on a low step, 30s easy march, x8",
+        "Band circuit: 40s band punches with a march, 20s easy, x8",
+        "Squat to calf raise, band row, march: 40s each, 20s rest, 3 rounds",
+        "Brisk or incline walk, 10 min",
+        "Skipped: flare, poor sleep or feeling run down"
+      ]
+    },
+    {
+      "id": "cooldown",
+      "label": "Cool-down (5 min)",
+      "color": "#6abf69",
+      "select": "multi",
+      "options": [
+        "Child's pose, wide knees",
+        "Half-kneeling hip flexor stretch",
+        "Figure-four glute stretch",
+        "Lying hamstring stretch with band",
+        "Doorway chest stretch",
+        "Thread the needle",
+        "1 min slow breathing"
+      ]
+    },
+    {
+      "id": "steps",
+      "label": "Daily steps (roughly, today)",
+      "color": "#6abf69",
+      "select": "single",
+      "options": [
+        "Under 5,000",
+        "5,000 to 7,500",
+        "7,500 to 10,000",
+        "10,000 plus"
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "a_squat",
+      "day": "A",
+      "section": "Legs",
+      "label": "Squat",
+      "sub": "Control and depth first, then load",
+      "color": "#1f3d2b",
+      "exercises": [
+        {
+          "name": "Sit-to-stand from bench",
+          "note": "Stand up without rocking, sit down slowly. Knees follow the toes. Add a folded mat on the bench if it is too low."
+        },
+        {
+          "name": "Box squat to bench, slow lower",
+          "note": "3 seconds down, light touch on the bench, stand. Chest tall, weight through the whole foot."
+        },
+        {
+          "name": "Bodyweight squat to bench height",
+          "note": "Tap and go, do not sit down."
+        },
+        {
+          "name": "Bodyweight squat, full comfortable depth",
+          "note": "Only as deep as the back stays neutral and heels stay down."
+        },
+        {
+          "name": "Tempo squat, 3s down, 1s pause"
+        },
+        {
+          "name": "Goblet squat, light dumbbell",
+          "note": "Around 4 to 6kg held at the chest. Exhale as you stand."
+        },
+        {
+          "name": "Goblet squat, moderate dumbbell",
+          "note": "Around 8 to 12kg."
+        },
+        {
+          "name": "Goblet squat, heavier dumbbell",
+          "note": "12kg plus. From here keep adding 2kg once you hit the top of the range twice."
+        }
+      ],
+      "superset_group": "a_legcore"
+    },
+    {
+      "id": "a_push",
+      "day": "A",
+      "section": "Push",
+      "label": "Push-up",
+      "sub": "Incline first, on the rack bar or push-up bars so wrists stay straight",
+      "color": "#b5651d",
+      "superset_group": "a_ss",
+      "exercises": [
+        {
+          "name": "Wall push-up",
+          "note": "Body in one straight line, ribs down. Exhale as you push away."
+        },
+        {
+          "name": "Incline push-up, rack bar at chest height",
+          "note": "Grip the barbell so wrists stay straight. Elbows about 45 degrees from the body."
+        },
+        {
+          "name": "Incline push-up, rack bar at hip height"
+        },
+        {
+          "name": "Incline push-up, rack bar at mid-thigh height"
+        },
+        {
+          "name": "Incline push-up, rack bar at knee height"
+        },
+        {
+          "name": "Push-up negatives on push-up bars",
+          "reps": {
+            "min": 3,
+            "max": 6
+          },
+          "note": "From toes, lower over 3 to 5 seconds, then knees down to come back up. Stop if the midline domes."
+        },
+        {
+          "name": "Full push-up on push-up bars",
+          "reps": {
+            "min": 3,
+            "max": 8
+          }
+        },
+        {
+          "name": "Full push-up on push-up bars, higher reps",
+          "reps": {
+            "min": 8,
+            "max": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "a_row",
+      "day": "A",
+      "section": "Pull",
+      "label": "Ring row",
+      "sub": "Rings let the wrists turn freely; lower the body angle to progress",
+      "color": "#2f4f6f",
+      "superset_group": "a_ss",
+      "exercises": [
+        {
+          "name": "Seated band row",
+          "note": "Band round the feet. Squeeze shoulder blades back and down, no shrugging."
+        },
+        {
+          "name": "Ring row, almost standing",
+          "note": "Body rigid like a plank, pull the rings to the lower ribs, lower slowly."
+        },
+        {
+          "name": "Ring row, body at 45 degrees"
+        },
+        {
+          "name": "Ring row, body at 30 degrees"
+        },
+        {
+          "name": "Ring row, rings at hip height, knees bent"
+        },
+        {
+          "name": "Ring row, rings at hip height, legs straight"
+        },
+        {
+          "name": "Ring row, feet on bench"
+        }
+      ]
+    },
+    {
+      "id": "a_core",
+      "day": "A",
+      "section": "Core",
+      "label": "Dead bug path",
+      "sub": "Deep core rebuild. Stop the set if the midline domes",
+      "color": "#c9a227",
+      "targets": {
+        "sets": 3,
+        "reps": {
+          "min": 6,
+          "max": 10
+        }
+      },
+      "exercises": [
+        {
+          "name": "Heel slides",
+          "note": "Reps are each side. Exhale as the heel slides away; low back stays gently on the floor."
+        },
+        {
+          "name": "Tabletop toe taps",
+          "note": "Each side. Knees over hips, lower one foot to tap, exhale."
+        },
+        {
+          "name": "Dead bug, arms only",
+          "note": "Each side. Legs hold tabletop while arms reach overhead in turn."
+        },
+        {
+          "name": "Dead bug, legs only",
+          "note": "Each side."
+        },
+        {
+          "name": "Dead bug, opposite arm and leg",
+          "note": "Each side. Slow, ribs stay down."
+        },
+        {
+          "name": "Dead bug, opposite arm and leg, leg straighter",
+          "note": "Each side."
+        },
+        {
+          "name": "Dead bug with band pull-down",
+          "note": "Each side. Band anchored overhead on the rack, hold it pulled to the hips while the legs move."
+        }
+      ],
+      "superset_group": "a_legcore"
+    },
+    {
+      "id": "a_carry",
+      "day": "A",
+      "section": "Conditioning",
+      "label": "Loaded carry",
+      "sub": "Walk tall with dumbbells: whole-body work that is kind to the core",
+      "color": "#7a4a2a",
+      "targets": {
+        "sets": 3,
+        "reps": {
+          "min": 30,
+          "max": 45
+        }
+      },
+      "exercises": [
+        {
+          "name": "Farmer's carry, light dumbbells",
+          "unit": "seconds",
+          "note": "Around 4 to 6kg each hand. Tall posture, ribs down, steady breathing, short quick steps. Put them down if hands or wrists ache."
+        },
+        {
+          "name": "Farmer's carry, moderate dumbbells",
+          "unit": "seconds",
+          "note": "Around 8 to 10kg each hand."
+        },
+        {
+          "name": "Suitcase carry, one dumbbell",
+          "unit": "seconds",
+          "note": "Seconds are each side. Do not lean towards or away from the weight."
+        },
+        {
+          "name": "Farmer's carry, heavier dumbbells",
+          "unit": "seconds",
+          "note": "12kg plus each hand. Keep adding 2kg once top of range twice."
+        }
+      ]
+    },
+    {
+      "id": "b_bridge",
+      "day": "B",
+      "section": "Glutes",
+      "label": "Glute bridge to hip thrust",
+      "sub": "The main glute builder",
+      "color": "#8a3b5c",
+      "targets": {
+        "sets": 3,
+        "reps": {
+          "min": 10,
+          "max": 15
+        }
+      },
+      "exercises": [
+        {
+          "name": "Glute bridge",
+          "note": "Exhale and lift, squeeze glutes at the top, ribs down. Do not arch the low back."
+        },
+        {
+          "name": "Glute bridge, 3s squeeze at top"
+        },
+        {
+          "name": "Banded glute bridge",
+          "note": "Band just above the knees, push knees gently out against it."
+        },
+        {
+          "name": "Hip thrust, shoulders on bench",
+          "note": "Bench just below the shoulder blades, chin tucked, shins vertical at the top."
+        },
+        {
+          "name": "Banded hip thrust"
+        },
+        {
+          "name": "Single-leg glute bridge",
+          "reps": {
+            "min": 8,
+            "max": 12
+          },
+          "note": "Reps are each side."
+        },
+        {
+          "name": "Dumbbell hip thrust",
+          "note": "Pad the dumbbell on the hips. Start around 8 to 10kg, add 2kg once top of range twice."
+        },
+        {
+          "name": "Barbell hip thrust",
+          "note": "Olympic bar with a pad. Start with the empty bar and add small plates over time."
+        }
+      ],
+      "superset_group": "b_glutecore"
+    },
+    {
+      "id": "b_hinge",
+      "day": "B",
+      "section": "Legs",
+      "label": "Hip hinge",
+      "sub": "Hamstrings and glutes",
+      "color": "#1f3d2b",
+      "exercises": [
+        {
+          "name": "Hip hinge with broomstick",
+          "note": "Stick touches head, upper back and tailbone the whole time. Push hips back, soft knees."
+        },
+        {
+          "name": "Band good morning",
+          "note": "Band under the feet and behind the neck. Hinge, then drive hips forward."
+        },
+        {
+          "name": "Dumbbell Romanian deadlift, light",
+          "note": "Around 4 to 6kg each hand. Slide down the thighs, stop when the hips stop moving back."
+        },
+        {
+          "name": "Dumbbell Romanian deadlift, moderate",
+          "note": "Around 8 to 12kg each hand."
+        },
+        {
+          "name": "Supported single-leg Romanian deadlift",
+          "note": "Reps are each side. One hand on the rack for balance."
+        },
+        {
+          "name": "Single-leg Romanian deadlift with dumbbell",
+          "note": "Reps are each side."
+        }
+      ]
+    },
+    {
+      "id": "b_pullup",
+      "day": "B",
+      "section": "Pull",
+      "label": "Pull-up path",
+      "sub": "The long game: first pull-up",
+      "color": "#2f4f6f",
+      "rest_seconds": 90,
+      "superset_group": "b_ss",
+      "exercises": [
+        {
+          "name": "Kneeling band lat pulldown",
+          "note": "Band over the rack's pull-up bar. Pull elbows down to the ribs, shoulders away from ears."
+        },
+        {
+          "name": "Supported hang, feet on bench",
+          "unit": "seconds",
+          "reps": {
+            "min": 15,
+            "max": 30
+          },
+          "note": "Relaxed grip, shoulders gently engaged. Let go if hands or wrists ache."
+        },
+        {
+          "name": "Dead hang",
+          "unit": "seconds",
+          "reps": {
+            "min": 10,
+            "max": 30
+          }
+        },
+        {
+          "name": "Scapular pull-ups",
+          "reps": {
+            "min": 5,
+            "max": 8
+          },
+          "note": "From a hang, pull shoulders down without bending the arms, then relax."
+        },
+        {
+          "name": "Flexed-arm hang",
+          "unit": "seconds",
+          "reps": {
+            "min": 5,
+            "max": 15
+          },
+          "note": "Step up from the bench to chin over bar and hold."
+        },
+        {
+          "name": "Negative pull-up",
+          "reps": {
+            "min": 3,
+            "max": 5
+          },
+          "note": "Step up to the top, lower over 3 to 5 seconds."
+        },
+        {
+          "name": "Band-assisted pull-up, heavy band",
+          "reps": {
+            "min": 3,
+            "max": 6
+          }
+        },
+        {
+          "name": "Band-assisted pull-up, light band",
+          "reps": {
+            "min": 3,
+            "max": 6
+          }
+        },
+        {
+          "name": "Pull-up",
+          "reps": {
+            "min": 1,
+            "max": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "b_press",
+      "day": "B",
+      "section": "Push",
+      "label": "Overhead press",
+      "sub": "Shoulders, with a neutral grip",
+      "color": "#b5651d",
+      "superset_group": "b_ss",
+      "exercises": [
+        {
+          "name": "Seated band overhead press",
+          "note": "Band under the bench or feet, palms facing each other. Ribs down, do not lean back."
+        },
+        {
+          "name": "Seated dumbbell press, neutral grip",
+          "note": "Start around 2 to 4kg each hand."
+        },
+        {
+          "name": "Standing dumbbell press, neutral grip",
+          "note": "Squeeze glutes so the low back does not arch."
+        },
+        {
+          "name": "Half-kneeling single-arm dumbbell press",
+          "note": "Reps are each side."
+        },
+        {
+          "name": "Standing dumbbell press, heavier",
+          "note": "Add 1 to 2kg each time you hit the top of the range twice."
+        }
+      ]
+    },
+    {
+      "id": "b_core",
+      "day": "B",
+      "section": "Core",
+      "label": "Side and anti-rotation",
+      "sub": "Waist and trunk control without crunching",
+      "color": "#c9a227",
+      "exercises": [
+        {
+          "name": "Bird dog",
+          "note": "Reps are each side. Hands on push-up bars or fists to spare the wrists. Hips stay level."
+        },
+        {
+          "name": "Half-kneeling Pallof press",
+          "note": "Reps are each side. Band anchored to the rack at chest height. Press out, resist the twist, exhale."
+        },
+        {
+          "name": "Standing Pallof press",
+          "note": "Reps are each side."
+        },
+        {
+          "name": "Side plank from knees, on forearm",
+          "unit": "seconds",
+          "reps": {
+            "min": 15,
+            "max": 30
+          },
+          "note": "Each side. Hips pushed forward, straight line from knee to head."
+        },
+        {
+          "name": "Side plank from feet, on forearm",
+          "unit": "seconds",
+          "reps": {
+            "min": 15,
+            "max": 30
+          },
+          "note": "Each side."
+        },
+        {
+          "name": "Side plank from feet, top leg lifted",
+          "unit": "seconds",
+          "reps": {
+            "min": 15,
+            "max": 30
+          },
+          "note": "Each side."
+        }
+      ],
+      "superset_group": "b_glutecore"
+    },
+    {
+      "id": "c_split",
+      "day": "C",
+      "section": "Legs",
+      "label": "Split squat",
+      "sub": "Single leg, logged left and right",
+      "color": "#1f3d2b",
+      "per_side": true,
+      "exercises": [
+        {
+          "name": "Split squat holding the rack, short range",
+          "note": "Long stance, torso tall, lower a few inches and stand."
+        },
+        {
+          "name": "Split squat holding the rack, full range",
+          "note": "Back knee lowers towards the floor, front knee tracks over the toes."
+        },
+        {
+          "name": "Split squat, no support"
+        },
+        {
+          "name": "Step-up onto low step",
+          "note": "Push through the whole front foot, control the way down."
+        },
+        {
+          "name": "Reverse lunge"
+        },
+        {
+          "name": "Dumbbell split squat",
+          "note": "Start around 4 to 6kg each hand."
+        },
+        {
+          "name": "Rear-foot-elevated split squat, holding the rack",
+          "note": "Back foot on the bench. A big glute and thigh builder."
+        },
+        {
+          "name": "Rear-foot-elevated split squat with dumbbells"
+        }
+      ],
+      "superset_group": "c_legcore"
+    },
+    {
+      "id": "c_chest",
+      "day": "C",
+      "section": "Push",
+      "label": "Chest press",
+      "sub": "Loads the chest without bending the wrists back",
+      "color": "#b5651d",
+      "superset_group": "c_ss",
+      "exercises": [
+        {
+          "name": "Dumbbell floor press, light, neutral grip",
+          "note": "Lie on the mat, knees bent. Palms facing, elbows about 45 degrees, pause elbows on the floor. Start around 4 to 6kg."
+        },
+        {
+          "name": "Dumbbell floor press, moderate",
+          "note": "Around 8 to 10kg each hand."
+        },
+        {
+          "name": "Dumbbell bench press, neutral grip",
+          "note": "Same grip on the bench, feet flat, lower slowly."
+        },
+        {
+          "name": "Dumbbell bench press, heavier",
+          "note": "Add 1 to 2kg once top of range twice."
+        }
+      ]
+    },
+    {
+      "id": "c_back",
+      "day": "C",
+      "section": "Pull",
+      "label": "Back and rear shoulders",
+      "sub": "Posture and upper-back shape",
+      "color": "#2f4f6f",
+      "superset_group": "c_ss",
+      "targets": {
+        "sets": 3,
+        "reps": {
+          "min": 10,
+          "max": 15
+        }
+      },
+      "exercises": [
+        {
+          "name": "Band pull-apart",
+          "note": "Arms straight at chest height, squeeze shoulder blades together, no shrugging."
+        },
+        {
+          "name": "Band face pull",
+          "note": "Band anchored to the rack at head height. Pull towards the eyes, elbows high."
+        },
+        {
+          "name": "Single-arm dumbbell row, light",
+          "note": "Reps are each side. Hand and knee on the bench, back flat, pull to the hip."
+        },
+        {
+          "name": "Single-arm dumbbell row, moderate",
+          "note": "Reps are each side."
+        }
+      ]
+    },
+    {
+      "id": "c_plank",
+      "day": "C",
+      "section": "Core",
+      "label": "Plank path",
+      "sub": "On forearms to spare the wrists. Stop if the midline domes",
+      "color": "#c9a227",
+      "exercises": [
+        {
+          "name": "Incline forearm plank on bench",
+          "unit": "seconds",
+          "reps": {
+            "min": 20,
+            "max": 40
+          },
+          "note": "Ribs down, glutes squeezed, breathe steadily throughout."
+        },
+        {
+          "name": "Forearm plank from knees",
+          "unit": "seconds",
+          "reps": {
+            "min": 20,
+            "max": 40
+          }
+        },
+        {
+          "name": "Forearm plank from toes",
+          "unit": "seconds",
+          "reps": {
+            "min": 20,
+            "max": 40
+          }
+        },
+        {
+          "name": "Forearm plank, slow alternating leg lifts",
+          "unit": "seconds",
+          "reps": {
+            "min": 20,
+            "max": 40
+          }
+        },
+        {
+          "name": "Hollow hold, knees bent",
+          "unit": "seconds",
+          "reps": {
+            "min": 15,
+            "max": 30
+          },
+          "note": "Only once the physio is happy with the abdominal gap. Low back stays on the floor."
+        }
+      ],
+      "superset_group": "c_legcore"
+    }
+  ]
+}

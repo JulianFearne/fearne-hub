@@ -36,8 +36,11 @@ the client in `src/supabaseClient.js`.
 - **Lists** — shopping lists, to-do lists and reusable checklists, each
   with multiple named lists and checkable items. Shopping lists take
   amounts and can be combined into one before a shop; to-do lists can clear
-  their done items; checklists can be unticked in one go for reuse. New
-  kinds of list are added in `LIST_KINDS` (`src/pages/listsData.js`).
+  their done items and give tasks to someone with a due date; checklists
+  can be unticked in one go for reuse. Chores sit on the same Lists page. Lists
+  are private to whoever made them until shared with named family members
+  as View, Edit or Manage. New kinds of list are added in `LIST_KINDS`
+  (`src/pages/listsData.js`).
 - **Chores** — assign one-off, daily or weekly chores to a family member (or
   leave them open to anyone), tick them off, and watch recurring ones reset
   themselves each day/week.

@@ -95,13 +95,21 @@ rename.
 | `created_by` | uuid | references `auth.users.id` |
 | `created_at` | timestamptz | |
 
-Shared/family-readable and writable (any approved user can create/delete a
-list, per `ListCollection.jsx`).
+**Not** family-wide: a list is visible only to its owner (`created_by`) and
+the people it's shared with in `list_shares`. RLS enforces this through the
+`list_access()` / `can_view_list()` / `can_edit_list()` / `can_manage_list()`
+helpers, and a `lists_keep_owner` trigger stops `created_by` being changed.
+Any approved user can create a list; only the owner or a `manage` share can
+rename or delete it. See
+[`_reference/lists-sharing-schema.sql`](../_reference/lists-sharing-schema.sql).
 
 ## `list_items`
 
 Formerly `shopping_list_items`. The same columns serve every kind of list;
-`amount`, `source` and `recipe_title` are only used by shopping lists.
+`amount`, `source` and `recipe_title` are only used by shopping lists;
+`assigned_to` and `due_date` only by to-do lists.
+Readable by anyone who can view the list; added to, ticked and removed by
+the owner or an `edit` / `manage` share.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -112,9 +120,28 @@ Formerly `shopping_list_items`. The same columns serve every kind of list;
 | `checked` | boolean | default `false` |
 | `source` | text | `'manual'` or `'meal'` (set by `ingredientsFromEntries()` when pulled from the Meal Planner) |
 | `recipe_title` | text | nullable; set when `source = 'meal'`, shown as provenance next to the item |
+| `assigned_to` | uuid | nullable, references `auth.users.id` (on delete set null); used by to-do lists, `null` means "anyone" |
+| `due_date` | date | nullable; used by to-do lists, open items sort soonest first and past dates show as overdue |
 | `created_at` | timestamptz | |
 
 Shared/family-readable and writable.
+
+## `list_shares`
+
+Read/written by `src/pages/listsData.js`. One row per person a list is
+shared with (the owner never has a row).
+
+| Column | Type | Notes |
+|---|---|---|
+| `list_id` | same as `lists.id` | references `lists.id`, on delete cascade |
+| `user_id` | uuid | references `auth.users.id`, on delete cascade |
+| `permission` | text | `view` (see it) \| `edit` (add, tick, remove items) \| `manage` (edit, plus rename, share, delete) |
+| `created_at` | timestamptz | |
+
+Primary key `(list_id, user_id)`; `setListShare()` upserts on it. Readable
+by anyone who can view the list; written by the owner or a `manage` share.
+A user can also delete their own row, which is how "Leave list" works.
+Admins get no special access.
 
 ## `chores`
 

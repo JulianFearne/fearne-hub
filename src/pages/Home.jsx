@@ -10,7 +10,7 @@ import Icon from '../components/ds/Icon.jsx'
 const shortcuts = [
   { to: '/recipes', title: 'Recipes', blurb: 'Browse, cook, add your own', icon: 'soup' },
   { to: '/planner', title: "This week's meals", blurb: '7 days, planned out', icon: 'calendar-days' },
-  { to: '/lists', title: 'Lists', blurb: 'Shopping, to-dos and checklists', icon: 'clipboard-list' },
+  { to: '/lists', title: 'Lists', blurb: 'Shopping, to-dos, checklists and chores', icon: 'clipboard-list' },
   { to: '/chores', title: 'Chores', blurb: "Who's doing what, and by when", icon: 'list-checks' },
   { to: '/calendar', title: 'Calendar', blurb: 'Events and birthdays', icon: 'calendar-days' },
   { to: '/workouts', title: 'Workouts', blurb: 'Log a session, see your progress', icon: 'dumbbell' },

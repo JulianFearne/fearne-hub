@@ -9,6 +9,8 @@ import { supabase } from '../supabaseClient'
 //   splitDone  ticked items drop into their own group below the rest
 //   clearDone  a button to delete every ticked item at once
 //   resetAll   a button to untick everything, for lists you reuse
+//   assignees  items can be given to someone who has access to the list
+//   dueDates   items can have a due date; open items sort soonest first
 export const LIST_KINDS = {
   shopping: {
     title: 'Shopping lists',
@@ -36,6 +38,8 @@ export const LIST_KINDS = {
     doneLabel: 'Done',
     splitDone: true,
     clearDone: true,
+    assignees: true,
+    dueDates: true,
   },
   checklist: {
     title: 'Checklists',
@@ -54,11 +58,32 @@ export function listKindFor(list) {
   return LIST_KINDS[list.kind] ? list.kind : 'shopping'
 }
 
+// ---------- access ----------
+// Enforced by RLS (see _reference/lists-sharing-schema.sql); these only
+// decide what the UI offers. The owner is lists.created_by; everyone else
+// needs a row in list_shares.
+
+export const PERMISSIONS = [
+  { id: 'view', label: 'View', hint: 'See the list' },
+  { id: 'edit', label: 'Edit', hint: 'Add, tick and remove items' },
+  { id: 'manage', label: 'Manage', hint: 'Edit, plus rename, share and delete' },
+]
+
+// 'owner' | 'manage' | 'edit' | 'view' | null, for a list fetched with its
+// list_shares embedded.
+export function accessFor(list, userId) {
+  if (list.created_by === userId) return 'owner'
+  return list.list_shares?.find((s) => s.user_id === userId)?.permission ?? null
+}
+
+export const canEdit = (access) => ['owner', 'manage', 'edit'].includes(access)
+export const canManage = (access) => ['owner', 'manage'].includes(access)
+
 // ---------- lists ----------
 
 // Pass a kind to get just that section's lists, or nothing for every list.
 export async function fetchLists(kind) {
-  let query = supabase.from('lists').select('*').order('created_at', { ascending: true })
+  let query = supabase.from('lists').select('*, list_shares(user_id, permission)').order('created_at', { ascending: true })
   if (kind) query = query.eq('kind', kind)
   const { data, error } = await query
   if (error) throw error
@@ -70,14 +95,34 @@ export async function createList(name, kind) {
   const { data, error } = await supabase
     .from('lists')
     .insert([{ name, kind, created_by: userData.user.id }])
-    .select()
+    .select('*, list_shares(user_id, permission)')
     .single()
   if (error) throw error
   return data
 }
 
+export async function renameList(id, name) {
+  const { error } = await supabase.from('lists').update({ name }).eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteList(id) {
   const { error } = await supabase.from('lists').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ---------- sharing ----------
+
+export async function setListShare(listId, userId, permission) {
+  const { error } = await supabase
+    .from('list_shares')
+    .upsert([{ list_id: listId, user_id: userId, permission }], { onConflict: 'list_id,user_id' })
+  if (error) throw error
+}
+
+// Also how someone leaves a list shared with them (removing their own share).
+export async function removeListShare(listId, userId) {
+  const { error } = await supabase.from('list_shares').delete().eq('list_id', listId).eq('user_id', userId)
   if (error) throw error
 }
 
@@ -93,10 +138,13 @@ export async function fetchListItems(listId) {
   return data
 }
 
-export async function addListItem(listId, { name, amount = null, source = 'manual', recipe_title = null }) {
+export async function addListItem(
+  listId,
+  { name, amount = null, source = 'manual', recipe_title = null, assigned_to = null, due_date = null }
+) {
   const { data, error } = await supabase
     .from('list_items')
-    .insert([{ list_id: listId, name, amount, source, recipe_title }])
+    .insert([{ list_id: listId, name, amount, source, recipe_title, assigned_to, due_date }])
     .select()
     .single()
   if (error) throw error
@@ -106,6 +154,13 @@ export async function addListItem(listId, { name, amount = null, source = 'manua
 export async function addListItems(listId, items) {
   const rows = items.map((i) => ({ list_id: listId, ...i }))
   const { data, error } = await supabase.from('list_items').insert(rows).select()
+  if (error) throw error
+  return data
+}
+
+// Edits an item's name / amount / assignee / due date.
+export async function updateListItem(id, fields) {
+  const { data, error } = await supabase.from('list_items').update(fields).eq('id', id).select().single()
   if (error) throw error
   return data
 }

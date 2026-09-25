@@ -11,7 +11,8 @@ import {
   deleteMealPlanEntry,
   ingredientsFromEntries,
 } from './mealPlanData'
-import { createList, fetchLists, addListItems } from './listsData'
+import { createList, fetchLists, addListItems, accessFor, canEdit } from './listsData'
+import { useAuth } from '../context/AuthContext.jsx'
 import RecipePickerModal from '../components/RecipePickerModal.jsx'
 import Sheet from '../components/ds/Sheet.jsx'
 import Button from '../components/ds/Button.jsx'
@@ -165,6 +166,7 @@ export default function MealPlanner() {
 }
 
 function AddToShoppingListModal({ entries, onClose }) {
+  const { user } = useAuth()
   const [lists, setLists] = useState([])
   const [loading, setLoading] = useState(true)
   const [choice, setChoice] = useState('') // list id, or 'new'
@@ -175,7 +177,9 @@ function AddToShoppingListModal({ entries, onClose }) {
 
   useEffect(() => {
     fetchLists('shopping')
-      .then((data) => {
+      .then((all) => {
+        // Only lists this user can add items to.
+        const data = all.filter((l) => canEdit(accessFor(l, user.id)))
         setLists(data)
         setChoice(data[0]?.id || 'new')
       })

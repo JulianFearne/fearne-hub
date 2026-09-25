@@ -4,11 +4,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import { validateProgram, describeTarget } from "../lib/workoutSchema";
 import {
   listPrograms,
   createProgram,
   deleteProgram,
+  requestDeleteProgram,
   seedBuiltinProgram,
   getActiveEnrollment,
   enrollInProgram,
@@ -29,6 +31,7 @@ const TABS = [
 
 export default function WorkoutHub() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [tab, setTab] = useState("library");
   const [programs, setPrograms] = useState([]);
   const [activeEnrollment, setActiveEnrollment] = useState(null);
@@ -86,6 +89,16 @@ export default function WorkoutHub() {
     }
   };
 
+  const handleRequestDelete = async (program) => {
+    try {
+      await requestDeleteProgram(program.id);
+      showToast("Delete requested. An admin will see it.");
+      refresh();
+    } catch (e) {
+      setError(e.message || "Could not request deletion.");
+    }
+  };
+
   return (
     <div className="fh-workout">
       <div className="fh-workout-shell">
@@ -127,9 +140,11 @@ export default function WorkoutHub() {
               <Library
                 programs={programs}
                 userId={userId}
+                isAdmin={isAdmin}
                 activeProgramId={activeEnrollment?.program_id}
                 onPick={setPendingProgram}
                 onDelete={handleDelete}
+                onRequestDelete={handleRequestDelete}
               />
             )}
             {tab === "upload" && (
@@ -163,7 +178,7 @@ export default function WorkoutHub() {
 /* Library                                                                     */
 /* ========================================================================== */
 
-function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
+function Library({ programs, userId, isAdmin, activeProgramId, onPick, onDelete, onRequestDelete }) {
   if (!programs.length) {
     return <div className="fh-workout-empty">No workouts yet. Upload one or build your own.</div>;
   }
@@ -176,6 +191,10 @@ function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
         const steps = (def.chains || []).reduce((n, c) => n + (c.exercises?.length ?? 0), 0);
         const isActive = p.id === activeProgramId;
         const mine = p.author_id === userId;
+        // an admin can delete anything, including a builtin programme or
+        // someone else's; everyone else can only delete their own custom ones
+        const canHardDelete = isAdmin || (mine && p.source !== "builtin");
+        const deleteRequested = !!p.delete_requested_by;
 
         return (
           <div key={p.id} className="fh-workout-card fh-workout-program-card" onClick={() => onPick(p)}>
@@ -197,6 +216,7 @@ function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
               )}
               {def.sessions_per_week && <span className="fh-workout-pill">{def.sessions_per_week}/week</span>}
               {p.source === "builtin" && <span className="fh-workout-pill">Built in</span>}
+              {deleteRequested && <span className="fh-workout-pill fh-workout-pill--active">Delete requested</span>}
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -206,12 +226,23 @@ function Library({ programs, userId, activeProgramId, onPick, onDelete }) {
               >
                 {isActive ? "Reload" : "Load this"}
               </button>
-              {mine && p.source !== "builtin" && (
+              {canHardDelete ? (
                 <button
                   className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm"
                   onClick={(e) => { e.stopPropagation(); onDelete(p); }}
                 >
                   Delete
+                </button>
+              ) : deleteRequested ? (
+                <span className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" style={{ cursor: "default" }}>
+                  Delete requested
+                </span>
+              ) : (
+                <button
+                  className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm"
+                  onClick={(e) => { e.stopPropagation(); onRequestDelete(p); }}
+                >
+                  Request delete
                 </button>
               )}
             </div>

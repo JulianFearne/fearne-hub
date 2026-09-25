@@ -10,7 +10,7 @@ querying a new table or column.
 Every table is expected to have Row Level Security enabled, following the
 same pattern: rows carry a `user_id` (or `created_by`) column referencing
 `auth.users`, and policies restrict reads/writes to the owning user, with
-shared/family-visible data (recipes, meal plans, shopping lists, workout
+shared/family-visible data (recipes, meal plans, lists, workout
 programs, games) readable by any approved user.
 
 ## `profiles`
@@ -80,32 +80,68 @@ Queried with `select('*, recipes(id, title, emoji, category, ingredients)')`
 — a foreign-key relationship to `recipes` must exist for that embed to work.
 Shared/family-readable.
 
-## `shopping_lists`
+## `lists`
+
+Read/written by `src/pages/listsData.js`. Every kind of list (shopping,
+to-do, checklist) lives here. Formerly `shopping_lists`; see
+[`_reference/lists-schema.sql`](../_reference/lists-schema.sql) for the
+rename.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid / bigint | PK |
 | `name` | text | |
+| `kind` | text | not null, default `'shopping'`; `shopping` \| `todo` \| `checklist`, matching the keys of `LIST_KINDS`. No check constraint, so new kinds need no schema change |
 | `created_by` | uuid | references `auth.users.id` |
 | `created_at` | timestamptz | |
 
-Shared/family-readable and writable (any approved user can create/delete a
-list, per `ShoppingLists.jsx`).
+**Not** family-wide: a list is visible only to its owner (`created_by`) and
+the people it's shared with in `list_shares`. RLS enforces this through the
+`list_access()` / `can_view_list()` / `can_edit_list()` / `can_manage_list()`
+helpers, and a `lists_keep_owner` trigger stops `created_by` being changed.
+Any approved user can create a list; only the owner or a `manage` share can
+rename or delete it. See
+[`_reference/lists-sharing-schema.sql`](../_reference/lists-sharing-schema.sql).
 
-## `shopping_list_items`
+## `list_items`
+
+Formerly `shopping_list_items`. The same columns serve every kind of list;
+`amount`, `source` and `recipe_title` are only used by shopping lists;
+`assigned_to` and `due_date` only by to-do lists.
+Readable by anyone who can view the list; added to, ticked and removed by
+the owner or an `edit` / `manage` share.
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | uuid / bigint | PK |
-| `list_id` | uuid / bigint | references `shopping_lists.id` |
+| `list_id` | uuid / bigint | references `lists.id` |
 | `name` | text | |
 | `amount` | text | nullable |
 | `checked` | boolean | default `false` |
 | `source` | text | `'manual'` or `'meal'` (set by `ingredientsFromEntries()` when pulled from the Meal Planner) |
 | `recipe_title` | text | nullable; set when `source = 'meal'`, shown as provenance next to the item |
+| `assigned_to` | uuid | nullable, references `auth.users.id` (on delete set null); used by to-do lists, `null` means "anyone" |
+| `due_date` | date | nullable; used by to-do lists, open items sort soonest first and past dates show as overdue |
 | `created_at` | timestamptz | |
 
 Shared/family-readable and writable.
+
+## `list_shares`
+
+Read/written by `src/pages/listsData.js`. One row per person a list is
+shared with (the owner never has a row).
+
+| Column | Type | Notes |
+|---|---|---|
+| `list_id` | same as `lists.id` | references `lists.id`, on delete cascade |
+| `user_id` | uuid | references `auth.users.id`, on delete cascade |
+| `permission` | text | `view` (see it) \| `edit` (add, tick, remove items) \| `manage` (edit, plus rename, share, delete) |
+| `created_at` | timestamptz | |
+
+Primary key `(list_id, user_id)`; `setListShare()` upserts on it. Readable
+by anyone who can view the list; written by the owner or a `manage` share.
+A user can also delete their own row, which is how "Leave list" works.
+Admins get no special access.
 
 ## `chores`
 
@@ -120,7 +156,7 @@ Read/written by `src/pages/choresData.js`.
 | `created_by` | uuid | references `auth.users.id` |
 | `created_at` | timestamptz | |
 
-Shared/family-readable and writable, same as shopping lists (any approved
+Shared/family-readable and writable, same as lists (any approved
 user can create one); only the creator or an `admin` can delete one
 (enforced client-side in `Chores.jsx` via `canDelete`, should also be
 enforced by RLS).
@@ -158,7 +194,7 @@ Read/written by `src/pages/calendarData.js`.
 | `created_by` | uuid | references `auth.users.id` |
 | `created_at` | timestamptz | |
 
-Shared/family-readable and writable, same as shopping lists and chores; only
+Shared/family-readable and writable, same as lists and chores; only
 the creator or an `admin` can delete one (enforced client-side in
 `Calendar.jsx` via the same `canDelete`-style check as `Chores.jsx`, should
 also be enforced by RLS).

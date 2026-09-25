@@ -10,10 +10,9 @@ import {
   addMealPlanEntry,
   deleteMealPlanEntry,
   ingredientsFromEntries,
-  createShoppingList,
-  fetchShoppingLists,
-  addListItems,
 } from './mealPlanData'
+import { createList, fetchLists, addListItems, accessFor, canEdit } from './listsData'
+import { useAuth } from '../context/AuthContext.jsx'
 import RecipePickerModal from '../components/RecipePickerModal.jsx'
 import Sheet from '../components/ds/Sheet.jsx'
 import Button from '../components/ds/Button.jsx'
@@ -167,6 +166,7 @@ export default function MealPlanner() {
 }
 
 function AddToShoppingListModal({ entries, onClose }) {
+  const { user } = useAuth()
   const [lists, setLists] = useState([])
   const [loading, setLoading] = useState(true)
   const [choice, setChoice] = useState('') // list id, or 'new'
@@ -176,8 +176,10 @@ function AddToShoppingListModal({ entries, onClose }) {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    fetchShoppingLists()
-      .then((data) => {
+    fetchLists('shopping')
+      .then((all) => {
+        // Only lists this user can add items to.
+        const data = all.filter((l) => canEdit(accessFor(l, user.id)))
         setLists(data)
         setChoice(data[0]?.id || 'new')
       })
@@ -197,7 +199,7 @@ function AddToShoppingListModal({ entries, onClose }) {
           setSaving(false)
           return
         }
-        const created = await createShoppingList(newName.trim())
+        const created = await createList(newName.trim(), 'shopping')
         listId = created.id
       }
       await addListItems(listId, ingredients)
@@ -245,7 +247,7 @@ function AddToShoppingListModal({ entries, onClose }) {
             <Icon name="check-circle" size={16} />
             Added. Head to Shopping Lists to see it.
           </div>
-          <Button as={Link} to="/shopping" block>
+          <Button as={Link} to="/lists/shopping" block>
             Go to Shopping Lists
           </Button>
         </>

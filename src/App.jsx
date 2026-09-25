@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import HubHeader from './components/ds/HubHeader.jsx'
@@ -30,7 +30,9 @@ import Bingo from './pages/games/bingo/Bingo.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
-import ShoppingLists from './pages/ShoppingLists.jsx'
+import Lists from './pages/Lists.jsx'
+import ListCollection from './pages/ListCollection.jsx'
+import { LIST_KINDS } from './pages/listsData'
 import WorkoutHub from './pages/WorkoutHub.jsx'
 import WorkoutTracker from './pages/WorkoutTracker.jsx'
 import WorkoutHistory from './pages/WorkoutHistory.jsx'
@@ -38,7 +40,7 @@ import WorkoutHistory from './pages/WorkoutHistory.jsx'
 const TAB_ITEMS = [
   { to: '/', label: 'Home', icon: 'house', end: true },
   { to: '/recipes', label: 'Cook', icon: 'soup' },
-  { to: '/shopping', label: 'Shop', icon: 'shopping-basket' },
+  { to: '/lists', label: 'Lists', icon: 'clipboard-list' },
   { to: '/workouts', label: 'Move', icon: 'dumbbell' },
   { to: '/games', label: 'Play', icon: 'gamepad-2' },
 ]
@@ -50,8 +52,9 @@ const ROUTE_HEADERS = {
   '/recipes': { title: 'Recipes', tab: true },
   '/import': { title: 'Import recipes', back: '/recipes' },
   '/planner': { title: "This week's meals", back: '/', wide: true },
-  '/shopping': { title: 'Shopping lists', tab: true },
-  '/chores': { title: 'Chores', back: '/' },
+  '/lists': { title: 'Lists', tab: true },
+  ...Object.fromEntries(Object.entries(LIST_KINDS).map(([kind, k]) => [`/lists/${kind}`, { title: k.title, back: '/lists' }])),
+  '/chores': { title: 'Chores', back: '/lists' },
   '/calendar': { title: 'Calendar', back: '/' },
   '/settings': { title: 'Settings', back: '/' },
   '/games': { title: 'Games', tab: true },
@@ -160,13 +163,23 @@ export default function App() {
           }
         />
         <Route
-          path="/shopping"
+          path="/lists"
           element={
             <ProtectedRoute>
-              <ShoppingLists />
+              <Lists />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/lists/:kind"
+          element={
+            <ProtectedRoute>
+              <ListCollection />
+            </ProtectedRoute>
+          }
+        />
+        {/* Old address from before lists were generalised; keeps bookmarks working. */}
+        <Route path="/shopping" element={<Navigate to="/lists/shopping" replace />} />
         <Route
           path="/chores"
           element={

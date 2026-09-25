@@ -1,0 +1,21 @@
+/* Lists (shopping, to-do, checklists). Scoped under .fh-lists. */
+.fh-lists__toolbar{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-lists__toolbar .fh-input{flex:1}
+.fh-lists__actions{display:flex;justify-content:flex-end;gap:var(--sp-4);margin-bottom:var(--sp-5)}
+.fh-lists__grid{display:grid;grid-template-columns:1fr;gap:var(--sp-5)}
+@media (min-width:600px){.fh-lists__grid{grid-template-columns:1fr 1fr}}
+.fh-lists__combinebox{position:absolute;top:var(--sp-5);right:var(--sp-5)}
+.fh-lists__group{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);margin:var(--sp-7) var(--sp-6) var(--sp-4)}
+.fh-lists__grouplabel{font:var(--fw-semibold) var(--fs-meta)/1.2 var(--font-text);color:var(--ink-3)}
+.fh-lists__add{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-lists__add .fh-input{flex:1}
+.fh-lists__head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-lists__head .fh-home__greet{margin:0;min-width:0;overflow-wrap:anywhere}
+.fh-lists__sharelabel{margin:var(--sp-6) 0 var(--sp-4)}
+.fh-lists__hint{font:var(--type-caption);color:var(--ink-3);margin-top:var(--sp-5)}
+.fh-lists__add{flex-wrap:wrap}
+.fh-lists__extras{flex-basis:100%;display:flex;gap:var(--sp-4)}
+.fh-lists__extras > *{flex:1;min-width:0}
+.fh-lists__itemmeta{display:block;font:var(--type-meta);color:var(--ink-3);margin-top:2px;text-decoration:none}
+.fh-lists__overdue{color:var(--danger)}
+.fh-lists__form{display:flex;flex-direction:column;gap:var(--sp-5)}

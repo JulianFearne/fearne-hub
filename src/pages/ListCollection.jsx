@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
+import { Navigate, useParams } from 'react-router-dom'
 import {
-  fetchShoppingLists,
-  createShoppingList,
-  deleteShoppingList,
+  LIST_KINDS,
+  fetchLists,
+  createList,
+  deleteList,
   fetchListItems,
   addListItem,
   addListItems,
   toggleListItem,
   deleteListItem,
-} from './mealPlanData'
+  uncheckAllItems,
+  deleteCheckedItems,
+} from './listsData'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
 import Button from '../components/ds/Button.jsx'
 import IconButton from '../components/ds/IconButton.jsx'
@@ -16,7 +20,17 @@ import Icon from '../components/ds/Icon.jsx'
 import { Input } from '../components/ds/Field.jsx'
 import TickRow from '../components/ds/TickRow.jsx'
 
-export default function ShoppingLists() {
+// Every list of one kind (shopping, to-do, checklist...) at /lists/:kind.
+// What each kind can do is driven by its entry in LIST_KINDS.
+export default function ListCollection() {
+  const { kind } = useParams()
+  if (!LIST_KINDS[kind]) return <Navigate to="/lists" replace />
+  // Keyed so switching kind resets the page state rather than reusing it.
+  return <KindLists key={kind} kind={kind} />
+}
+
+function KindLists({ kind }) {
+  const k = LIST_KINDS[kind]
   const [lists, setLists] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -31,7 +45,7 @@ export default function ShoppingLists() {
 
   function load() {
     setLoading(true)
-    fetchShoppingLists()
+    fetchLists(kind)
       .then(setLists)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
@@ -41,7 +55,7 @@ export default function ShoppingLists() {
     e.preventDefault()
     if (!newListName.trim()) return
     try {
-      const created = await createShoppingList(newListName.trim())
+      const created = await createList(newListName.trim(), kind)
       setLists((prev) => [...prev, created])
       setNewListName('')
     } catch (err) {
@@ -51,7 +65,7 @@ export default function ShoppingLists() {
 
   async function handleDeleteList(id) {
     try {
-      await deleteShoppingList(id)
+      await deleteList(id)
       setLists((prev) => prev.filter((l) => l.id !== id))
       if (activeId === id) setActiveId(null)
     } catch (err) {
@@ -67,7 +81,7 @@ export default function ShoppingLists() {
     if (selectedForCombine.length < 2) return
     try {
       const name = `Combined (${new Date().toLocaleDateString()})`
-      const combined = await createShoppingList(name)
+      const combined = await createList(name, kind)
       const allItems = []
       for (const id of selectedForCombine) {
         const items = await fetchListItems(id)
@@ -93,7 +107,7 @@ export default function ShoppingLists() {
   const activeList = lists.find((l) => l.id === activeId)
 
   if (activeList) {
-    return <ListDetail list={activeList} onBack={() => setActiveId(null)} />
+    return <ListDetail list={activeList} kind={kind} onBack={() => setActiveId(null)} />
   }
 
   return (
@@ -105,8 +119,8 @@ export default function ShoppingLists() {
         </div>
       )}
 
-      <form onSubmit={handleCreate} className="fh-shop__toolbar">
-        <Input value={newListName} onChange={(e) => setNewListName(e.target.value)} placeholder="New list name, e.g. Family" />
+      <form onSubmit={handleCreate} className="fh-lists__toolbar">
+        <Input value={newListName} onChange={(e) => setNewListName(e.target.value)} placeholder={k.namePlaceholder} />
         <Button type="submit" icon="plus">
           Create
         </Button>
@@ -117,33 +131,35 @@ export default function ShoppingLists() {
       {!loading && lists.length === 0 && (
         <div className="fh-empty">
           <span className="fh-empty__mark">
-            <Icon name="shopping-basket" size={22} />
+            <Icon name={k.icon} size={22} />
           </span>
-          <p className="fh-empty__title">Nothing on this list yet</p>
-          <p className="fh-empty__body">Create one above, or pull the ingredients in from this week's meals.</p>
+          <p className="fh-empty__title">No {k.noun}s yet</p>
+          <p className="fh-empty__body">{k.emptyBody}</p>
         </div>
       )}
 
       {!loading && lists.length > 0 && (
         <>
-          <div className="fh-shop__actions">
-            {combineMode ? (
-              <>
-                <Button variant="quiet" onClick={() => { setCombineMode(false); setSelectedForCombine([]) }}>
-                  Cancel
+          {k.combine && lists.length > 1 && (
+            <div className="fh-lists__actions">
+              {combineMode ? (
+                <>
+                  <Button variant="quiet" onClick={() => { setCombineMode(false); setSelectedForCombine([]) }}>
+                    Cancel
+                  </Button>
+                  <Button icon="merge" disabled={selectedForCombine.length < 2} onClick={handleCombine}>
+                    Combine {selectedForCombine.length} lists
+                  </Button>
+                </>
+              ) : (
+                <Button variant="quiet" icon="merge" onClick={() => setCombineMode(true)}>
+                  Combine lists
                 </Button>
-                <Button icon="merge" disabled={selectedForCombine.length < 2} onClick={handleCombine}>
-                  Combine {selectedForCombine.length} lists
-                </Button>
-              </>
-            ) : (
-              <Button variant="quiet" icon="merge" onClick={() => setCombineMode(true)}>
-                Combine lists
-              </Button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
-          <div className="fh-shop__grid">
+          <div className="fh-lists__grid">
             {lists.map((l) => (
               <Card
                 key={l.id}
@@ -158,14 +174,14 @@ export default function ShoppingLists() {
                 }}
               >
                 {combineMode && (
-                  <span className="fh-shop__combinebox">
+                  <span className="fh-lists__combinebox">
                     <span className="fh-tick__box" style={selectedForCombine.includes(l.id) ? { background: 'var(--success)', borderColor: 'var(--success)', color: 'var(--white)' } : undefined}>
                       {selectedForCombine.includes(l.id) && <Icon name="check" size={16} />}
                     </span>
                   </span>
                 )}
                 <span className="fh-recipes__mark">
-                  <Icon name="shopping-basket" size={18} />
+                  <Icon name={k.icon} size={18} />
                 </span>
                 <div>
                   <CardTitle>{l.name}</CardTitle>
@@ -193,7 +209,8 @@ export default function ShoppingLists() {
   )
 }
 
-function ListDetail({ list, onBack }) {
+function ListDetail({ list, kind, onBack }) {
+  const k = LIST_KINDS[kind]
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -239,13 +256,32 @@ function ListDetail({ list, onBack }) {
     }
   }
 
-  const unchecked = items.filter((i) => !i.checked)
-  const checked = items.filter((i) => i.checked)
+  async function handleUncheckAll() {
+    setItems((prev) => prev.map((i) => ({ ...i, checked: false })))
+    try {
+      await uncheckAllItems(list.id)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleClearDone() {
+    try {
+      await deleteCheckedItems(list.id)
+      setItems((prev) => prev.filter((i) => !i.checked))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const unchecked = k.splitDone ? items.filter((i) => !i.checked) : items
+  const checked = k.splitDone ? items.filter((i) => i.checked) : []
+  const checkedCount = items.filter((i) => i.checked).length
 
   return (
     <div>
       <Button variant="quiet" icon="chevron-left" style={{ marginBottom: 'var(--sp-6)' }} onClick={onBack}>
-        All lists
+        All {k.title.toLowerCase()}
       </Button>
 
       <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)', marginBottom: 'var(--sp-6)' }}>{list.name}</p>
@@ -257,9 +293,11 @@ function ListDetail({ list, onBack }) {
         </div>
       )}
 
-      <form onSubmit={handleAdd} className="fh-shop__add">
-        <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Add an item…" />
-        <Input value={newAmount} onChange={(e) => setNewAmount(e.target.value)} placeholder="Amount (optional)" style={{ flex: '0 0 140px' }} />
+      <form onSubmit={handleAdd} className="fh-lists__add">
+        <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder={k.itemPlaceholder} />
+        {k.amounts && (
+          <Input value={newAmount} onChange={(e) => setNewAmount(e.target.value)} placeholder="Amount (optional)" style={{ flex: '0 0 140px' }} />
+        )}
         <Button type="submit" icon="plus">
           Add
         </Button>
@@ -270,27 +308,44 @@ function ListDetail({ list, onBack }) {
       {!loading && items.length === 0 && (
         <div className="fh-empty">
           <span className="fh-empty__mark">
-            <Icon name="shopping-basket" size={22} />
+            <Icon name={k.icon} size={22} />
           </span>
           <p className="fh-empty__title">This list is empty</p>
-          <p className="fh-empty__body">Add items above, or pull ingredients in from this week's meals.</p>
+          <p className="fh-empty__body">{k.emptyItemsBody}</p>
+        </div>
+      )}
+
+      {!loading && k.resetAll && checkedCount > 0 && (
+        <div className="fh-lists__actions">
+          <Button variant="quiet" icon="rotate-ccw" onClick={handleUncheckAll}>
+            Untick all ({checkedCount})
+          </Button>
         </div>
       )}
 
       {!loading && unchecked.length > 0 && (
         <div className="fh-rows">
           {unchecked.map((item) => (
-            <ShoppingItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
+            <ListItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
           ))}
         </div>
       )}
 
       {!loading && checked.length > 0 && (
         <>
-          <p className="fh-shop__group">Got it ({checked.length})</p>
+          <div className="fh-lists__group">
+            <p className="fh-lists__grouplabel">
+              {k.doneLabel} ({checked.length})
+            </p>
+            {k.clearDone && (
+              <Button variant="ghost" size="sm" icon="trash-2" onClick={handleClearDone}>
+                Clear
+              </Button>
+            )}
+          </div>
           <div className="fh-rows">
             {checked.map((item) => (
-              <ShoppingItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
+              <ListItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
             ))}
           </div>
         </>
@@ -299,7 +354,7 @@ function ListDetail({ list, onBack }) {
   )
 }
 
-function ShoppingItem({ item, onToggle, onDelete }) {
+function ListItem({ item, onToggle, onDelete }) {
   return (
     <TickRow
       checked={item.checked}

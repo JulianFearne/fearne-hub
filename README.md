@@ -33,8 +33,11 @@ the client in `src/supabaseClient.js`.
 - **Meal Planner** — a weekly grid (breakfast/lunch/dinner × 7 days), fed by
   the recipe book, that can push its ingredients straight into a shopping
   list.
-- **Shopping Lists** — multiple named lists, checkable items, and the
-  ability to combine several lists into one before a shop.
+- **Lists** — shopping lists, to-do lists and reusable checklists, each
+  with multiple named lists and checkable items. Shopping lists take
+  amounts and can be combined into one before a shop; to-do lists can clear
+  their done items; checklists can be unticked in one go for reuse. New
+  kinds of list are added in `LIST_KINDS` (`src/pages/listsData.js`).
 - **Chores** — assign one-off, daily or weekly chores to a family member (or
   leave them open to anyone), tick them off, and watch recurring ones reset
   themselves each day/week.
@@ -81,8 +84,9 @@ src/
     Admin.jsx                 approve users, change roles (requireRole="admin")
     Recipes.jsx / recipesData.js         recipe book + Supabase queries
     ImportRecipes.jsx                     bulk JSON import for recipes
-    MealPlanner.jsx / mealPlanData.js    weekly planner + shopping list helpers
-    ShoppingLists.jsx                     list management (shares mealPlanData.js)
+    MealPlanner.jsx / mealPlanData.js    weekly planner
+    Lists.jsx                             Lists tab: one tile per kind of list
+    ListCollection.jsx / listsData.js    lists of one kind (/lists/:kind) + LIST_KINDS config
     Chores.jsx / choresData.js           chores + Supabase queries
     Calendar.jsx / calendarData.js       events, birthdays, .ics export
     Settings.jsx / accountData.js        nickname, avatar upload

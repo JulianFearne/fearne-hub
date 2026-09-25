@@ -202,7 +202,9 @@ export default function Chores() {
 
       {!loading && done.length > 0 && (
         <>
-          <p className="fh-shop__group">Done ({done.length})</p>
+          <div className="fh-lists__group">
+            <p className="fh-lists__grouplabel">Done ({done.length})</p>
+          </div>
           <div className="fh-rows">
             {done.map((chore) => (
               <ChoreRow

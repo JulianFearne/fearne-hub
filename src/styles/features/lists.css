@@ -1,0 +1,11 @@
+/* Lists (shopping, to-do, checklists). Scoped under .fh-lists. */
+.fh-lists__toolbar{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-lists__toolbar .fh-input{flex:1}
+.fh-lists__actions{display:flex;justify-content:flex-end;gap:var(--sp-4);margin-bottom:var(--sp-5)}
+.fh-lists__grid{display:grid;grid-template-columns:1fr;gap:var(--sp-5)}
+@media (min-width:600px){.fh-lists__grid{grid-template-columns:1fr 1fr}}
+.fh-lists__combinebox{position:absolute;top:var(--sp-5);right:var(--sp-5)}
+.fh-lists__group{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);margin:var(--sp-7) var(--sp-6) var(--sp-4)}
+.fh-lists__grouplabel{font:var(--fw-semibold) var(--fs-meta)/1.2 var(--font-text);color:var(--ink-3)}
+.fh-lists__add{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
+.fh-lists__add .fh-input{flex:1}

@@ -10,10 +10,8 @@ import {
   addMealPlanEntry,
   deleteMealPlanEntry,
   ingredientsFromEntries,
-  createShoppingList,
-  fetchShoppingLists,
-  addListItems,
 } from './mealPlanData'
+import { createList, fetchLists, addListItems } from './listsData'
 import RecipePickerModal from '../components/RecipePickerModal.jsx'
 import Sheet from '../components/ds/Sheet.jsx'
 import Button from '../components/ds/Button.jsx'
@@ -176,7 +174,7 @@ function AddToShoppingListModal({ entries, onClose }) {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    fetchShoppingLists()
+    fetchLists('shopping')
       .then((data) => {
         setLists(data)
         setChoice(data[0]?.id || 'new')
@@ -197,7 +195,7 @@ function AddToShoppingListModal({ entries, onClose }) {
           setSaving(false)
           return
         }
-        const created = await createShoppingList(newName.trim())
+        const created = await createList(newName.trim(), 'shopping')
         listId = created.id
       }
       await addListItems(listId, ingredients)
@@ -245,7 +243,7 @@ function AddToShoppingListModal({ entries, onClose }) {
             <Icon name="check-circle" size={16} />
             Added. Head to Shopping Lists to see it.
           </div>
-          <Button as={Link} to="/shopping" block>
+          <Button as={Link} to="/lists/shopping" block>
             Go to Shopping Lists
           </Button>
         </>

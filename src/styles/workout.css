@@ -279,6 +279,102 @@
   padding: var(--sp-5) 0;
 }
 
+/* ---------- set logger ---------- */
+.fh-workout-logger__head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-5); }
+.fh-workout-logger__close {
+  background: transparent;
+  border: 0;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 0 var(--sp-2);
+}
+.fh-workout-logger__last { font-size: var(--fs-caption); color: var(--ink-3); margin-top: var(--sp-3); }
+
+.fh-workout-setlist { margin: var(--sp-6) 0; }
+.fh-workout-setrow {
+  display: grid;
+  grid-template-columns: 34px 1fr 48px;
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-3) var(--sp-3);
+  border-radius: var(--r-control);
+  margin-bottom: var(--sp-3);
+  transition: background var(--dur-2) var(--ease-out);
+}
+.fh-workout-setrow[data-weight="true"] { grid-template-columns: 34px 1fr 1fr 48px; }
+.fh-workout-setrow[data-sides="true"] { grid-template-columns: 34px 1fr 1fr 48px; }
+.fh-workout-setrow[data-weight="true"][data-sides="true"] { grid-template-columns: 34px 1fr 1fr 1fr 48px; }
+.fh-workout-setrow--head {
+  font: var(--fw-semibold) var(--fs-caption)/1.2 var(--font-text);
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-meta);
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+.fh-workout-setrow--head span:not(:first-child) { text-align: center; }
+.fh-workout-setrow__n {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.fh-workout-setrow__remove {
+  background: transparent;
+  border: 0;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 2px;
+}
+.fh-workout .fh-workout-setrow input[type="number"] {
+  text-align: center;
+  font-size: var(--fs-title-sm);
+  font-weight: var(--fw-bold);
+  padding: var(--sp-4) 0;
+}
+.fh-workout .fh-workout-setrow input::placeholder { color: var(--ink-faint); font-weight: var(--fw-semibold); opacity: 1; }
+.fh-workout-setrow__tick {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: var(--bw-hair) solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--ink-3);
+  font-size: 20px;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+.fh-workout-setrow__tick:disabled { opacity: .4; cursor: not-allowed; }
+.fh-workout-setrow[data-done="true"] { background: var(--success-soft); }
+.fh-workout .fh-workout-setrow[data-done="true"] input[type="number"] {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--success-soft-ink);
+  opacity: 1;
+  -webkit-text-fill-color: var(--success-soft-ink);
+}
+.fh-workout-setrow__tick[data-done="true"] {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--white);
+}
+
+.fh-workout-notes { list-style: none; margin: var(--sp-4) 0 0; padding: 0; }
+.fh-workout-notes li {
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+  border-left: 2px solid var(--border-strong);
+  padding: var(--sp-2) 0 var(--sp-2) var(--sp-5);
+  margin-bottom: var(--sp-3);
+}
+.fh-workout-notes .when { display: block; font-size: var(--fs-caption); color: var(--ink-3); }
+
 /* ---------- rest timer ---------- */
 .fh-workout-timer {
   position: fixed;
@@ -295,6 +391,7 @@
   box-shadow: var(--shadow-3);
   z-index: 70;
   min-width: 260px;
+  max-width: calc(100vw - 2 * var(--sp-6));
 }
 .fh-workout-timer__count {
   font-family: var(--font-display);
@@ -303,7 +400,16 @@
   font-variant-numeric: tabular-nums;
   min-width: 68px;
 }
-.fh-workout-timer__label { font-size: var(--fs-caption); opacity: .75; letter-spacing: var(--ls-meta); text-transform: uppercase; }
+.fh-workout-timer__count { flex-shrink: 0; }
+.fh-workout-timer__label {
+  font-size: var(--fs-caption);
+  opacity: .75;
+  letter-spacing: var(--ls-meta);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .fh-workout-timer__bar { height: 3px; background: rgba(252,248,243,.25); border-radius: var(--r-pill); margin-top: var(--sp-3); overflow: hidden; }
 .fh-workout-timer__bar span { display: block; height: 100%; background: var(--secondary); }
 .fh-workout-timer button {
@@ -316,6 +422,19 @@
   font-family: var(--font-text);
   cursor: pointer;
 }
+/* inside the set logger it pins to the top of the sheet while scrolling */
+.fh-workout-timer--inline {
+  position: sticky;
+  top: calc(-1 * var(--sp-7));
+  left: auto;
+  bottom: auto;
+  transform: none;
+  min-width: 0;
+  max-width: none;
+  margin: var(--sp-5) 0 0;
+}
+/* a toast lifts above the floating timer instead of covering it */
+.fh-workout-timer:not(.fh-workout-timer--inline) ~ .fh-workout-toast { bottom: calc(var(--bar-h) + var(--sp-5) + 84px); }
 .fh-workout-timer[data-done="true"] { background: var(--secondary); color: var(--ink-on-secondary); }
 .fh-workout-timer[data-done="true"] button { border-color: rgba(36,30,34,.3); color: var(--ink-on-secondary); }
 

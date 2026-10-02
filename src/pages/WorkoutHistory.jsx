@@ -13,6 +13,8 @@ import {
   logWeight,
   deleteWeight,
   canLogWeight,
+  listSplitDays,
+  tidySplitDay,
 } from "../lib/workoutApi";
 import "../styles/workout.css";
 
@@ -74,7 +76,7 @@ export default function WorkoutHistory() {
           <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>
         ) : (
           <>
-            {tab === "sessions" && <SessionsPanel />}
+            {tab === "sessions" && <SessionsPanel program={program} programId={programId} />}
             {tab === "progress" && <ProgressPanel program={program} programId={programId} />}
             {tab === "weight" && <WeightPanel />}
           </>
@@ -88,18 +90,40 @@ export default function WorkoutHistory() {
 /* Sessions                                                                    */
 /* ========================================================================== */
 
-function SessionsPanel() {
+function SessionsPanel({ program, programId }) {
   const [sessions, setSessions] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [sets, setSets] = useState({});
   const [loading, setLoading] = useState(true);
+  const [splitDays, setSplitDays] = useState([]);
+  const [tidying, setTidying] = useState(null);
+  const [tidyMsg, setTidyMsg] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      try { setSessions(await listSessions(40)); }
-      finally { setLoading(false); }
-    })();
-  }, []);
+  const load = useCallback(async () => {
+    try {
+      setSessions(await listSessions(40));
+      setSets({});
+      setSplitDays(programId ? await listSplitDays(programId).catch(() => []) : []);
+    } finally {
+      setLoading(false);
+    }
+  }, [programId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const tidy = async (day) => {
+    setTidying(day);
+    setTidyMsg(null);
+    try {
+      const { merged } = await tidySplitDay(program, programId, day);
+      setTidyMsg({ ok: true, text: `Tidied ${merged} exercise${merged === 1 ? "" : "s"} into single entries and re-worked their streaks.` });
+      await load();
+    } catch (e) {
+      setTidyMsg({ ok: false, text: e.message || "Couldn't tidy that day." });
+    } finally {
+      setTidying(null);
+    }
+  };
 
   const toggle = async (id) => {
     if (expanded === id) { setExpanded(null); return; }
@@ -119,6 +143,26 @@ function SessionsPanel() {
 
   return (
     <>
+      {tidyMsg && (
+        <div className={`fh-workout-alert ${tidyMsg.ok ? "fh-workout-alert--ok" : "fh-workout-alert--error"}`}>{tidyMsg.text}</div>
+      )}
+      {splitDays.map((d) => (
+        <div key={d.day} className="fh-workout-alert fh-workout-alert--warn">
+          <div style={{ marginBottom: 8 }}>
+            On {fmtDate(`${d.day}T12:00:00`)}, {d.exercises.join(", ")} {d.exercises.length === 1 ? "was" : "were"} saved
+            in pieces (one entry per set), which reset the streak each time. Tidying joins each into one entry and works
+            the streak out again.
+          </div>
+          <button
+            className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--sm"
+            onClick={() => tidy(d.day)}
+            disabled={!!tidying}
+          >
+            {tidying === d.day ? "Tidying…" : "Tidy this day"}
+          </button>
+        </div>
+      ))}
+
       <div className="fh-workout-stat-row">
         <div className="fh-workout-stat">
           <div className="val">{sessions.length}</div>
@@ -162,12 +206,17 @@ function SessionsPanel() {
                       <div className="name">{r.exercise_name}</div>
                       <div className="meta">
                         {r.side && `${r.side === "left" ? "L" : "R"} · `}
-                        {r.amounts.join(" / ")} {r.unit === "seconds" ? "sec" : r.unit === "metres" ? "m" : "reps"}
-                        {r.load_kg != null && ` @ ${r.load_kg}kg`}
+                        {r.loads_kg?.some((kg) => kg != null && Number(kg) !== Number(r.load_kg))
+                          ? r.amounts.map((a, i) => (r.loads_kg[i] != null ? `${a}×${r.loads_kg[i]}kg` : a)).join(" / ")
+                          : <>
+                              {r.amounts.join(" / ")} {r.unit === "seconds" ? "sec" : r.unit === "metres" ? "m" : "reps"}
+                              {r.load_kg != null && ` @ ${r.load_kg}kg`}
+                            </>}
                         {r.rpe != null && ` · RPE ${r.rpe}`}
                         {r.advanced && " · levelled up"}
                         {!r.advanced && r.hit_target && " · target hit"}
                       </div>
+                      {r.note && <div className="meta" style={{ fontStyle: "italic" }}>{r.note}</div>}
                     </div>
                   </div>
                 ))}

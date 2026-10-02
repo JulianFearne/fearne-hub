@@ -18,6 +18,7 @@ import { useState, useEffect } from "react";
 import { effectiveTarget, describeTarget, judgeSide } from "../lib/workoutSchema";
 import { getChainHistory } from "../lib/workoutApi";
 import { primeBeep } from "../lib/workoutLive";
+import ExerciseGuide from "./ExerciseGuide";
 
 const blankRow = () => ({ kg: "", a: "", l: "", r: "", done: false });
 
@@ -202,6 +203,7 @@ export default function WorkoutLogger({
         )}
 
         <h2 style={{ margin: "6px 0 3px" }}>{exercise.name}</h2>
+        <ExerciseGuide key={`${chain.id}:${cur.idx}`} exercise={exercise} />
         <p className="fh-workout-card__sub">
           Target {describeTarget(target)}
           {mode === "load" && ` at ${workingKg}kg`}

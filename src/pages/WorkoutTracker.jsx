@@ -19,6 +19,7 @@ import {
 import { loadLive, saveLive, clearLive, emptyLive, startRest, togglePause, buildRunItems, nextOpenItem } from "../lib/workoutLive";
 import WorkoutLogger, { draftFor, doneCount, entryFromDraft } from "../components/WorkoutLogger";
 import WorkoutRestTimer from "../components/WorkoutRestTimer";
+import ExerciseGuide from "../components/ExerciseGuide";
 import "../styles/workout.css";
 
 const dayKey = (programId) => `fh-workout-last-day-${programId}`;
@@ -717,26 +718,13 @@ export default function WorkoutTracker() {
                     </div>
                   </div>
 
-                  <div className="fh-workout-exercise-name">
-                    {exercise.name}
-                    {exercise.video_url && (
-                      <a
-                        href={exercise.video_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="fh-workout-pill"
-                        style={{ marginLeft: 8, textDecoration: "none", verticalAlign: "middle" }}
-                      >
-                        form video
-                      </a>
-                    )}
-                  </div>
+                  <div className="fh-workout-exercise-name">{exercise.name}</div>
                   <div className="fh-workout-step">
                     {mode === "load"
                       ? <>target {describeTarget(target)} at {cur.loadKg ?? 0}kg</>
                       : <>step {cur.idx + 1} of {total} · target {describeTarget(target)}{maxed && " · top of the chain"}</>}
                   </div>
-                  {exercise.note && <p className="fh-workout-card__sub" style={{ marginBottom: 8 }}>{exercise.note}</p>}
+                  <ExerciseGuide key={`${chain.id}:${cur.idx}`} exercise={exercise} />
 
                   <div className="fh-workout-track">
                     <div className="fh-workout-track__fill" style={{ width: `${pct}%` }} />

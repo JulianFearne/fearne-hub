@@ -138,6 +138,7 @@ export function validateProgram(raw) {
           color: pickColor(sec.color, where, warnings),
           select: sec.select === "single" ? "single" : "multi",
           options,
+          ...(sec.when === "start" || sec.when === "end" ? { when: sec.when } : {}),
         });
       });
     }
@@ -508,4 +509,16 @@ export function mergeSplitSets(pieces) {
     }
   }
   return { amounts, loads };
+}
+
+/**
+ * Where a tick-list belongs in a guided session: "start" (before the first
+ * exercise) or "end" (on the summary). An explicit `when` wins; otherwise
+ * warm-up and skill-practice sections go first and everything else (cool-down, finisher,
+ * checks, steps) at the end. Built-in programmes are copied into the
+ * database once, so this has to work from the label alone.
+ */
+export function sectionPlacement(sec) {
+  if (sec.when === "start" || sec.when === "end") return sec.when;
+  return /warm|mobility|breath|connect|activation|prep|skill/i.test(`${sec.id} ${sec.label}`) ? "start" : "end";
 }

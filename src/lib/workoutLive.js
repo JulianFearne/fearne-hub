@@ -11,9 +11,9 @@ const key = (programId) => `fh-workout-live-${programId}`;
 const STALE_MS = 12 * 60 * 60 * 1000;
 
 // `run` is the guided session, when one has been started from a day:
-// { day, items: [[chainId, ...], ...], current, done: [itemIndex], log: [...] }
+// { day, items: [[chainId, ...], ...], current, done: [itemIndex], log: [...], warmupDone }
 // (an item holds 2+ chain ids for a superset; `current` is null on the summary)
-export const emptyLive = () => ({ sessionId: null, sessionStart: null, drafts: {}, rest: null, run: null });
+export const emptyLive = () => ({ sessionId: null, sessionStart: null, drafts: {}, rest: null, run: null, records: {} });
 
 /** The day's exercises in programme order, a superset kept together as one item. */
 export function buildRunItems(program, day) {

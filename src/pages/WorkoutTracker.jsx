@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { effectiveTarget, effectiveRest, describeTarget } from "../lib/workoutSchema";
+import { effectiveTarget, effectiveRest, describeTarget, sectionPlacement } from "../lib/workoutSchema";
 import {
   getActiveEnrollment,
   getProgress,
@@ -29,7 +29,6 @@ export default function WorkoutTracker() {
   const [program, setProgram] = useState(null);
   const [programId, setProgramId] = useState(null);
   const [progress, setProgress] = useState({});
-  const [records, setRecords] = useState({});
   const [live, setLive] = useState(emptyLive); // { sessionId, sessionStart, drafts, rest }
 
   const [loading, setLoading] = useState(true);
@@ -45,6 +44,7 @@ export default function WorkoutTracker() {
 
   const [showOverview, setShowOverview] = useState(false); // peek at the overview mid-session
   const { sessionId, sessionStart, drafts, rest, run } = live;
+  const records = live.records || {}; // tick-list choices, kept with the rest of the live workout
   const inRun = !!run && !showOverview;
   // the chains being logged: the bottom sheet's, or the session's current item
   const activeIds = loggerIds ?? (inRun && run.current != null ? run.items[run.current] : []);
@@ -89,7 +89,6 @@ export default function WorkoutTracker() {
         setProgramId(prog.id);
         setLive(loadLive(prog.id));
         setProgress(await getProgress(prog.id));
-        setRecords(Object.fromEntries((prog.definition.record_sections || []).map((s) => [s.id, []])));
       } catch (e) {
         setError(e.message || "Could not load your workout.");
       } finally {
@@ -262,7 +261,7 @@ export default function WorkoutTracker() {
     moveOn(false);
   };
 
-  const jumpTo = (i) => patchLive((l) => ({ run: { ...l.run, current: i } }));
+  const jumpTo = (i) => patchLive((l) => ({ run: { ...l.run, current: i, warmupDone: true } }));
   const toSummary = () => patchLive((l) => ({ run: { ...l.run, current: null } }));
 
   // ---- deload ---------------------------------------------------------------
@@ -309,7 +308,6 @@ export default function WorkoutTracker() {
       setLive(emptyLive());
       sessionReq.current = null;
       showToast(msgs.length ? `Workout saved. ${msgs[msgs.length - 1]}` : "Workout saved. Well done.");
-      setRecords(Object.fromEntries((program.record_sections || []).map((s) => [s.id, []])));
       setShowOverview(false);
       setTimeout(() => navigate("/workouts/history"), 900);
     } catch (e) {
@@ -320,13 +318,13 @@ export default function WorkoutTracker() {
   };
 
   const toggleRecord = (sectionId, option, single) => {
-    setRecords((prev) => {
+    patchLive((l) => {
+      const prev = l.records || {};
       const cur = prev[sectionId] || [];
-      if (single) return { ...prev, [sectionId]: cur.includes(option) ? [] : [option] };
-      return {
-        ...prev,
-        [sectionId]: cur.includes(option) ? cur.filter((x) => x !== option) : [...cur, option],
-      };
+      const next = single
+        ? (cur.includes(option) ? [] : [option])
+        : cur.includes(option) ? cur.filter((x) => x !== option) : [...cur, option];
+      return { records: { ...prev, [sectionId]: next } };
     });
   };
 
@@ -378,6 +376,25 @@ export default function WorkoutTracker() {
     />
   );
   const startDay = dayFilter !== "All" ? dayFilter : nextDayHint ?? dayLabels[0] ?? null;
+  const startSections = (program.record_sections || []).filter((sec) => sectionPlacement(sec) === "start");
+  const endSections = (program.record_sections || []).filter((sec) => sectionPlacement(sec) === "end");
+  const recordCard = (sec) => (
+    <div key={sec.id} className="fh-workout-card fh-workout-card--accent" style={{ "--w-accent": sec.color, marginTop: 14 }}>
+      <div className="fh-workout-card__label" style={{ "--w-accent": sec.color, marginBottom: 9 }}>{sec.label}</div>
+      <div className="fh-workout-chips">
+        {sec.options.map((opt) => (
+          <button
+            key={opt}
+            className="fh-workout-chip"
+            data-on={(records[sec.id] || []).includes(opt)}
+            onClick={() => toggleRecord(sec.id, opt, sec.select === "single")}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
   const startItems = buildRunItems(program, startDay);
 
   // ---- guided session ------------------------------------------------------
@@ -403,10 +420,21 @@ export default function WorkoutTracker() {
     );
     const steps = (
       <ol className="fh-workout-run__steps">
+        {startSections.length > 0 && (
+          <li>
+            <button
+              data-state={!run.warmupDone && run.current != null ? "current" : "done"}
+              onClick={() => patchLive((l) => ({ run: { ...l.run, warmupDone: false, current: l.run.current ?? nextOpenItem(l.run, -1) ?? 0 } }))}
+              aria-label="Warm-up"
+            >
+              W
+            </button>
+          </li>
+        )}
         {run.items.map((ids, i) => (
           <li key={i}>
             <button
-              data-state={run.done.includes(i) ? "done" : i === run.current ? "current" : "todo"}
+              data-state={run.done.includes(i) ? "done" : i === run.current && (run.warmupDone || !startSections.length) ? "current" : "todo"}
               onClick={() => jumpTo(i)}
               aria-label={`${i + 1}. ${itemLabel(ids)}${run.done.includes(i) ? ", done" : ""}`}
             >
@@ -416,6 +444,28 @@ export default function WorkoutTracker() {
         ))}
       </ol>
     );
+
+    if (run.current != null && !run.warmupDone && startSections.length) {
+      return (
+        <div className="fh-workout">
+          <div className="fh-workout-shell">
+            {elapsedHeader}
+            {steps}
+            <h1 style={{ margin: "10px 0 4px" }}>Warm up first</h1>
+            <p className="fh-workout-card__sub">Tick what you did, then start the exercises.</p>
+            {startSections.map(recordCard)}
+            <button
+              className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block"
+              style={{ marginTop: 18 }}
+              onClick={() => patchLive((l) => ({ run: { ...l.run, warmupDone: true } }))}
+            >
+              Start exercises
+            </button>
+          </div>
+          {toast && <div className="fh-workout-toast">{toast}</div>}
+        </div>
+      );
+    }
 
     if (run.current != null) {
       const ids = run.items[run.current];
@@ -499,23 +549,7 @@ export default function WorkoutTracker() {
             </div>
           )}
 
-          {(program.record_sections || []).map((sec) => (
-            <div key={sec.id} className="fh-workout-card fh-workout-card--accent" style={{ "--w-accent": sec.color, marginTop: 14 }}>
-              <div className="fh-workout-card__label" style={{ "--w-accent": sec.color, marginBottom: 9 }}>{sec.label}</div>
-              <div className="fh-workout-chips">
-                {sec.options.map((opt) => (
-                  <button
-                    key={opt}
-                    className="fh-workout-chip"
-                    data-on={(records[sec.id] || []).includes(opt)}
-                    onClick={() => toggleRecord(sec.id, opt, sec.select === "single")}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+          {endSections.map(recordCard)}
 
           <button
             className="fh-workout-btn fh-workout-btn--gold fh-workout-btn--block"
@@ -570,7 +604,9 @@ export default function WorkoutTracker() {
             <div>
               <h3>{startDay ? `Day ${startDay}` : "Today's workout"}{startDay && startDay === nextDayHint ? " is up next" : ""}</h3>
               <p className="fh-workout-card__sub">
+                {startSections.length > 0 && "Warm-up, then "}
                 {startItems.length} exercise{startItems.length === 1 ? "" : "s"}, one at a time
+                {endSections.length > 0 && ", then cool-down"}
               </p>
             </div>
             <button className="fh-workout-btn fh-workout-btn--primary" onClick={() => startRun(startDay)}>

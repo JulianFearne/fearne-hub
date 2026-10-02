@@ -200,7 +200,9 @@ partner is filtered out by the day tab just renders on its own.
 ## Record sections
 
 Simple tick-lists that appear above the chains in the tracker and get saved
-with the session, but don't progress.
+with the session, but don't progress. In a guided session the warm-up ones
+are a step before the first exercise and the rest (cool-down etc.) are on
+the summary at the end.
 
 ```json
 {
@@ -219,6 +221,7 @@ with the session, but don't progress.
 | `color` | string | no | `#rrggbb`, same fallback as chains. |
 | `select` | `"single"` \| `"multi"` | no | `"single"` behaves like a radio group (picking one clears any other); anything else (default) is multi-select. |
 | `options` | array of strings | yes | At least one. Max 40 kept (extra dropped with a warning). |
+| `when` | `"start"` \| `"end"` | no | Where it appears in a guided session: before the first exercise, or on the summary. If left out, a warm-up/mobility/breathing/skill style label goes at the start and anything else (cool-down, finisher, checks) at the end. |
 
 ## Validation behaviour
 

@@ -1,8 +1,8 @@
 // src/components/WorkoutLogger.jsx
 // The set logger. Sets are ticked off one at a time as they're done, each
 // with its own weight; last time's numbers sit greyed in every empty box
-// (falling back to the set above, then the target), and ticking an empty set
-// takes them as they are. Nothing reaches the database
+// that has them (no history, no number), and ticking an empty set takes them
+// as they are. Nothing reaches the database
 // until "Finish exercise", so the streak is judged once, on the whole
 // exercise. Ticks live in the tracker's on-device draft, so closing this (or
 // the page) keeps them.
@@ -108,14 +108,9 @@ export default function WorkoutLogger({
       : i < target.sets
         ? workingKg
         : lastKg ?? (prevRow ? (prevRow.kg !== "" ? prevRow.kg : ghost(i - 1).kg) : workingKg);
-    // reps: last time's for this set, else the set above's, else the top of
-    // the target range, so every set can be ticked in one tap
-    const amount = (field, lastSets) => {
-      const fromLast = lastSets?.[i]?.amount;
-      if (fromLast != null) return fromLast;
-      if (prevRow) return prevRow[field] !== "" ? prevRow[field] : ghost(i - 1)[field];
-      return target.repMax ?? "";
-    };
+    // reps: only ever last time's real number for this set; with no history
+    // the box stays empty and has to be typed, rather than guessing
+    const amount = (_field, lastSets) => lastSets?.[i]?.amount ?? "";
     return {
       kg: kg ?? "",
       a: amount("a", hist?.last?.single),
@@ -267,7 +262,7 @@ export default function WorkoutLogger({
 
         {done > 0 && done < target.sets && (
           <p className="fh-workout-card__sub" style={{ marginBottom: 12 }}>
-            {target.sets - done} to go. Greyed numbers are last time's: tick an empty set to use them.
+            {target.sets - done} to go. Greyed numbers are last time's: tick a set to use them, or type over them.
           </p>
         )}
         {done >= target.sets && (

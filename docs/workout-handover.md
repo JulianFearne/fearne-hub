@@ -53,7 +53,10 @@ handle barbell training. Both models now work in one schema.
 | `src/lib/workoutApi.js` | Every Supabase call. Pages import from here only. Contains the progression engine in `logSet`. |
 | `src/styles/workout.css` | Scoped under `.workout`. |
 | `src/pages/WorkoutHub.jsx` | Library, upload panel, builder form, start-position modal. |
-| `src/pages/WorkoutTracker.jsx` | Live tracker, log modal, reposition modal, rest timer. |
+| `src/pages/WorkoutTracker.jsx` | Live tracker and reposition modal. Owns the in-progress workout state. |
+| `src/components/WorkoutLogger.jsx` | Set logger: sets ticked off one at a time, per-set weight, greyed "last time" values, exercise notes. |
+| `src/components/WorkoutRestTimer.jsx` | Rest timer, counts down to a stored end time. |
+| `src/lib/workoutLive.js` | The in-progress workout kept in localStorage (session, ticked sets, rest end time), plus the rest-over beep. |
 | `src/pages/WorkoutHistory.jsx` | Sessions, progress charts, symmetry, body weight. |
 | `src/data/programs/calisthenics-bta.json` | Seed programme, schema v1, auto-inserted on first hub load. |
 | `docs/workout-program-format.md` | The JSON spec. Read this before generating any programme file. |
@@ -88,7 +91,18 @@ is not something to leave to a client-side check. Do not relax this without bein
 
 ## 5. The progression engine
 
-Lives in `logSet` in `workoutApi.js`. This is the heart of the feature.
+Lives in `judgeSide` and `decideProgression` in `workoutSchema.js` (pure), called by
+`logSet` in `workoutApi.js` and by the "tidy split sets" repair. This is the heart of the feature.
+
+**One judgement per exercise.** Sets are ticked off one at a time in the logger but stay
+on the device (`workoutLive.js`) until "Finish exercise" (or "Finish and save workout"),
+when the whole exercise is saved as one entry and judged once. Before October 2026 each
+tap saved a whole exercise, so logging set by set split an exercise into pieces that each
+failed the target; the History page offers to tidy any such day (`tidySplitDay`).
+
+**Which sets count.** Only the first `target.sets` sets are judged, so a burnout set after
+the prescribed ones is recorded but can't reset the streak. In load mode, sets lighter than
+the working weight (drop sets, warm-ups) don't count either.
 
 **Two thresholds, because rep ranges need both:**
 
@@ -157,8 +171,15 @@ which also covers the old "deload and reset" gap. `barbell-5x5.json` now uses al
 these: a two-day (A/B) split, a face-pulls/plank superset, and a metres-based farmer's
 carry.
 
-The rest timer requests a screen wake lock and vibrates on completion. Both degrade
-silently where unsupported.
+The rest timer counts down to a stored end time, so closing the page or locking the phone
+doesn't stretch a rest; coming back shows the time left, or how long ago it ran out. It
+requests a screen wake lock (re-taken when the page is shown again), beeps when the rest is
+up while the page is open (iPhones ignore vibrate), and vibrates where supported. It can't
+alert while the page is fully closed: that would need push notifications.
+
+Per-set weights (`loads_kg`) and exercise notes (`note`) on `workout_sets` need
+`_reference/workout-schema-v5.sql`. Until it's run, logging still works and saves
+without them.
 
 ---
 
@@ -203,6 +224,10 @@ rule counts logged entries, not calendar days.
 - [ ] Log a per-side exercise with only one side, confirm it does not bank a credit
 - [ ] Log both sides unevenly, confirm the gap toast appears above 15%
 - [ ] Rest timer counts down, pauses, and can be skipped
+- [ ] Tick set 1, close the page, reopen: the tick and the timer are still there, and the timer has kept counting
+- [ ] Greyed boxes show last session's numbers; ticking an empty set uses them
+- [ ] Add a drop set at a lighter weight: it's saved, and doesn't count against the target
+- [ ] Notes on an exercise show under it next time
 - [ ] Finish a workout, confirm it appears in History with its sets
 - [ ] Left vs right tab charts both lines once two paired sessions exist
 - [ ] Body weight tab shows the adult-only message on a kid account

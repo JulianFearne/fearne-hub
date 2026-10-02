@@ -331,8 +331,8 @@ record selections. Own-row read/write only.
 
 ## `workout_sets`
 
-One row per logged set-group (i.e. one "Log sets" submission for one
-exercise), linked to a session.
+One row per logged exercise (all the sets ticked off for it, saved
+together on "Finish exercise"), linked to a session.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -348,6 +348,8 @@ exercise), linked to a session.
 | `load_kg` | numeric | nullable; the working weight this set was logged at, only set for chains in load mode |
 | `side` | text | nullable; `'left'` \| `'right'` for a `per_side` chain, otherwise `null` |
 | `rpe` | numeric | nullable, 1-10 in half-point steps; optional, entered at logging time |
+| `loads_kg` | numeric[] | nullable; one weight per set, lined up with `amounts` (drop sets). Empty for rows from before v5 and for bodyweight chains, which fall back to `load_kg` |
+| `note` | text | nullable, up to 500 characters; the exercise's note for that day ("did 4 negatives"). Written on the first row of a per-side pair |
 | `hit_target` | boolean | true unless this row was a miss (below the rep floor, or too few sets) |
 | `advanced` | boolean | true if this set pushed the chain up a rung, or (load mode) increased the working weight |
 | `performed_at` | timestamptz | defaults to now |
@@ -359,7 +361,9 @@ detail view and the per-chain progress chart (`listSetsForChain`). See
 [`_reference/workout-schema-v2.sql`](../_reference/workout-schema-v2.sql) for
 the migration that added `load_kg` and `side`, and
 [`_reference/workout-schema-v3.sql`](../_reference/workout-schema-v3.sql) for
-`rpe`.
+`rpe`, and [`_reference/workout-schema-v5.sql`](../_reference/workout-schema-v5.sql)
+for `loads_kg`, `note` and own-row delete policies on `workout_sets` and
+`workout_sessions`.
 
 Day assignment (`day`), supersets (`superset_group`), the `"metres"` unit
 and `video_url` are all fields inside the `definition` jsonb on

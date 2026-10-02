@@ -3,7 +3,7 @@
 // Pages import from this file only, so the query surface stays in one place.
 
 import { supabase } from "../supabaseClient";
-import { effectiveTarget } from "./workoutSchema";
+import { effectiveTarget, cleanSets, judgeSide, decideProgression, mergeSplitSets } from "./workoutSchema";
 
 // ---------------------------------------------------------------------------
 // Identity
@@ -243,18 +243,22 @@ function clampRpe(v) {
 }
 
 /**
- * Log one exercise's sets and apply the progression rule.
+ * Log one exercise (all the sets ticked off for it) and apply the
+ * progression rule.
  *
  * Two thresholds, because rep ranges need both: `repMin` is the floor (any
  * set below it is a miss, streak resets to zero); `repMax` is the ceiling
  * (every set must reach it to bank a streak credit). Between the two the
- * session still counts (streak holds where it is).
+ * session still counts (streak holds where it is). Which sets are judged is
+ * decided by `judgeSide` in workoutSchema.js: drop sets below the working
+ * weight, and sets beyond the prescribed number, are recorded but don't
+ * count either way.
  *
- * `amounts` is a flat array of set values for an ordinary chain, or
+ * `entry` is `{ sets: [{ amount, kg }] }` for an ordinary chain, or
  * `{ left: [...], right: [...] }` when `chain.per_side` is true. Per side,
  * the weaker side gates progression: any miss on either side resets the
  * streak, and both sides must reach the ceiling to bank a credit. This is
- * deliberate (see docs/workout-handover.md) — do not change this to "either
+ * deliberate (see docs/workout-handover.md), do not change this to "either
  * side" without being asked.
  *
  * Completing the streak either advances the chain to the next exercise
@@ -262,87 +266,64 @@ function clampRpe(v) {
  * chain's working weight and stays on the same exercise (`"load"`).
  *
  * @returns {{advanced: boolean, streak: number, newIndex: number, newLoadKg: number|null,
- *            newExercise: object|null, hitTarget: boolean, allCeiling: boolean}}
+ *            newExercise: object|null, hitTarget: boolean, allCeiling: boolean,
+ *            migrationMissing: boolean}}
  */
-export async function logSet({ program, programId, chain, amounts, sessionId = null, currentIdx, currentStreak, currentLoadKg = null, rpe = null }) {
+export async function logSet({ program, programId, chain, entry, sessionId = null, currentIdx, currentStreak, currentLoadKg = null, rpe = null, note = null }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("You need to be signed in.");
 
   const exercise = chain.exercises[currentIdx];
   const target = effectiveTarget(program.definition ?? program, chain, exercise);
   const mode = chain.progression?.mode === "load" ? "load" : "ladder";
+  const judgeOpts = { mode, workingLoadKg: currentLoadKg };
 
-  const cleanSet = (arr) => (arr || []).map((v) => parseInt(v, 10)).filter((v) => !Number.isNaN(v) && v >= 0);
-
-  const sideOutcome = (clean) => {
-    if (!clean.length) return null;
-    const enoughSets = clean.length >= target.sets;
-    const miss = !enoughSets || clean.some((v) => v < target.repMin);
-    const ceiling = enoughSets && clean.every((v) => v >= target.repMax);
-    return { clean, miss, ceiling };
-  };
-
-  // outcomes drive the streak/ceiling decision; insertRows is only the sides
+  // outcomes drive the streak/ceiling decision; logged is only the sides
   // that were actually logged (an untouched side gets no workout_sets row,
-  // but still counts as a miss below - the weaker/missing side gates it)
-  let outcomes;
-  let insertRows;
-  if (chain.per_side) {
-    const left = sideOutcome(cleanSet(amounts?.left));
-    const right = sideOutcome(cleanSet(amounts?.right));
-    if (!left && !right) throw new Error("Enter at least one set for at least one side.");
-    outcomes = [left ?? { miss: true, ceiling: false }, right ?? { miss: true, ceiling: false }];
-    insertRows = [left && { side: "left", ...left }, right && { side: "right", ...right }].filter(Boolean);
-  } else {
-    const one = sideOutcome(cleanSet(amounts));
-    if (!one) throw new Error("Enter at least one set.");
-    outcomes = [one];
-    insertRows = [{ side: null, ...one }];
-  }
+  // but still counts as a miss - the weaker/missing side gates it)
+  const sideList = chain.per_side
+    ? [{ side: "left", sets: cleanSets(entry?.left) }, { side: "right", sets: cleanSets(entry?.right) }]
+    : [{ side: null, sets: cleanSets(entry?.sets) }];
+  const outcomes = sideList.map((s) => judgeSide(s.sets, target, judgeOpts));
+  const logged = sideList.map((s, i) => ({ ...s, outcome: outcomes[i] })).filter((s) => s.sets.length);
+  if (!logged.length) throw new Error("Tick off at least one set first.");
 
-  const anyMiss = outcomes.some((r) => r.miss);
-  const allCeiling = outcomes.every((r) => r.ceiling);
-  const hitTarget = !anyMiss;
-
-  let streak = anyMiss ? 0 : allCeiling ? currentStreak + 1 : currentStreak;
-  let newIndex = currentIdx;
-  let newLoadKg = currentLoadKg;
-  let advanced = false;
-
-  if (!anyMiss && allCeiling && streak >= target.streak) {
-    if (mode === "load") {
-      const inc = chain.progression?.incrementKg ?? 2.5;
-      newLoadKg = Math.round(((currentLoadKg ?? 0) + inc) * 100) / 100;
-      advanced = true;
-    } else if (currentIdx < chain.exercises.length - 1) {
-      newIndex = currentIdx + 1;
-      advanced = true;
-    }
-    streak = 0;
-  }
+  const res = decideProgression({ outcomes, target, chain, currentIdx, currentStreak, currentLoadKg });
 
   // the weight actually lifted this session is the *current* working weight,
   // not the (possibly just-incremented) new one
   const loadForRow = mode === "load" ? currentLoadKg : null;
   const cleanRpe = clampRpe(rpe);
+  const cleanNote = typeof note === "string" && note.trim() ? note.trim().slice(0, 500) : null;
 
-  const { error: setErr } = await supabase.from("workout_sets").insert(
-    insertRows.map((r) => ({
-      session_id: sessionId,
-      user_id: user.id,
-      program_id: programId,
-      chain_id: chain.id,
-      exercise_index: currentIdx,
-      exercise_name: exercise.name,
-      unit: target.unit,
-      amounts: r.clean,
-      side: r.side,
-      load_kg: loadForRow,
-      rpe: cleanRpe,
-      hit_target: !r.miss,
-      advanced,
-    }))
-  );
+  const rows = logged.map((s, i) => ({
+    session_id: sessionId,
+    user_id: user.id,
+    program_id: programId,
+    chain_id: chain.id,
+    exercise_index: currentIdx,
+    exercise_name: exercise.name,
+    unit: target.unit,
+    amounts: s.sets.map((x) => x.amount),
+    loads_kg: s.sets.some((x) => x.kg != null) ? s.sets.map((x) => x.kg) : null,
+    note: i === 0 ? cleanNote : null,
+    side: s.side,
+    load_kg: loadForRow,
+    rpe: cleanRpe,
+    hit_target: !s.outcome.miss,
+    advanced: res.advanced,
+  }));
+
+  // loads_kg and note arrive with workout-schema-v5.sql; until that's run,
+  // save without them rather than lose the workout
+  let migrationMissing = false;
+  let { error: setErr } = await supabase.from("workout_sets").insert(rows);
+  if (setErr && isMissingColumn(setErr, ["loads_kg", "note"])) {
+    migrationMissing = true;
+    ({ error: setErr } = await supabase
+      .from("workout_sets")
+      .insert(rows.map(({ loads_kg: _l, note: _n, ...rest }) => rest)));
+  }
   if (setErr) throw setErr;
 
   const { error: progErr } = await supabase
@@ -352,23 +333,244 @@ export async function logSet({ program, programId, chain, amounts, sessionId = n
         user_id: user.id,
         program_id: programId,
         chain_id: chain.id,
-        current_index: newIndex,
-        streak,
-        current_load_kg: mode === "load" ? newLoadKg : currentLoadKg,
+        current_index: res.newIndex,
+        streak: res.streak,
+        current_load_kg: mode === "load" ? res.newLoadKg : currentLoadKg,
       },
       { onConflict: "user_id,program_id,chain_id" }
     );
   if (progErr) throw progErr;
 
   return {
-    advanced,
-    streak,
-    newIndex,
-    newLoadKg,
-    hitTarget,
-    allCeiling,
-    newExercise: advanced && mode === "ladder" ? chain.exercises[newIndex] : null,
+    ...res,
+    migrationMissing,
+    newExercise: res.advanced && mode === "ladder" ? chain.exercises[res.newIndex] : null,
   };
+}
+
+function isMissingColumn(error, columns) {
+  const msg = `${error?.message ?? ""} ${error?.details ?? ""}`;
+  return columns.some((c) => msg.includes(`'${c}'`) || msg.includes(`"${c}"`));
+}
+
+/**
+ * Recent entries for one chain, newest first: feeds the greyed "last time"
+ * numbers and the past notes in the set logger.
+ */
+export async function getChainHistory(programId, chainId, limit = 60) {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("workout_sets")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("program_id", programId)
+    .eq("chain_id", chainId)
+    .order("performed_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Tidying exercises that were saved in pieces
+// ---------------------------------------------------------------------------
+
+const localDay = (iso) => new Date(iso).toLocaleDateString("en-CA"); // YYYY-MM-DD
+const splitKey = (r) => `${r.chain_id}|${r.exercise_index}|${r.side ?? ""}`;
+const loadsOf = (r) => r.loads_kg ?? (r.amounts || []).map(() => r.load_kg ?? null);
+
+/**
+ * Days in the last few weeks where one exercise was saved as more than one
+ * entry (the old logger saved a whole exercise per tap, so logging set by
+ * set left it in pieces).
+ * @returns {Promise<{ day: string, exercises: string[] }[]>}
+ */
+export async function listSplitDays(programId, days = 21) {
+  const user = await getCurrentUser();
+  if (!user || !programId) return [];
+
+  const since = new Date(Date.now() - days * 864e5).toISOString();
+  const { data, error } = await supabase
+    .from("workout_sets")
+    .select("chain_id, exercise_index, exercise_name, side, performed_at")
+    .eq("user_id", user.id)
+    .eq("program_id", programId)
+    .gte("performed_at", since);
+  if (error) throw error;
+
+  const counts = {};
+  (data ?? []).forEach((r) => {
+    const k = `${localDay(r.performed_at)}#${splitKey(r)}`;
+    (counts[k] ||= { day: localDay(r.performed_at), name: r.exercise_name, n: 0 }).n += 1;
+  });
+  const byDay = {};
+  Object.values(counts).filter((c) => c.n > 1).forEach((c) => {
+    (byDay[c.day] ||= new Set()).add(c.name);
+  });
+  return Object.entries(byDay)
+    .sort(([a], [b]) => (a < b ? 1 : -1))
+    .map(([day, names]) => ({ day, exercises: [...names] }));
+}
+
+/**
+ * Stitch one day's split entries back into one entry per exercise, pull the
+ * day's sets into a single session, and re-run each affected chain's streak
+ * so the misses the pieces caused are undone.
+ */
+export async function tidySplitDay(program, programId, day) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("You need to be signed in.");
+  const def = program.definition ?? program;
+
+  // a generous window around the local day, then filter exactly
+  const from = new Date(`${day}T00:00:00`);
+  const to = new Date(from.getTime() + 864e5);
+  const { data: all, error } = await supabase
+    .from("workout_sets")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("program_id", programId)
+    .gte("performed_at", from.toISOString())
+    .lt("performed_at", to.toISOString())
+    .order("performed_at", { ascending: true });
+  if (error) throw error;
+  const rows = (all ?? []).filter((r) => localDay(r.performed_at) === day);
+  if (!rows.length) return { merged: 0 };
+
+  // keep the day's finished session if there is one, else the earliest
+  const sessionIds = [...new Set(rows.map((r) => r.session_id).filter(Boolean))];
+  let keepSession = rows.find((r) => r.session_id)?.session_id ?? null;
+  if (sessionIds.length > 1) {
+    const { data: sess } = await supabase
+      .from("workout_sessions")
+      .select("id, duration_seconds, performed_at")
+      .in("id", sessionIds)
+      .order("performed_at", { ascending: true });
+    keepSession = (sess || []).find((s) => s.duration_seconds != null)?.id ?? sess?.[0]?.id ?? keepSession;
+  }
+
+  const groups = {};
+  rows.forEach((r) => (groups[splitKey(r)] ||= []).push(r));
+  const hasLoadsColumn = "loads_kg" in rows[0];
+
+  // delete first: if this account can't delete, stop before anything changes
+  const doomed = Object.values(groups).filter((g) => g.length > 1).flatMap((g) => g.slice(1).map((r) => r.id));
+  if (doomed.length) {
+    const { data: gone, error: delErr } = await supabase.from("workout_sets").delete().in("id", doomed).select("id");
+    if (delErr) throw delErr;
+    if ((gone ?? []).length !== doomed.length) {
+      throw new Error("Couldn't remove the split entries. Run _reference/workout-schema-v5.sql in Supabase first, then try again.");
+    }
+  }
+
+  const touchedChains = new Set();
+  for (const g of Object.values(groups)) {
+    const first = g[0];
+    const patch = { session_id: keepSession };
+    if (g.length > 1) {
+      touchedChains.add(first.chain_id);
+      const chain = def.chains.find((c) => c.id === first.chain_id);
+      const merged = mergeSplitSets(g.map((r) => ({ amounts: r.amounts, loads: loadsOf(r) })));
+      patch.amounts = merged.amounts;
+      if (hasLoadsColumn && merged.loads.some((v) => v != null)) patch.loads_kg = merged.loads;
+      patch.advanced = g.some((r) => r.advanced);
+      const notes = g.map((r) => r.note).filter(Boolean);
+      if (hasLoadsColumn && notes.length) patch.note = notes.join(" · ").slice(0, 500);
+      if (chain) {
+        const target = effectiveTarget(def, chain, chain.exercises[first.exercise_index]);
+        const mode = chain.progression?.mode === "load" ? "load" : "ladder";
+        const sets = merged.amounts.map((amount, i) => ({ amount, kg: merged.loads[i] }));
+        patch.hit_target = !judgeSide(sets, target, { mode, workingLoadKg: first.load_kg })?.miss;
+      }
+    } else if (first.session_id === keepSession) {
+      continue;
+    }
+    const { error: upErr } = await supabase.from("workout_sets").update(patch).eq("id", first.id);
+    if (upErr) throw upErr;
+  }
+
+  // sessions left empty by the move
+  const emptied = sessionIds.filter((id) => id !== keepSession);
+  if (emptied.length) await supabase.from("workout_sessions").delete().in("id", emptied);
+
+  for (const chainId of touchedChains) {
+    const chain = def.chains.find((c) => c.id === chainId);
+    if (chain) await replayChainStreak(def, programId, chain);
+  }
+  return { merged: touchedChains.size };
+}
+
+/**
+ * Rebuild a chain's streak from its logged entries since it last moved on,
+ * using the same rule as logging. Used after tidying, where the pieces had
+ * each been judged (and failed) as a whole exercise.
+ */
+async function replayChainStreak(def, programId, chain) {
+  const user = await getCurrentUser();
+  const mode = chain.progression?.mode === "load" ? "load" : "ladder";
+
+  const { data: prog } = await supabase
+    .from("workout_progress")
+    .select("current_index, streak, current_load_kg")
+    .eq("user_id", user.id)
+    .eq("program_id", programId)
+    .eq("chain_id", chain.id)
+    .maybeSingle();
+  let idx = prog?.current_index ?? 0;
+  let loadKg = prog?.current_load_kg != null ? Number(prog.current_load_kg) : (chain.start_load_kg ?? null);
+
+  const { data: rows, error } = await supabase
+    .from("workout_sets")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("program_id", programId)
+    .eq("chain_id", chain.id)
+    .order("performed_at", { ascending: true });
+  if (error) throw error;
+
+  // one entry per session (or per row, for old session-less rows)
+  const entries = [];
+  const byKey = {};
+  (rows ?? []).forEach((r) => {
+    const k = `${r.session_id ?? r.id}|${r.exercise_index}`;
+    if (!byKey[k]) { byKey[k] = { rows: [] }; entries.push(byKey[k]); }
+    byKey[k].rows.push(r);
+  });
+
+  // only the run since the chain last moved on counts toward the streak
+  let start = 0;
+  entries.forEach((e, i) => {
+    const r = e.rows[0];
+    const moved = e.rows.some((x) => x.advanced) || r.exercise_index !== idx
+      || (mode === "load" && loadKg != null && r.load_kg != null && Number(r.load_kg) !== loadKg);
+    if (moved) start = i + 1;
+  });
+
+  const target = effectiveTarget(def, chain, chain.exercises[idx]);
+  let streak = 0;
+  for (const e of entries.slice(start)) {
+    const side = (s) => e.rows.find((r) => (r.side ?? null) === s);
+    const toSets = (r) => (r ? r.amounts.map((amount, i) => ({ amount, kg: loadsOf(r)[i] })) : []);
+    const outcomes = (chain.per_side ? [side("left"), side("right")] : [side(null)])
+      .map((r) => (r ? judgeSide(toSets(r), target, { mode, workingLoadKg: loadKg }) : null));
+    const res = decideProgression({ outcomes, target, chain, currentIdx: idx, currentStreak: streak, currentLoadKg: loadKg });
+    streak = res.streak;
+    if (res.advanced) {
+      idx = res.newIndex;
+      loadKg = res.newLoadKg;
+      await supabase.from("workout_sets").update({ advanced: true }).in("id", e.rows.map((r) => r.id));
+    }
+  }
+
+  const { error: upErr } = await supabase
+    .from("workout_progress")
+    .upsert(
+      { user_id: user.id, program_id: programId, chain_id: chain.id, current_index: idx, streak, current_load_kg: mode === "load" ? loadKg : prog?.current_load_kg ?? null },
+      { onConflict: "user_id,program_id,chain_id" }
+    );
+  if (upErr) throw upErr;
 }
 
 // ---------------------------------------------------------------------------

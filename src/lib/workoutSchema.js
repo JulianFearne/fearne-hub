@@ -410,3 +410,102 @@ export function describeTarget(target) {
     : `${target.repMin}-${target.repMax}${suffix}`;
   return `${target.sets}×${repPart}`;
 }
+
+// ---------------------------------------------------------------------------
+// Progression rule. Pure, so logging and the "tidy split sets" repair both
+// judge an exercise the same way.
+// ---------------------------------------------------------------------------
+
+/** Clean one side's logged sets into `[{ amount, kg }]`, dropping blanks. */
+export function cleanSets(sets) {
+  return (sets || [])
+    .map((s) => ({
+      amount: Number.parseInt(s?.amount, 10),
+      kg: s?.kg === "" || s?.kg == null ? null : Number(s.kg),
+    }))
+    .filter((s) => !Number.isNaN(s.amount) && s.amount >= 0)
+    .map((s) => ({ amount: s.amount, kg: Number.isFinite(s.kg) && s.kg >= 0 ? s.kg : null }));
+}
+
+/**
+ * Judge one side of one exercise against its target. Only the sets that
+ * count are judged: in load mode a set lighter than the working weight (a
+ * drop set, a warm-up) is extra work rather than a miss, and in both modes
+ * only the first `target.sets` counting sets are looked at, so a burnout set
+ * after the prescribed ones can't reset the streak.
+ *
+ * @returns {{ miss: boolean, ceiling: boolean } | null} null when nothing was logged
+ */
+export function judgeSide(sets, target, { mode = "ladder", workingLoadKg = null } = {}) {
+  const clean = cleanSets(sets);
+  if (!clean.length) return null;
+  const counting = (mode === "load" && workingLoadKg != null
+    ? clean.filter((s) => s.kg == null || s.kg >= workingLoadKg)
+    : clean
+  ).slice(0, target.sets);
+  const enough = counting.length >= target.sets;
+  const miss = !enough || counting.some((s) => s.amount < target.repMin);
+  const ceiling = enough && counting.every((s) => s.amount >= target.repMax);
+  return { miss, ceiling };
+}
+
+/**
+ * Apply the streak rule to one logged exercise. `outcomes` is one judged
+ * side, or two for a per-side chain; a side that wasn't logged is passed as
+ * null and counts as a miss (the weaker side gates progression, see
+ * docs/workout-handover.md).
+ */
+export function decideProgression({ outcomes, target, chain, currentIdx, currentStreak, currentLoadKg }) {
+  const mode = chain.progression?.mode === "load" ? "load" : "ladder";
+  const sides = outcomes.map((o) => o ?? { miss: true, ceiling: false });
+  const anyMiss = sides.some((o) => o.miss);
+  const allCeiling = sides.every((o) => o.ceiling);
+
+  let streak = anyMiss ? 0 : allCeiling ? currentStreak + 1 : currentStreak;
+  let newIndex = currentIdx;
+  let newLoadKg = currentLoadKg;
+  let advanced = false;
+
+  if (!anyMiss && allCeiling && streak >= target.streak) {
+    if (mode === "load") {
+      const inc = chain.progression?.incrementKg ?? 2.5;
+      newLoadKg = Math.round(((currentLoadKg ?? 0) + inc) * 100) / 100;
+      advanced = true;
+    } else if (currentIdx < chain.exercises.length - 1) {
+      newIndex = currentIdx + 1;
+      advanced = true;
+    }
+    streak = 0;
+  }
+
+  return { streak, newIndex, newLoadKg, advanced, hitTarget: !anyMiss, allCeiling };
+}
+
+/**
+ * Stitch together one exercise that was saved in pieces (one set per save,
+ * before sets could be ticked off individually). Two shapes turn up: each
+ * save holding just the new set, or each save re-entering every set so far.
+ * A save that is longer than, and starts with, everything already collected
+ * is the second shape, so it replaces rather than appends.
+ *
+ * @param {{ amounts: number[], loads: (number|null)[] }[]} pieces oldest first
+ */
+export function mergeSplitSets(pieces) {
+  let amounts = [];
+  let loads = [];
+  for (const p of pieces) {
+    const a = p.amounts || [];
+    const l = p.loads || a.map(() => null);
+    // strictly longer, so two genuine single-set saves of the same number
+    // ([10] then [10]) still read as two sets
+    const isPrefix = a.length > amounts.length && amounts.every((v, i) => a[i] === v);
+    if (isPrefix && amounts.length > 0) {
+      amounts = [...a];
+      loads = [...l];
+    } else {
+      amounts = [...amounts, ...a];
+      loads = [...loads, ...l];
+    }
+  }
+  return { amounts, loads };
+}

@@ -1,6 +1,8 @@
 // src/pages/WorkoutTracker.jsx
 // Phase 3 + 4 :: the live tracker. Log sets against the loaded programme,
-// advance the chains automatically, and rest between sets.
+// advance the chains automatically, and rest between sets. The workout in
+// progress (session, ticked sets, rest timer) is kept on the device by
+// workoutLive.js, so closing the page part way through loses nothing.
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +16,9 @@ import {
   startSession,
   finishSession,
 } from "../lib/workoutApi";
+import { loadLive, saveLive, clearLive, emptyLive, startRest, togglePause } from "../lib/workoutLive";
+import WorkoutLogger, { draftFor, doneCount, entryFromDraft } from "../components/WorkoutLogger";
+import WorkoutRestTimer from "../components/WorkoutRestTimer";
 import "../styles/workout.css";
 
 const dayKey = (programId) => `fh-workout-last-day-${programId}`;
@@ -25,20 +30,27 @@ export default function WorkoutTracker() {
   const [programId, setProgramId] = useState(null);
   const [progress, setProgress] = useState({});
   const [records, setRecords] = useState({});
-  const [sessionId, setSessionId] = useState(null);
-  const [sessionStart, setSessionStart] = useState(null);
+  const [live, setLive] = useState(emptyLive); // { sessionId, sessionStart, drafts, rest }
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const [modal, setModal] = useState(null);      // { mode: "log"|"pick", chainId }
+  const [modal, setModal] = useState(null);      // { mode: "pick", chainId }
+  const [loggerIds, setLoggerIds] = useState(null); // chain ids open in the set logger (2+ for a superset)
   const [openChainList, setOpenChainList] = useState(null);
-  const [rest, setRest] = useState(null);        // { seconds, label }
   const [dayFilter, setDayFilter] = useState("All");
   const [nextDayHint, setNextDayHint] = useState(null);
-  const [supersetQueue, setSupersetQueue] = useState(null); // { group, currentId, remaining }
+
+  const { sessionId, sessionStart, drafts, rest } = live;
+  const patchLive = useCallback((patch) => {
+    setLive((l) => {
+      const next = { ...l, ...(typeof patch === "function" ? patch(l) : patch) };
+      if (programId) saveLive(programId, next);
+      return next;
+    });
+  }, [programId]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -71,6 +83,7 @@ export default function WorkoutTracker() {
         const prog = enr.workout_programs;
         setProgram(prog.definition);
         setProgramId(prog.id);
+        setLive(loadLive(prog.id));
         setProgress(await getProgress(prog.id));
         setRecords(Object.fromEntries((prog.definition.record_sections || []).map((s) => [s.id, []])));
       } catch (e) {
@@ -82,87 +95,105 @@ export default function WorkoutTracker() {
   }, [navigate]);
 
   // ---- ensure a session exists before the first log ------------------------
+  // one request in flight at a time, so a tick and a quick "finish" can't
+  // open two sessions between them
+  const sessionReq = useRef(null);
   const ensureSession = useCallback(async () => {
     if (sessionId) return sessionId;
-    const s = await startSession(programId);
-    setSessionId(s.id);
-    setSessionStart(Date.now());
-    return s.id;
-  }, [sessionId, programId]);
+    if (!sessionReq.current) {
+      sessionReq.current = startSession(programId)
+        .then((s) => {
+          patchLive((l) => ({ sessionId: s.id, sessionStart: l.sessionStart ?? Date.now() }));
+          return s.id;
+        })
+        .catch((e) => { sessionReq.current = null; throw e; });
+    }
+    return sessionReq.current;
+  }, [sessionId, programId, patchLive]);
 
-  // ---- log sets -----------------------------------------------------------
-  const handleLog = async (chain, amounts, rpe) => {
+  // ---- ticking sets off ------------------------------------------------------
+  const setDraft = (chainId, draft) => patchLive((l) => ({ drafts: { ...l.drafts, [chainId]: draft } }));
+
+  const handleTick = ({ isLastOfRound }) => {
+    // the session row is made in the background; a dropped connection at the
+    // gym shouldn't stop a set being ticked, and finishing retries it
+    if (!sessionId) ensureSession().catch(() => {});
+    if (!sessionStart) patchLive({ sessionStart: Date.now() });
+    if (!isLastOfRound) return; // superset: straight into the next exercise
+    const group = loggerIds.map((id) => program.chains.find((c) => c.id === id));
+    patchLive({
+      rest: startRest(Math.max(...group.map((c) => effectiveRest(program, c))), group.map((c) => c.label).join(" + ")),
+    });
+  };
+
+  // ---- save one exercise: the streak is judged here, once ------------------
+  const commitChain = async (chain, sid) => {
+    const cur = progress[chain.id] ?? { idx: 0, streak: 0, loadKg: chain.start_load_kg ?? 0 };
+    const draft = draftFor(drafts, chain, cur.idx, program);
+    const mode = chain.progression?.mode === "load" ? "load" : "ladder";
+    const entry = entryFromDraft(chain, draft);
+
+    const res = await logSet({
+      program,
+      programId,
+      chain,
+      entry,
+      sessionId: sid,
+      currentIdx: cur.idx,
+      currentStreak: cur.streak,
+      currentLoadKg: cur.loadKg ?? 0,
+      rpe: draft.rpe === "" ? null : draft.rpe,
+      note: draft.note,
+    });
+
+    setProgress((p) => ({
+      ...p,
+      [chain.id]: { idx: res.newIndex, streak: res.streak, loadKg: mode === "load" ? res.newLoadKg : cur.loadKg },
+    }));
+    patchLive((l) => {
+      const { [chain.id]: _gone, ...rest } = l.drafts;
+      return { drafts: rest };
+    });
+    if (chain.day) {
+      try { localStorage.setItem(dayKey(programId), chain.day); } catch { /* ignore */ }
+    }
+
+    const msgs = [];
+    const target = effectiveTarget(program, chain, chain.exercises[cur.idx]);
+    if (res.advanced && mode === "load") msgs.push(`${chain.label}: working weight up to ${res.newLoadKg}kg`);
+    else if (res.advanced) msgs.push(`${chain.label}: levelled up to ${res.newExercise.name}`);
+    else if (res.allCeiling) msgs.push(`${chain.label}: ${res.streak} of ${target.streak} toward the next step`);
+    else if (res.hitTarget) msgs.push(`${chain.label}: saved, on target`);
+    else msgs.push(`${chain.label}: saved, streak back to zero`);
+
+    if (chain.per_side && entry.left.length && entry.right.length) {
+      const sum = (arr) => arr.reduce((n, v) => n + (parseInt(v.amount, 10) || 0), 0);
+      const l = sum(entry.left);
+      const r = sum(entry.right);
+      const gap = Math.max(l, r) > 0 ? Math.abs(l - r) / Math.max(l, r) : 0;
+      if (gap > 0.15) msgs.push(`${chain.label}: ${Math.round(gap * 100)}% left/right gap, ${l < r ? "left" : "right"} side is behind`);
+    }
+    if (res.migrationMissing) msgs.push("Saved without per-set weights and notes: workout-schema-v5.sql still needs running.");
+    return msgs;
+  };
+
+  const showToasts = (msgs) => msgs.forEach((m, i) => setTimeout(() => showToast(m), i * 3300));
+
+  const handleFinishExercise = async () => {
     setBusy(true);
     setError(null);
     try {
       const sid = await ensureSession();
-      const cur = progress[chain.id] ?? { idx: 0, streak: 0, loadKg: chain.start_load_kg ?? 0 };
-      const mode = chain.progression?.mode === "load" ? "load" : "ladder";
-
-      const res = await logSet({
-        program,
-        programId,
-        chain,
-        amounts,
-        sessionId: sid,
-        currentIdx: cur.idx,
-        currentStreak: cur.streak,
-        currentLoadKg: cur.loadKg ?? 0,
-        rpe,
-      });
-
-      setProgress((p) => ({
-        ...p,
-        [chain.id]: { idx: res.newIndex, streak: res.streak, loadKg: mode === "load" ? res.newLoadKg : cur.loadKg },
-      }));
-      setModal(null);
-
-      if (chain.day) {
-        try { localStorage.setItem(dayKey(programId), chain.day); } catch { /* ignore */ }
+      const msgs = [];
+      for (const id of loggerIds) {
+        const chain = program.chains.find((c) => c.id === id);
+        const cur = progress[chain.id] ?? { idx: 0 };
+        if (doneCount(draftFor(drafts, chain, cur.idx, program)) > 0) msgs.push(...(await commitChain(chain, sid)));
       }
-
-      const target = effectiveTarget(program, chain, chain.exercises[cur.idx]);
-      if (res.advanced && mode === "load") showToast(`${chain.label}: working weight up to ${res.newLoadKg}kg`);
-      else if (res.advanced) showToast(`${chain.label}: levelled up to ${res.newExercise.name}`);
-      else if (res.allCeiling) showToast(`${chain.label}: ${res.streak} of ${target.streak} toward the next step`);
-      else if (res.hitTarget) showToast(`${chain.label}: logged, on target`);
-      else showToast(`${chain.label}: logged, streak back to zero`);
-
-      if (chain.per_side && amounts && Array.isArray(amounts.left) && Array.isArray(amounts.right)) {
-        const sum = (arr) => arr.reduce((n, v) => n + (parseInt(v, 10) || 0), 0);
-        const l = sum(amounts.left);
-        const r = sum(amounts.right);
-        const gap = Math.max(l, r) > 0 ? Math.abs(l - r) / Math.max(l, r) : 0;
-        if (gap > 0.15) {
-          const weaker = l < r ? "left" : "right";
-          setTimeout(
-            () => showToast(`${chain.label}: ${Math.round(gap * 100)}% left/right gap, ${weaker} side is behind`),
-            3300
-          );
-        }
-      }
-
-      // a superset chains straight into its next exercise instead of resting,
-      // with one shared rest only once every exercise in the group is logged
-      if (supersetQueue && supersetQueue.currentId === chain.id) {
-        const next = supersetQueue.remaining[0];
-        if (next) {
-          setSupersetQueue({ group: supersetQueue.group, currentId: next, remaining: supersetQueue.remaining.slice(1) });
-          setModal({ mode: "log", chainId: next });
-          return;
-        }
-        const group = supersetQueue.group;
-        setSupersetQueue(null);
-        setRest({
-          seconds: Math.max(...group.map((c) => effectiveRest(program, c))),
-          label: group.map((c) => c.label).join(" + "),
-        });
-        return;
-      }
-
-      setRest({ seconds: effectiveRest(program, chain), label: chain.label });
+      setLoggerIds(null);
+      showToasts(msgs);
     } catch (e) {
-      setError(e.message || "Could not save that set.");
+      setError(e.message || "Could not save that exercise. Your ticked sets are still here, try again.");
     } finally {
       setBusy(false);
     }
@@ -180,12 +211,6 @@ export default function WorkoutTracker() {
     }
   };
 
-  // ---- superset ---------------------------------------------------------
-  const startSuperset = (group) => {
-    setSupersetQueue({ group, currentId: group[0].id, remaining: group.slice(1).map((c) => c.id) });
-    setModal({ mode: "log", chainId: group[0].id });
-  };
-
   // ---- reposition ---------------------------------------------------------
   const handleReposition = async (chain, index) => {
     try {
@@ -199,15 +224,25 @@ export default function WorkoutTracker() {
   };
 
   // ---- finish -------------------------------------------------------------
+  const pendingChains = (program?.chains || []).filter(
+    (c) => doneCount(draftFor(drafts, c, (progress[c.id] ?? { idx: 0 }).idx, program)) > 0
+  );
+
   const handleFinish = async () => {
-    if (!sessionId) { showToast("Log at least one set first."); return; }
+    if (!sessionId && !pendingChains.length) { showToast("Tick off at least one set first."); return; }
     setBusy(true);
+    setError(null);
     try {
+      // exercises with sets ticked but not finished are saved as they stand
+      const sid = await ensureSession();
+      const msgs = [];
+      for (const chain of pendingChains) msgs.push(...(await commitChain(chain, sid)));
       const duration = sessionStart ? Math.round((Date.now() - sessionStart) / 1000) : null;
-      await finishSession(sessionId, { recordSelections: records, durationSeconds: duration });
-      showToast("Workout saved. Well done.");
-      setSessionId(null);
-      setSessionStart(null);
+      await finishSession(sid, { recordSelections: records, durationSeconds: duration });
+      clearLive(programId);
+      setLive(emptyLive());
+      sessionReq.current = null;
+      showToast(msgs.length ? `Workout saved. ${msgs[msgs.length - 1]}` : "Workout saved. Well done.");
       setRecords(Object.fromEntries((program.record_sections || []).map((s) => [s.id, []])));
       setTimeout(() => navigate("/workouts/history"), 900);
     } catch (e) {
@@ -355,7 +390,8 @@ export default function WorkoutTracker() {
                       program={program}
                       group={group}
                       progress={progress}
-                      onLog={startSuperset}
+                      drafts={drafts}
+                      onLog={(group) => setLoggerIds(group.map((c) => c.id))}
                     />
                   );
                 }
@@ -369,6 +405,7 @@ export default function WorkoutTracker() {
               const maxed = cur.idx >= total - 1;
               const listOpen = openChainList === chain.id;
               const logWord = target.unit === "seconds" ? "hold" : target.unit === "metres" ? "distance" : "sets";
+              const ticked = doneCount(draftFor(drafts, chain, cur.idx, program));
 
               return (
                 <div key={chain.id} className="fh-workout-card fh-workout-card--accent" style={{ "--w-accent": chain.color }}>
@@ -437,9 +474,9 @@ export default function WorkoutTracker() {
 
                   <button
                     className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block"
-                    onClick={() => setModal({ mode: "log", chainId: chain.id })}
+                    onClick={() => setLoggerIds([chain.id])}
                   >
-                    Log {logWord}
+                    {ticked > 0 ? `Carry on · ${ticked} of ${target.sets} done` : `Log ${logWord}`}
                   </button>
 
                   {listOpen && (
@@ -462,7 +499,7 @@ export default function WorkoutTracker() {
             className="fh-workout-btn fh-workout-btn--gold"
             style={{ flex: 1 }}
             onClick={handleFinish}
-            disabled={busy || !sessionId}
+            disabled={busy || (!sessionId && !pendingChains.length)}
           >
             Finish and save workout
           </button>
@@ -472,21 +509,27 @@ export default function WorkoutTracker() {
         </div>
       </div>
 
-      {modal?.mode === "log" && activeChain && (
-        <LogModal
-          key={activeChain.id}
+      {loggerIds && (
+        <WorkoutLogger
+          key={loggerIds.join("+")}
           program={program}
-          chain={activeChain}
-          idx={(progress[activeChain.id] ?? { idx: 0 }).idx}
-          loadKg={(progress[activeChain.id] ?? {}).loadKg ?? activeChain.start_load_kg ?? 0}
+          programId={programId}
+          chains={loggerIds.map((id) => program.chains.find((c) => c.id === id))}
+          progress={progress}
+          drafts={drafts}
           busy={busy}
-          supersetStep={
-            supersetQueue && supersetQueue.currentId === activeChain.id
-              ? { index: supersetQueue.group.length - supersetQueue.remaining.length, total: supersetQueue.group.length }
-              : null
-          }
-          onCancel={() => { setModal(null); setSupersetQueue(null); }}
-          onSave={(amounts, rpe) => handleLog(activeChain, amounts, rpe)}
+          timer={rest && (
+            <WorkoutRestTimer
+              inline
+              rest={rest}
+              onTogglePause={() => patchLive((l) => ({ rest: togglePause(l.rest) }))}
+              onDismiss={() => patchLive({ rest: null })}
+            />
+          )}
+          onDraft={setDraft}
+          onTick={handleTick}
+          onFinish={handleFinishExercise}
+          onClose={() => setLoggerIds(null)}
         />
       )}
 
@@ -499,11 +542,11 @@ export default function WorkoutTracker() {
         />
       )}
 
-      {rest && (
-        <RestTimer
-          seconds={rest.seconds}
-          label={rest.label}
-          onDismiss={() => setRest(null)}
+      {rest && !loggerIds && (
+        <WorkoutRestTimer
+          rest={rest}
+          onTogglePause={() => patchLive((l) => ({ rest: togglePause(l.rest) }))}
+          onDismiss={() => patchLive({ rest: null })}
         />
       )}
 
@@ -516,7 +559,7 @@ export default function WorkoutTracker() {
 /* Superset card                                                              */
 /* ========================================================================== */
 
-function SupersetCard({ program, group, progress, onLog }) {
+function SupersetCard({ program, group, progress, drafts, onLog }) {
   const accent = group[0].color;
   return (
     <div className="fh-workout-card fh-workout-card--accent" style={{ "--w-accent": accent }}>
@@ -563,138 +606,10 @@ function SupersetCard({ program, group, progress, onLog }) {
       })}
 
       <button className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block" onClick={() => onLog(group)}>
-        Log superset
+        {group.some((c) => doneCount(draftFor(drafts, c, (progress[c.id] ?? { idx: 0 }).idx, program)) > 0)
+          ? "Carry on with superset"
+          : "Log superset"}
       </button>
-    </div>
-  );
-}
-
-/* ========================================================================== */
-/* Log modal                                                                   */
-/* ========================================================================== */
-
-function LogModal({ program, chain, idx, loadKg, busy, supersetStep, onCancel, onSave }) {
-  const exercise = chain.exercises[idx];
-  const target = effectiveTarget(program, chain, exercise);
-  const mode = chain.progression?.mode === "load" ? "load" : "ladder";
-
-  const makeBlank = () => Array(target.sets).fill("");
-  const [left, setLeft] = useState(makeBlank);
-  const [right, setRight] = useState(() => (chain.per_side ? makeBlank() : null));
-  const [rpe, setRpe] = useState("");
-  const firstRef = useRef(null);
-
-  useEffect(() => { firstRef.current?.focus(); }, []);
-
-  const setAt = (setter, i, v) => setter((p) => p.map((x, j) => (j === i ? v : x)));
-
-  const filledOf = (arr) => (arr || []).filter((v) => v !== "" && !Number.isNaN(parseInt(v, 10)));
-  const reachesCeiling = (arr) => {
-    const filled = filledOf(arr);
-    return filled.length >= target.sets && filled.every((v) => parseInt(v, 10) >= target.repMax);
-  };
-  const belowFloor = (arr) => filledOf(arr).some((v) => parseInt(v, 10) < target.repMin);
-
-  const leftFilled = filledOf(left);
-  const rightFilled = chain.per_side ? filledOf(right) : [];
-  // a per-side log can be saved with just one side filled in (the other
-  // reads as a miss and gates the streak, same as a weaker side would)
-  const canSave = chain.per_side ? leftFilled.length > 0 || rightFilled.length > 0 : leftFilled.length > 0;
-  const anyFilled = leftFilled.length > 0 || rightFilled.length > 0;
-  const sideWillMiss = (arr) => filledOf(arr).length === 0 || belowFloor(arr);
-  const willMiss = chain.per_side ? sideWillMiss(left) || sideWillMiss(right) : belowFloor(left);
-  const willCeiling = chain.per_side ? reachesCeiling(left) && reachesCeiling(right) : reachesCeiling(left);
-
-  const save = () => onSave(chain.per_side ? { left, right } : left, rpe === "" ? null : rpe);
-
-  return (
-    <div className="fh-workout-overlay" onClick={onCancel}>
-      <div className="fh-workout-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="fh-workout-kicker" style={{ color: chain.color }}>
-          {chain.section} · {chain.label}
-          {supersetStep && ` · superset ${supersetStep.index} of ${supersetStep.total}`}
-        </div>
-        <h2 style={{ margin: "6px 0 3px" }}>{exercise.name}</h2>
-        <p className="fh-workout-card__sub">
-          Target {describeTarget(target)}
-          {mode === "load" && ` at ${loadKg ?? 0}kg`}
-        </p>
-
-        {chain.per_side ? (
-          <>
-            <div className="fh-workout-section-heading" style={{ margin: "14px 0 6px" }}>Left</div>
-            <SetsRow amounts={left} unit={target.unit} idPrefix="l" firstRef={firstRef} onChange={(i, v) => setAt(setLeft, i, v)} />
-            <div className="fh-workout-section-heading" style={{ margin: "14px 0 6px" }}>Right</div>
-            <SetsRow amounts={right} unit={target.unit} idPrefix="r" onChange={(i, v) => setAt(setRight, i, v)} />
-          </>
-        ) : (
-          <SetsRow amounts={left} unit={target.unit} idPrefix="s" firstRef={firstRef} onChange={(i, v) => setAt(setLeft, i, v)} />
-        )}
-
-        <div style={{ maxWidth: 140, marginTop: 12 }}>
-          <label htmlFor="rpe">RPE (optional)</label>
-          <input
-            id="rpe"
-            type="number"
-            min="1"
-            max="10"
-            step="0.5"
-            inputMode="decimal"
-            placeholder="1-10"
-            value={rpe}
-            onChange={(e) => setRpe(e.target.value)}
-          />
-        </div>
-
-        {anyFilled && (
-          <div className={`fh-workout-alert ${willMiss ? "fh-workout-alert--warn" : "fh-workout-alert--ok"}`}>
-            {willMiss
-              ? "Below target, so the streak resets. Still worth logging."
-              : willCeiling
-                ? mode === "load"
-                  ? "At the top of the range. One more like this and the weight goes up."
-                  : "That hits the target. One more step toward levelling up."
-                : "Between the two, so this counts and the streak holds where it is."}
-          </div>
-        )}
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onCancel}>
-            Cancel
-          </button>
-          <button
-            className="fh-workout-btn fh-workout-btn--primary"
-            style={{ flex: 2 }}
-            onClick={save}
-            disabled={busy || !canSave}
-          >
-            {busy ? "Saving…" : "Save"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SetsRow({ amounts, unit, idPrefix, firstRef, onChange }) {
-  const placeholder = unit === "seconds" ? "secs" : unit === "metres" ? "metres" : "reps";
-  return (
-    <div className="fh-workout-sets-row">
-      {amounts.map((v, i) => (
-        <div key={i}>
-          <label htmlFor={`${idPrefix}-set-${i}`}>Set {i + 1}</label>
-          <input
-            id={`${idPrefix}-set-${i}`}
-            ref={i === 0 ? firstRef : null}
-            type="number"
-            min="0"
-            inputMode="numeric"
-            placeholder={placeholder}
-            value={v}
-            onChange={(e) => onChange(i, e.target.value)}
-          />
-        </div>
-      ))}
     </div>
   );
 }
@@ -745,67 +660,6 @@ function PickModal({ chain, idx, onCancel, onPick }) {
           Close
         </button>
       </div>
-    </div>
-  );
-}
-
-/* ========================================================================== */
-/* Rest timer                                                                  */
-/* ========================================================================== */
-
-function RestTimer({ seconds, label, onDismiss }) {
-  const [left, setLeft] = useState(seconds);
-  const [paused, setPaused] = useState(false);
-  const wakeRef = useRef(null);
-
-  // keep the screen awake while resting, where the browser supports it
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        if ("wakeLock" in navigator) {
-          const lock = await navigator.wakeLock.request("screen");
-          if (cancelled) { lock.release(); return; }
-          wakeRef.current = lock;
-        }
-      } catch { /* not supported, no problem */ }
-    })();
-    return () => {
-      cancelled = true;
-      try { wakeRef.current?.release(); } catch { /* already gone */ }
-      wakeRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (paused || left <= 0) return;
-    const t = setTimeout(() => setLeft((n) => n - 1), 1000);
-    return () => clearTimeout(t);
-  }, [left, paused]);
-
-  // one short buzz when the rest is up, if the device does that
-  useEffect(() => {
-    if (left === 0 && "vibrate" in navigator) {
-      try { navigator.vibrate([120, 60, 120]); } catch { /* ignore */ }
-    }
-  }, [left]);
-
-  const done = left <= 0;
-  const pct = Math.max(0, Math.min(100, (left / seconds) * 100));
-  const mm = Math.floor(Math.abs(left) / 60);
-  const ss = String(Math.abs(left) % 60).padStart(2, "0");
-
-  return (
-    <div className="fh-workout-timer" data-done={done}>
-      <div className="fh-workout-timer__count">{done ? "Go" : `${mm}:${ss}`}</div>
-      <div style={{ flex: 1 }}>
-        <div className="fh-workout-timer__label">{done ? `${label} rest over` : `Resting · ${label}`}</div>
-        <div className="fh-workout-timer__bar"><span style={{ width: `${pct}%` }} /></div>
-      </div>
-      {!done && (
-        <button onClick={() => setPaused((p) => !p)}>{paused ? "Resume" : "Pause"}</button>
-      )}
-      <button onClick={onDismiss}>{done ? "Done" : "Skip"}</button>
     </div>
   );
 }

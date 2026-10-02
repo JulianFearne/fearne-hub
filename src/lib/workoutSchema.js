@@ -75,6 +75,19 @@ export function validateProgram(raw) {
   let sessionsPerWeek = clampInt(raw.sessions_per_week, 1, 7);
   if (sessionsPerWeek === null) sessionsPerWeek = 3;
 
+  // ---- deload schedule (optional) -------------------------------------------
+  // Every Nth week of an enrolment is a lighter week: load chains drop by
+  // `percent` and nothing progresses or resets. Omitted means no schedule.
+  let deload = null;
+  if (raw.deload != null) {
+    const every = clampInt(raw.deload?.every_weeks, 2, 12);
+    if (every === null) {
+      warnings.push("deload.every_weeks must be a number from 2 to 12; the deload schedule was ignored.");
+    } else {
+      deload = { every_weeks: every, percent: clampInt(raw.deload?.percent, 5, 50) ?? 10 };
+    }
+  }
+
   // ---- day rotation (optional) -----------------------------------------------
   // Purely a display/filter hint for the tracker (e.g. "A"/"B"/"Push"); chains
   // reference these by their own `day` field. If omitted, the tracker falls
@@ -228,6 +241,7 @@ export function validateProgram(raw) {
       days,
       record_sections: recordSections,
       chains,
+      ...(deload ? { deload } : {}),
     },
   };
 }
@@ -323,7 +337,7 @@ function normaliseExercises(list, where, errors, warnings) {
     if (typeof ex === "string") {
       const nm = ex.trim();
       if (!nm) { warnings.push(`${at} was blank and skipped.`); return; }
-      out.push({ name: nm.slice(0, 120), unit: "reps", repMin: null, repMax: null, sets: null, note: "" });
+      out.push({ name: nm.slice(0, 120), unit: "reps", repMin: null, repMax: null, sets: null, note: "", video_url: "" });
       return;
     }
 
@@ -521,4 +535,78 @@ export function mergeSplitSets(pieces) {
 export function sectionPlacement(sec) {
   if (sec.when === "start" || sec.when === "end") return sec.when;
   return /warm|mobility|breath|connect|activation|prep|skill/i.test(`${sec.id} ${sec.label}`) ? "start" : "end";
+}
+
+/**
+ * Is this a deload week? Weeks count from the enrolment's start (week 1 is
+ * the first seven days); every `every_weeks`th one is lighter. A manual
+ * deload (`manualUntil`, a timestamp) also counts until it runs out.
+ */
+export function deloadState(program, enrolledAt, { now = Date.now(), manualUntil = null } = {}) {
+  const pct = program?.deload?.percent ?? 10;
+  if (manualUntil && now < manualUntil) return { active: true, percent: pct, manual: true };
+  const every = program?.deload?.every_weeks;
+  if (!every || !enrolledAt) return { active: false, percent: pct, manual: false, week: null };
+  const week = Math.floor((now - new Date(enrolledAt).getTime()) / (7 * 864e5)) + 1;
+  return { active: week % every === 0, percent: pct, manual: false, week, every };
+}
+
+/** A working weight lightened for a deload, rounded to the nearest 0.5kg. */
+export const deloadKg = (kg, percent) => Math.round((kg || 0) * (1 - percent / 100) * 2) / 2;
+
+/**
+ * Turn a validated (stored) programme back into the documented file format,
+ * so a download re-uploads cleanly and the builder can start from it. The
+ * stored shape uses repMin/repMax and incrementKg; the file format uses
+ * reps and increment_kg.
+ */
+export function toProgramFile(def) {
+  const reps = (min, max) => (min === max ? min : { min, max });
+  const out = {
+    schema_version: SCHEMA_VERSION,
+    name: def.name,
+    ...(def.description ? { description: def.description } : {}),
+    ...(def.author ? { author: def.author } : {}),
+    sessions_per_week: def.sessions_per_week,
+    rest_seconds: def.rest_seconds,
+    targets: { sets: def.targets.sets, reps: reps(def.targets.repMin, def.targets.repMax), streak: def.targets.streak },
+    ...(def.days?.length ? { days: def.days } : {}),
+    ...(def.deload ? { deload: def.deload } : {}),
+    record_sections: (def.record_sections || []).map((s) => ({
+      id: s.id,
+      label: s.label,
+      color: s.color,
+      select: s.select,
+      ...(s.when ? { when: s.when } : {}),
+      options: s.options,
+    })),
+    chains: (def.chains || []).map((c) => {
+      const load = c.progression?.mode === "load";
+      return {
+        id: c.id,
+        section: c.section,
+        label: c.label,
+        ...(c.sub ? { sub: c.sub } : {}),
+        color: c.color,
+        ...(c.day ? { day: c.day } : {}),
+        ...(c.superset_group ? { superset_group: c.superset_group } : {}),
+        ...(c.rest_seconds != null ? { rest_seconds: c.rest_seconds } : {}),
+        ...(c.targets ? { targets: { sets: c.targets.sets, reps: reps(c.targets.repMin, c.targets.repMax) } } : {}),
+        progression: load ? { mode: "load", increment_kg: c.progression.incrementKg ?? 2.5 } : { mode: "ladder" },
+        ...(load && c.start_load_kg != null ? { start_load_kg: c.start_load_kg } : {}),
+        ...(c.per_side ? { per_side: true } : {}),
+        exercises: c.exercises.map((e) => {
+          const extra = {
+            ...(e.unit && e.unit !== "reps" ? { unit: e.unit } : {}),
+            ...(e.repMin != null ? { reps: reps(e.repMin, e.repMax) } : {}),
+            ...(e.sets != null ? { sets: e.sets } : {}),
+            ...(e.note ? { note: e.note } : {}),
+            ...(e.video_url ? { video_url: e.video_url } : {}),
+          };
+          return Object.keys(extra).length ? { name: e.name, ...extra } : e.name;
+        }),
+      };
+    }),
+  };
+  return out;
 }

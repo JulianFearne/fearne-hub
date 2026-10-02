@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { effectiveTarget, effectiveRest, describeTarget, sectionPlacement } from "../lib/workoutSchema";
+import { effectiveTarget, effectiveRest, describeTarget, sectionPlacement, deloadState } from "../lib/workoutSchema";
 import {
   getActiveEnrollment,
   getProgress,
@@ -23,6 +23,11 @@ import ExerciseGuide from "../components/ExerciseGuide";
 import "../styles/workout.css";
 
 const dayKey = (programId) => `fh-workout-last-day-${programId}`;
+// a manual "deload this week": the time it runs out, kept on the device
+const deloadKey = (programId) => `fh-workout-deload-until-${programId}`;
+const readManualDeload = (programId) => {
+  try { return Number(localStorage.getItem(deloadKey(programId))) || null; } catch { return null; }
+};
 
 export default function WorkoutTracker() {
   const navigate = useNavigate();
@@ -44,9 +49,13 @@ export default function WorkoutTracker() {
   const [nextDayHint, setNextDayHint] = useState(null);
 
   const [showOverview, setShowOverview] = useState(false); // peek at the overview mid-session
+  const [enrolledAt, setEnrolledAt] = useState(null);
+  const [manualDeloadUntil, setManualDeloadUntil] = useState(null);
   const { sessionId, sessionStart, drafts, rest, run } = live;
   const records = live.records || {}; // tick-list choices, kept with the rest of the live workout
   const inRun = !!run && !showOverview;
+  const deload = deloadState(program, enrolledAt, { manualUntil: manualDeloadUntil });
+  const deloadPercent = deload.active ? deload.percent : null;
   // the chains being logged: the bottom sheet's, or the session's current item
   const activeIds = loggerIds ?? (inRun && run.current != null ? run.items[run.current] : []);
   const patchLive = useCallback((patch) => {
@@ -89,6 +98,8 @@ export default function WorkoutTracker() {
         setProgram(prog.definition);
         setProgramId(prog.id);
         setLive(loadLive(prog.id));
+        setEnrolledAt(enr.started_at ?? null);
+        setManualDeloadUntil(readManualDeload(prog.id));
         setProgress(await getProgress(prog.id));
       } catch (e) {
         setError(e.message || "Could not load your workout.");
@@ -148,6 +159,7 @@ export default function WorkoutTracker() {
       currentLoadKg: cur.loadKg ?? 0,
       rpe: draft.rpe === "" ? null : draft.rpe,
       note: draft.note,
+      deloadPercent,
     });
 
     setProgress((p) => ({
@@ -164,7 +176,8 @@ export default function WorkoutTracker() {
 
     const msgs = [];
     const target = effectiveTarget(program, chain, chain.exercises[cur.idx]);
-    if (res.advanced && mode === "load") msgs.push(`${chain.label}: working weight up to ${res.newLoadKg}kg`);
+    if (deloadPercent != null) msgs.push(`${chain.label}: saved, deload week so nothing moves`);
+    else if (res.advanced && mode === "load") msgs.push(`${chain.label}: working weight up to ${res.newLoadKg}kg`);
     else if (res.advanced) msgs.push(`${chain.label}: levelled up to ${res.newExercise.name}`);
     else if (res.allCeiling) msgs.push(`${chain.label}: ${res.streak} of ${target.streak} toward the next step`);
     else if (res.hitTarget) msgs.push(`${chain.label}: saved, on target`);
@@ -264,6 +277,16 @@ export default function WorkoutTracker() {
 
   const jumpTo = (i) => patchLive((l) => ({ run: { ...l.run, current: i, warmupDone: true } }));
   const toSummary = () => patchLive((l) => ({ run: { ...l.run, current: null } }));
+
+  // ---- deload week ----------------------------------------------------------
+  const toggleManualDeload = () => {
+    const until = manualDeloadUntil && manualDeloadUntil > Date.now() ? null : Date.now() + 7 * 864e5;
+    try {
+      if (until) localStorage.setItem(deloadKey(programId), String(until));
+      else localStorage.removeItem(deloadKey(programId));
+    } catch { /* ignore */ }
+    setManualDeloadUntil(until);
+  };
 
   // ---- deload ---------------------------------------------------------------
   const handleDeload = async (chain, currentLoadKg) => {
@@ -404,7 +427,10 @@ export default function WorkoutTracker() {
     const elapsedHeader = (
       <div className="fh-workout-run__bar">
         <div>
-          <div className="fh-workout-kicker">{run.day ? `Day ${run.day}` : program.name}</div>
+          <div className="fh-workout-kicker">
+            {run.day ? `Day ${run.day}` : program.name}
+            {deload.active && ` · deload week, ${deload.percent}% lighter`}
+          </div>
           <Elapsed since={sessionStart} />
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -476,6 +502,7 @@ export default function WorkoutTracker() {
           <div className="fh-workout-shell">
             {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
             <WorkoutLogger
+              deloadPercent={deloadPercent}
               key={`${run.current}:${ids.join("+")}`}
               page
               header={
@@ -612,6 +639,24 @@ export default function WorkoutTracker() {
             </div>
             <button className="fh-workout-btn fh-workout-btn--primary" onClick={() => startRun(startDay)}>
               Start
+            </button>
+          </div>
+        )}
+
+        {deload.active ? (
+          <div className="fh-workout-alert fh-workout-alert--ok" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+            <span>
+              <strong>Deload week.</strong> Weights are {deload.percent}% lighter and nothing moves up or resets.
+              {!deload.manual && deload.every ? ` (Week ${deload.week} of the programme; a deload comes every ${deload.every} weeks.)` : ""}
+            </span>
+            {deload.manual && (
+              <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={toggleManualDeload}>End it</button>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: "right", margin: "-6px 0 12px" }}>
+            <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={toggleManualDeload}>
+              Take a deload week
             </button>
           </div>
         )}
@@ -779,6 +824,7 @@ export default function WorkoutTracker() {
       {loggerIds && (
         <WorkoutLogger
           key={loggerIds.join("+")}
+          deloadPercent={deloadPercent}
           program={program}
           programId={programId}
           chains={loggerIds.map((id) => program.chains.find((c) => c.id === id))}
@@ -829,20 +875,8 @@ function SupersetCard({ program, group, progress, drafts, onLog }) {
         return (
           <div key={chain.id} style={{ marginBottom: i < group.length - 1 ? 14 : 10 }}>
             <div className="fh-workout-card__label" style={{ "--w-accent": chain.color }}>{chain.label}</div>
-            <div className="fh-workout-exercise-name" style={{ fontSize: "1.05em" }}>
-              {exercise.name}
-              {exercise.video_url && (
-                <a
-                  href={exercise.video_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="fh-workout-pill"
-                  style={{ marginLeft: 8, textDecoration: "none", verticalAlign: "middle" }}
-                >
-                  form video
-                </a>
-              )}
-            </div>
+            <div className="fh-workout-exercise-name" style={{ fontSize: "1.05em" }}>{exercise.name}</div>
+            <ExerciseGuide key={`${chain.id}:${cur.idx}`} exercise={exercise} />
             <div className="fh-workout-step">
               {mode === "load" ? <>target {describeTarget(target)} at {cur.loadKg ?? 0}kg</> : <>target {describeTarget(target)}</>}
             </div>

@@ -17,6 +17,7 @@ import {
   tidySplitDay,
 } from "../lib/workoutApi";
 import { summariseChain } from "../lib/workoutStats";
+import { downloadText, csvLine } from "../lib/download";
 import "../styles/workout.css";
 
 const TABS = [
@@ -112,6 +113,41 @@ function SessionsPanel({ program, programId }) {
 
   useEffect(() => { load(); }, [load]);
 
+  const [exporting, setExporting] = useState(false);
+  // one row per set, so it opens cleanly in a spreadsheet
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const rows = await listSetsForProgram(programId, 20000);
+      const lines = [csvLine(["date", "time", "exercise", "chain", "side", "set", "amount", "unit", "kg", "working_kg", "rpe", "hit_target", "moved_up", "note"])];
+      rows.forEach((r) => {
+        const d = new Date(r.performed_at);
+        (r.amounts || []).forEach((amount, i) => {
+          lines.push(csvLine([
+            d.toLocaleDateString("en-CA"),
+            d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+            r.exercise_name,
+            r.chain_id,
+            r.side ?? "",
+            i + 1,
+            amount,
+            r.unit,
+            r.loads_kg?.[i] ?? r.load_kg ?? "",
+            r.load_kg ?? "",
+            r.rpe ?? "",
+            r.hit_target ? "yes" : "no",
+            r.advanced ? "yes" : "no",
+            i === 0 ? r.note ?? "" : "",
+          ]));
+        });
+      });
+      const name = (program?.name || "workout").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      downloadText(`${name}-sets-${new Date().toLocaleDateString("en-CA")}.csv`, lines.join("\r\n"), "text/csv");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const tidy = async (day) => {
     setTidying(day);
     setTidyMsg(null);
@@ -163,6 +199,14 @@ function SessionsPanel({ program, programId }) {
           </button>
         </div>
       ))}
+
+      {programId && (
+        <div style={{ textAlign: "right", marginBottom: 10 }}>
+          <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={exportCsv} disabled={exporting}>
+            {exporting ? "Preparing…" : "Download all sets (CSV)"}
+          </button>
+        </div>
+      )}
 
       <div className="fh-workout-stat-row">
         <div className="fh-workout-stat">

@@ -2,7 +2,9 @@
 
 This is the JSON format the Workouts feature accepts, either pasted/uploaded
 on the "Upload JSON" tab of `/workouts`, or produced by the "Build your own"
-form (which is still v1-shaped — see below). It's validated and normalised
+form, which can express all of it. A programme's "Download" button on the
+library gives back this same format (`toProgramFile`), so a download can be
+edited and uploaded again. It's validated and normalised
 by `src/lib/workoutSchema.js` (`validateProgram`) — that file is the source
 of truth; this document describes it in plain language, and both should be
 kept in sync.
@@ -50,6 +52,7 @@ none of the v2 features. `schema_version` in a saved program is always `2`.
 | `sessions_per_week` | number | no | 1–7. Defaults to `3`. Informational only. |
 | `days` | array of strings | no | Ordered rotation labels (e.g. `["A", "B"]`), used by the day tabs and the "next up" hint in the tracker. Max 10. If omitted, the tracker derives the same list from whatever distinct `day` values the chains use. |
 | `record_sections` | array | no | See [Record sections](#record-sections). Defaults to `[]`. |
+| `deload` | object | no | `{ "every_weeks": 4, "percent": 10 }`. Every `every_weeks`th week of an enrolment (2 to 12, counted from the day the programme was loaded) is a deload week: load chains are `percent` lighter (5 to 50, default 10) and nothing moves up or resets. Leave it out for no schedule; anyone can still start a deload week by hand from the tracker. |
 | `chains` | array | yes | See [Chains](#chains). Must be non-empty. |
 
 Unknown top-level keys are silently stripped rather than rejected, so new

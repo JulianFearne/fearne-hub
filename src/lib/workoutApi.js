@@ -3,7 +3,7 @@
 // Pages import from this file only, so the query surface stays in one place.
 
 import { supabase } from "../supabaseClient";
-import { effectiveTarget, cleanSets, judgeSide, decideProgression, mergeSplitSets } from "./workoutSchema";
+import { effectiveTarget, cleanSets, judgeSide, decideProgression, mergeSplitSets, deloadKg } from "./workoutSchema";
 
 // ---------------------------------------------------------------------------
 // Identity
@@ -268,15 +268,22 @@ function clampRpe(v) {
  * @returns {{advanced: boolean, streak: number, newIndex: number, newLoadKg: number|null,
  *            newExercise: object|null, hitTarget: boolean, allCeiling: boolean,
  *            migrationMissing: boolean}}
+ *
+ * With `deloadPercent` set (a deload week), the sets are saved at the
+ * lightened weight and nothing progresses or resets.
  */
-export async function logSet({ program, programId, chain, entry, sessionId = null, currentIdx, currentStreak, currentLoadKg = null, rpe = null, note = null }) {
+export async function logSet({ program, programId, chain, entry, sessionId = null, currentIdx, currentStreak, currentLoadKg = null, rpe = null, note = null, deloadPercent = null }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("You need to be signed in.");
 
   const exercise = chain.exercises[currentIdx];
   const target = effectiveTarget(program.definition ?? program, chain, exercise);
   const mode = chain.progression?.mode === "load" ? "load" : "ladder";
-  const judgeOpts = { mode, workingLoadKg: currentLoadKg };
+  // in a deload week the lighter weight is the one judged against, and
+  // nothing moves: the streak, rung and working weight all hold
+  const deloading = deloadPercent != null;
+  const liftedKg = deloading && mode === "load" ? deloadKg(currentLoadKg, deloadPercent) : currentLoadKg;
+  const judgeOpts = { mode, workingLoadKg: liftedKg };
 
   // outcomes drive the streak/ceiling decision; logged is only the sides
   // that were actually logged (an untouched side gets no workout_sets row,
@@ -288,11 +295,16 @@ export async function logSet({ program, programId, chain, entry, sessionId = nul
   const logged = sideList.map((s, i) => ({ ...s, outcome: outcomes[i] })).filter((s) => s.sets.length);
   if (!logged.length) throw new Error("Tick off at least one set first.");
 
-  const res = decideProgression({ outcomes, target, chain, currentIdx, currentStreak, currentLoadKg });
+  const res = deloading
+    ? {
+        streak: currentStreak, newIndex: currentIdx, newLoadKg: currentLoadKg, advanced: false,
+        hitTarget: outcomes.every((o) => o && !o.miss), allCeiling: false,
+      }
+    : decideProgression({ outcomes, target, chain, currentIdx, currentStreak, currentLoadKg });
 
   // the weight actually lifted this session is the *current* working weight,
   // not the (possibly just-incremented) new one
-  const loadForRow = mode === "load" ? currentLoadKg : null;
+  const loadForRow = mode === "load" ? liftedKg : null;
   const cleanRpe = clampRpe(rpe);
   const cleanNote = typeof note === "string" && note.trim() ? note.trim().slice(0, 500) : null;
 
@@ -326,7 +338,7 @@ export async function logSet({ program, programId, chain, entry, sessionId = nul
   }
   if (setErr) throw setErr;
 
-  const { error: progErr } = await supabase
+  const { error: progErr } = deloading ? { error: null } : await supabase
     .from("workout_progress")
     .upsert(
       {

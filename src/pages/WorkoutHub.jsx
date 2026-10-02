@@ -5,7 +5,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { validateProgram, describeTarget } from "../lib/workoutSchema";
+import { validateProgram, describeTarget, toProgramFile } from "../lib/workoutSchema";
+import WorkoutBuilder from "../components/WorkoutBuilder";
 import {
   listPrograms,
   createProgram,
@@ -21,6 +22,7 @@ import barbellProgram from "../data/programs/barbell-5x5.json";
 import strengthShapeProgram from "../data/programs/strength-and-shape.json";
 
 const BUILTIN_PROGRAMS = [builtinProgram, barbellProgram, strengthShapeProgram];
+import { downloadText } from "../lib/download";
 import "../styles/workout.css";
 
 const TABS = [
@@ -40,6 +42,7 @@ export default function WorkoutHub() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [pendingProgram, setPendingProgram] = useState(null); // program awaiting start-position setup
+  const [builderSeed, setBuilderSeed] = useState(null); // programme file to start the builder from ("Edit a copy")
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -125,7 +128,7 @@ export default function WorkoutHub() {
               key={t.id}
               className="fh-workout-tab"
               data-active={tab === t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => { if (t.id === "create" && tab !== "create") setBuilderSeed(null); setTab(t.id); }}
             >
               {t.label}
             </button>
@@ -145,6 +148,7 @@ export default function WorkoutHub() {
                 onPick={setPendingProgram}
                 onDelete={handleDelete}
                 onRequestDelete={handleRequestDelete}
+                onEditCopy={(p) => { setBuilderSeed(toProgramFile(p.definition)); setTab("create"); window.scrollTo({ top: 0 }); }}
               />
             )}
             {tab === "upload" && (
@@ -153,8 +157,10 @@ export default function WorkoutHub() {
               />
             )}
             {tab === "create" && (
-              <BuilderPanel
-                onSaved={(p) => { showToast("Workout created."); refresh(); setTab("library"); setPendingProgram(p); }}
+              <WorkoutBuilder
+                key={builderSeed ? builderSeed.name : "blank"}
+                seed={builderSeed}
+                onSaved={(p) => { showToast("Workout created."); setBuilderSeed(null); refresh(); setTab("library"); setPendingProgram(p); }}
               />
             )}
           </>
@@ -178,7 +184,7 @@ export default function WorkoutHub() {
 /* Library                                                                     */
 /* ========================================================================== */
 
-function Library({ programs, userId, isAdmin, activeProgramId, onPick, onDelete, onRequestDelete }) {
+function Library({ programs, userId, isAdmin, activeProgramId, onPick, onDelete, onRequestDelete, onEditCopy }) {
   if (!programs.length) {
     return <div className="fh-workout-empty">No workouts yet. Upload one or build your own.</div>;
   }
@@ -219,12 +225,27 @@ function Library({ programs, userId, isAdmin, activeProgramId, onPick, onDelete,
               {deleteRequested && <span className="fh-workout-pill fh-workout-pill--active">Delete requested</span>}
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
               <button
                 className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--sm"
                 onClick={(e) => { e.stopPropagation(); onPick(p); }}
               >
                 {isActive ? "Reload" : "Load this"}
+              </button>
+              <button
+                className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadText(`${slug(p.name)}.json`, JSON.stringify(toProgramFile(p.definition), null, 2), "application/json");
+                }}
+              >
+                Download
+              </button>
+              <button
+                className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm"
+                onClick={(e) => { e.stopPropagation(); onEditCopy(p); }}
+              >
+                Edit a copy
               </button>
               {canHardDelete ? (
                 <button
@@ -341,175 +362,6 @@ function UploadPanel({ onSaved }) {
           </button>
         </>
       )}
-    </div>
-  );
-}
-
-/* ========================================================================== */
-/* Builder                                                                     */
-/* ========================================================================== */
-
-const blankChain = () => ({
-  id: "",
-  section: "",
-  label: "",
-  sub: "",
-  color: "#7A2E4E",
-  exercisesText: "",
-});
-
-function BuilderPanel({ onSaved }) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [sets, setSets] = useState(3);
-  const [reps, setReps] = useState(12);
-  const [streak, setStreak] = useState(3);
-  const [rest, setRest] = useState(90);
-  const [perWeek, setPerWeek] = useState(3);
-  const [chains, setChains] = useState([blankChain()]);
-  const [result, setResult] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-
-  const patchChain = (i, patch) =>
-    setChains((prev) => prev.map((c, j) => (j === i ? { ...c, ...patch } : c)));
-
-  const build = () => ({
-    schema_version: 1,
-    name: name.trim(),
-    description: description.trim(),
-    sessions_per_week: Number(perWeek),
-    rest_seconds: Number(rest),
-    targets: { sets: Number(sets), reps: Number(reps), streak: Number(streak) },
-    record_sections: [],
-    chains: chains.map((c) => ({
-      id: c.id.trim() || slug(c.label),
-      section: c.section.trim() || "General",
-      label: c.label.trim(),
-      sub: c.sub.trim(),
-      color: c.color,
-      exercises: c.exercisesText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    })),
-  });
-
-  const check = () => {
-    const r = validateProgram(build());
-    setResult(r);
-    return r;
-  };
-
-  const save = async () => {
-    const r = check();
-    if (!r.ok) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const saved = await createProgram(r.program, "custom");
-      onSaved(saved);
-    } catch (e) {
-      setError(e.message || "Could not save that workout.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fh-workout-card">
-      <h2>Build a workout</h2>
-      <p className="fh-workout-card__sub" style={{ marginBottom: 16 }}>
-        One chain per muscle pattern. List the exercises easiest first, one per line.
-      </p>
-
-      <label htmlFor="wk-name">Name</label>
-      <input id="wk-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Claire's morning routine" />
-
-      <label htmlFor="wk-desc" style={{ marginTop: 12 }}>Description</label>
-      <textarea id="wk-desc" value={description} onChange={(e) => setDescription(e.target.value)} style={{ minHeight: 56 }} />
-
-      <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-        <NumField label="Sets" value={sets} onChange={setSets} min={1} max={10} />
-        <NumField label="Reps" value={reps} onChange={setReps} min={1} max={100} />
-        <NumField label="Streak" value={streak} onChange={setStreak} min={1} max={10} />
-        <NumField label="Rest (s)" value={rest} onChange={setRest} min={10} max={600} />
-        <NumField label="Per week" value={perWeek} onChange={setPerWeek} min={1} max={7} />
-      </div>
-
-      <div className="fh-workout-section-heading">Chains</div>
-
-      {chains.map((c, i) => (
-        <div key={i} className="fh-workout-card" style={{ background: "var(--surface-sunken)" }}>
-          <div className="fh-workout-card__top">
-            <strong style={{ fontSize: 13 }}>Chain {i + 1}</strong>
-            {chains.length > 1 && (
-              <button
-                className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm"
-                onClick={() => setChains((p) => p.filter((_, j) => j !== i))}
-              >
-                Remove
-              </button>
-            )}
-          </div>
-
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 130 }}>
-              <label>Section</label>
-              <input type="text" value={c.section} onChange={(e) => patchChain(i, { section: e.target.value })} placeholder="Push" />
-            </div>
-            <div style={{ flex: 1, minWidth: 130 }}>
-              <label>Label</label>
-              <input type="text" value={c.label} onChange={(e) => patchChain(i, { label: e.target.value })} placeholder="Pushups" />
-            </div>
-          </div>
-
-          <label style={{ marginTop: 10 }}>Exercises, easiest first, one per line</label>
-          <textarea
-            value={c.exercisesText}
-            onChange={(e) => patchChain(i, { exercisesText: e.target.value })}
-            placeholder={"Wall pushups\nIncline pushup\nNormal pushup"}
-            style={{ minHeight: 96, fontSize: 13 }}
-          />
-        </div>
-      ))}
-
-      <button
-        className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--block"
-        onClick={() => setChains((p) => [...p, blankChain()])}
-        style={{ marginBottom: 14 }}
-      >
-        + Add another chain
-      </button>
-
-      {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}
-
-      {result && !result.ok && (
-        <div className="fh-workout-alert fh-workout-alert--error">
-          <strong>Not quite there:</strong>
-          <ul>{result.errors.map((m, i) => <li key={i}>{m}</li>)}</ul>
-        </div>
-      )}
-
-      <button className="fh-workout-btn fh-workout-btn--primary fh-workout-btn--block" onClick={save} disabled={saving}>
-        {saving ? "Saving…" : "Create workout"}
-      </button>
-    </div>
-  );
-}
-
-function NumField({ label, value, onChange, min, max }) {
-  return (
-    <div style={{ width: 84 }}>
-      <label>{label}</label>
-      <input
-        type="number"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ textAlign: "center" }}
-      />
     </div>
   );
 }

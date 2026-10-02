@@ -2,13 +2,13 @@
 // Phase 5 :: session history, per-chain progression, and the weight tracker.
 // Charts are hand-rolled SVG so this page adds no new dependencies.
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getActiveEnrollment,
   listSessions,
   listSetsForSession,
-  listSetsForChain,
+  listSetsForProgram,
   listWeights,
   logWeight,
   deleteWeight,
@@ -16,17 +16,18 @@ import {
   listSplitDays,
   tidySplitDay,
 } from "../lib/workoutApi";
+import { summariseChain } from "../lib/workoutStats";
 import "../styles/workout.css";
 
 const TABS = [
-  { id: "sessions", label: "Sessions" },
   { id: "progress", label: "Progress" },
+  { id: "sessions", label: "Sessions" },
   { id: "weight", label: "Weight" },
 ];
 
 export default function WorkoutHistory() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("sessions");
+  const [tab, setTab] = useState("progress");
   const [program, setProgram] = useState(null);
   const [programId, setProgramId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -241,25 +242,41 @@ function SessionsPanel({ program, programId }) {
 /* ========================================================================== */
 
 function ProgressPanel({ program, programId }) {
-  const [chainId, setChainId] = useState(program?.chains?.[0]?.id ?? null);
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const chain = program?.chains?.find((c) => c.id === chainId);
-  const mode = chain?.progression?.mode === "load" ? "load" : "ladder";
-  const perSide = !!chain?.per_side;
+  const [chainId, setChainId] = useState(null);
+  const [allRows, setAllRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const detailRef = useRef(null);
 
   useEffect(() => {
-    if (!programId || !chainId) return;
+    if (!programId) { setLoading(false); return; }
     setLoading(true);
-    listSetsForChain(programId, chainId, 120)
-      .then(setRows)
+    listSetsForProgram(programId)
+      .then(setAllRows)
       .finally(() => setLoading(false));
-  }, [programId, chainId]);
+  }, [programId]);
 
   if (!program) {
     return <div className="fh-workout-empty">Load a workout first and your progress will show up here.</div>;
   }
+  if (loading) return <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>;
+
+  const summaries = program.chains
+    .map((c) => ({ chain: c, summary: summariseChain(c, allRows.filter((r) => r.chain_id === c.id)) }))
+    .filter((x) => x.summary);
+  if (!summaries.length) {
+    return <div className="fh-workout-empty">Nothing logged yet. Your progress shows up here after your first workout.</div>;
+  }
+
+  const pick = (id) => {
+    setChainId(id);
+    setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+
+  const shownId = chainId ?? summaries[0].chain.id;
+  const chain = program.chains.find((c) => c.id === shownId);
+  const rows = allRows.filter((r) => r.chain_id === shownId);
+  const mode = chain?.progression?.mode === "load" ? "load" : "ladder";
+  const perSide = !!chain?.per_side;
 
   const levelUps = rows.filter((r) => r.advanced);
   const best = rows.reduce((m, r) => Math.max(m, ...r.amounts), 0);
@@ -276,24 +293,48 @@ function ProgressPanel({ program, programId }) {
 
   return (
     <>
-      <div className="fh-workout-tabs" style={{ marginBottom: 16 }}>
-        {program.chains.map((c) => (
-          <button key={c.id} className="fh-workout-tab" data-active={chainId === c.id} onClick={() => setChainId(c.id)}>
-            {c.label}
+      <div className="fh-workout-dash">
+        {summaries.map(({ chain: c, summary: s }) => (
+          <button
+            key={c.id}
+            className="fh-workout-dash__tile"
+            data-active={c.id === shownId}
+            style={{ "--w-accent": c.color }}
+            onClick={() => pick(c.id)}
+          >
+            <span className="fh-workout-dash__label">{c.label}</span>
+            <span className="fh-workout-dash__nums">
+              {s.kind === "ladder" ? (
+                <span className="fh-workout-dash__rung">{s.now}</span>
+              ) : (
+                <>
+                  <span className="fh-workout-dash__from">{s.start}</span>
+                  <span aria-hidden="true"> → </span>
+                  <span className="fh-workout-dash__now">{s.now}</span>
+                </>
+              )}
+            </span>
+            <span className="fh-workout-dash__delta" data-up={s.deltaUp}>
+              {s.kind === "ladder" && s.start !== s.now ? `from ${s.start} · ` : ""}{s.delta}
+            </span>
+            <Sparkline points={s.points} accent={c.color} label={`${c.label}: ${s.start} to ${s.now}`} />
+            <span className="fh-workout-dash__meta">
+              {s.sessions} session{s.sessions === 1 ? "" : "s"}
+              {s.best ? ` · ${s.bestLabel} ${s.best}` : ""}
+            </span>
           </button>
         ))}
       </div>
 
-      {loading ? (
-        <div className="fh-workout-empty"><span className="fh-workout-spinner" /> Loading…</div>
-      ) : rows.length === 0 ? (
+      <div ref={detailRef} className="fh-workout-section-heading" style={{ marginTop: 22 }}>{chain?.label} in detail</div>
+      {rows.length === 0 ? (
         <div className="fh-workout-empty">Nothing logged for {chain?.label} yet.</div>
       ) : (
         <>
           <div className="fh-workout-stat-row">
             <div className="fh-workout-stat">
-              <div className="val">{rows.length}</div>
-              <div className="cap">Logged sets</div>
+              <div className="val">{new Set(rows.map((r) => r.session_id ?? r.id)).size}</div>
+              <div className="cap">Sessions</div>
             </div>
             <div className="fh-workout-stat">
               <div className="val">{levelUps.length}</div>
@@ -301,7 +342,7 @@ function ProgressPanel({ program, programId }) {
             </div>
             <div className="fh-workout-stat">
               <div className="val">{best}</div>
-              <div className="cap">Best set</div>
+              <div className="cap">Best set{rows[0]?.unit === "seconds" ? " (s)" : rows[0]?.unit === "metres" ? " (m)" : " (reps)"}</div>
             </div>
             {perSide && gapPct != null && (
               <div className="fh-workout-stat">
@@ -311,6 +352,21 @@ function ProgressPanel({ program, programId }) {
             )}
           </div>
 
+          {mode === "load" && (
+            <div className="fh-workout-card">
+              <h3 style={{ marginBottom: 10 }}>Working weight</h3>
+              <LineChart
+                points={rows
+                  .filter((r) => r.load_kg != null)
+                  .map((r) => ({ x: new Date(r.performed_at).getTime(), y: Number(r.load_kg), flag: r.advanced }))}
+                unit="kg"
+                accent={chain?.color || "var(--primary)"}
+              />
+              <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
+                A staircase is expected here: flat while the streak builds, a step up each time it resets.
+              </p>
+            </div>
+          )}
           {perSide ? (
             <div className="fh-workout-card">
               <h3 style={{ marginBottom: 10 }}>Left vs right, best set each session</h3>
@@ -344,21 +400,6 @@ function ProgressPanel({ program, programId }) {
             </div>
           )}
 
-          {mode === "load" && (
-            <div className="fh-workout-card">
-              <h3 style={{ marginBottom: 10 }}>Working weight</h3>
-              <LineChart
-                points={rows
-                  .filter((r) => r.load_kg != null)
-                  .map((r) => ({ x: new Date(r.performed_at).getTime(), y: Number(r.load_kg), flag: r.advanced }))}
-                unit="kg"
-                accent={chain?.color || "var(--primary)"}
-              />
-              <p className="fh-workout-card__sub" style={{ marginTop: 8 }}>
-                A staircase is expected here: flat while the streak builds, a step up each time it resets.
-              </p>
-            </div>
-          )}
 
           <div className="fh-workout-section-heading">{mode === "load" ? "Weight jumps" : "Rungs climbed"}</div>
           {levelUps.length === 0 ? (
@@ -526,6 +567,33 @@ function WeightPanel() {
 }
 
 /* ========================================================================== */
+/* Sparkline for the dashboard tiles                                          */
+/* ========================================================================== */
+
+function Sparkline({ points, accent, label }) {
+  const W = 200, H = 44, PAD = 5;
+  if (points.length < 2) {
+    return <span className="fh-workout-dash__spark fh-workout-dash__spark--empty">A trend line appears after two sessions</span>;
+  }
+  const xs = points.map((p) => p.x), ys = points.map((p) => p.y);
+  const minX = Math.min(...xs), spanX = Math.max(...xs) - minX || 1;
+  const minY = Math.min(...ys), spanY = Math.max(...ys) - minY || 1;
+  const sx = (x) => PAD + ((x - minX) / spanX) * (W - PAD * 2);
+  const sy = (y) => H - PAD - ((y - minY) / spanY) * (H - PAD * 2);
+  const d = points.map((p, i) => `${i ? "L" : "M"} ${sx(p.x).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(" ");
+  const last = points[points.length - 1];
+  return (
+    <svg className="fh-workout-dash__spark" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}>
+      <path d={d} fill="none" stroke={accent} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {points.filter((p) => p.flag).map((p, i) => (
+        <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r="3.5" fill="var(--secondary)" stroke="var(--surface-card)" strokeWidth="1.5" />
+      ))}
+      <circle cx={sx(last.x)} cy={sy(last.y)} r="3.5" fill={accent} stroke="var(--surface-card)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+/* ========================================================================== */
 /* Tiny SVG line chart                                                         */
 /* ========================================================================== */
 
@@ -562,16 +630,21 @@ function LineChart({ points, unit = "", accent = "var(--primary)" }) {
       <path d={area} fill={accent} opacity="0.08" />
       <path d={d} fill="none" stroke={accent} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p, i) => (
-        <circle
-          key={i}
-          cx={sx(p.x)}
-          cy={sy(p.y)}
-          r={p.flag ? 4.5 : 2.5}
-          fill={p.flag ? "var(--secondary)" : accent}
-        />
+        <g key={i}>
+          <circle
+            cx={sx(p.x)}
+            cy={sy(p.y)}
+            r={p.flag ? 4.5 : 2.5}
+            fill={p.flag ? "var(--secondary)" : accent}
+          />
+          {/* bigger invisible hit area, with a native tooltip */}
+          <circle cx={sx(p.x)} cy={sy(p.y)} r="12" fill="transparent">
+            <title>{`${fmtDate(p.x, true)}: ${p.y}${unit}${p.flag ? " (moved up)" : ""}`}</title>
+          </circle>
+        </g>
       ))}
       <text x={PAD} y={16} fontSize="11" fill="var(--ink-3)">{maxY}{unit}</text>
-      <text x={PAD} y={H - PAD - 4} fontSize="11" fill="var(--ink-3)">{minY}{unit}</text>
+      {minY !== maxY && <text x={PAD} y={H - PAD - 4} fontSize="11" fill="var(--ink-3)">{minY}{unit}</text>}
     </svg>
   );
 }

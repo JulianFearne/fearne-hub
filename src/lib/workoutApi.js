@@ -626,21 +626,37 @@ export async function listSetsForSession(sessionId) {
   return data ?? [];
 }
 
-/** History for one chain, oldest first, for the progression graph. */
+/** The most recent history for one chain, returned oldest first, for the progression graph. */
 export async function listSetsForChain(programId, chainId, limit = 100) {
   const user = await getCurrentUser();
   if (!user) return [];
 
   const { data, error } = await supabase
     .from("workout_sets")
-    .select("exercise_index, exercise_name, amounts, unit, hit_target, advanced, performed_at, load_kg, side, rpe")
+    .select("*")
     .eq("user_id", user.id)
     .eq("program_id", programId)
     .eq("chain_id", chainId)
-    .order("performed_at", { ascending: true })
+    .order("performed_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).reverse();
+}
+
+/** Every chain's recent history for a programme, oldest first, for the dashboard. */
+export async function listSetsForProgram(programId, limit = 3000) {
+  const user = await getCurrentUser();
+  if (!user || !programId) return [];
+
+  const { data, error } = await supabase
+    .from("workout_sets")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("program_id", programId)
+    .order("performed_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).reverse();
 }
 
 // ---------------------------------------------------------------------------

@@ -59,7 +59,8 @@ handle barbell training. Both models now work in one schema.
 | `src/data/exerciseGuides.js` | "How to" content (setup, key cues, common mistakes) for every exercise in the built-in programmes, grouped into families, looked up loosely by name (`guideFor`). Lives in code because built-in programmes are copied into the database once. Add a variant line here when a programme gains a new exercise. |
 | `src/components/ExerciseGuide.jsx` | The programme note plus the "How to" button and panel, in the logger and on overview cards. |
 | `src/lib/workoutLive.js` | The in-progress workout kept in localStorage (session, ticked sets, rest end time), plus the rest-over beep. |
-| `src/pages/WorkoutHistory.jsx` | Sessions, progress charts, symmetry, body weight. |
+| `src/pages/WorkoutHistory.jsx` | Progress dashboard (a tile per chain: start to now, change, sparkline, best estimated max; tap for the detailed charts), sessions, symmetry, body weight. |
+| `src/lib/workoutStats.js` | Pure summaries for the dashboard (`summariseChain`, `estimateOneRepMax`). |
 | `src/data/programs/calisthenics-bta.json` | Seed programme, schema v1, auto-inserted on first hub load. |
 | `docs/workout-program-format.md` | The JSON spec. Read this before generating any programme file. |
 

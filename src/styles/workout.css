@@ -529,6 +529,40 @@
 }
 .fh-workout-stat .cap { font-size: var(--fs-caption); color: var(--ink-3); text-transform: uppercase; letter-spacing: var(--ls-meta); }
 
+/* ---------- progress dashboard ---------- */
+.fh-workout-dash { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-5); }
+.fh-workout-dash__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  text-align: left;
+  background: var(--surface-card);
+  border: var(--bw-hair) solid var(--border);
+  border-top: 3px solid var(--w-accent, var(--primary));
+  border-radius: var(--r-panel);
+  padding: var(--sp-5);
+  font-family: var(--font-text);
+  color: var(--ink-1);
+  cursor: pointer;
+  min-width: 0;
+}
+.fh-workout-dash__tile[data-active="true"] { box-shadow: 0 0 0 2px var(--primary); }
+.fh-workout-dash__label {
+  font: var(--fw-semibold) var(--fs-caption)/1.2 var(--font-text);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-meta);
+  color: var(--ink-3);
+}
+.fh-workout-dash__nums { font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--ink-1); }
+.fh-workout-dash__from { color: var(--ink-3); font-weight: var(--fw-semibold); }
+.fh-workout-dash__now { font-size: var(--fs-title-sm); font-weight: var(--fw-black); }
+.fh-workout-dash__rung { font-size: var(--fs-body); line-height: 1.25; }
+.fh-workout-dash__delta { font-size: var(--fs-caption); font-weight: var(--fw-semibold); color: var(--ink-2); }
+.fh-workout-dash__delta[data-up="true"] { color: var(--success-soft-ink); }
+.fh-workout-dash__spark { display: block; width: 100%; height: auto; margin: var(--sp-2) 0; }
+.fh-workout-dash__spark--empty { font-size: var(--fs-caption); color: var(--ink-3); padding: var(--sp-4) 0; }
+.fh-workout-dash__meta { font-size: var(--fs-caption); color: var(--ink-3); }
+
 /* ---------- misc ---------- */
 .fh-workout-empty {
   text-align: center;

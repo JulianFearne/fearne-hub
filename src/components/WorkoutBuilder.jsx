@@ -12,6 +12,7 @@ import { useState, useId } from "react";
 import { validateProgram } from "../lib/workoutSchema";
 import { createProgram } from "../lib/workoutApi";
 import { guideFor } from "../data/exerciseGuides";
+import { useSharedGuides, sharedGuideFor, saveSharedGuides } from "../lib/sharedGuides";
 
 const PALETTE = ["#7a2e4e", "#1f3d2b", "#e8743b", "#3b9ee8", "#9b51e0", "#c9a227", "#2a9d8f", "#d1495b"];
 
@@ -201,6 +202,7 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(() => (seed ? null : 0)); // which chain card is expanded
+  const [editedCues, setEditedCues] = useState(() => new Set()); // exercise names whose cues were written or edited here
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const patchChain = (i, patch) => set({ chains: form.chains.map((c, j) => (j === i ? { ...c, ...patch } : c)) });
@@ -222,7 +224,12 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
     setSaving(true);
     setError(null);
     try {
-      onSaved(await createProgram(r.program, "custom"));
+      const saved = await createProgram(r.program, "custom");
+      // cues written or edited here on purpose replace the shared copy;
+      // createProgram has already filled any other gaps
+      const edited = r.program.chains.flatMap((c) => c.exercises).filter((e) => e.guide && editedCues.has(e.name));
+      try { await saveSharedGuides(edited); } catch { /* the library is a nicety */ }
+      onSaved(saved);
     } catch (e) {
       setError(e.message || "Could not save that workout.");
     } finally {
@@ -371,8 +378,10 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
 
                 <ChainCues
                   chain={c}
-                  onExtras={(name, patch) =>
-                    patchChain(i, { extras: { ...c.extras, [name]: { ...(c.extras[name] || {}), ...patch } } })}
+                  onExtras={(name, patch) => {
+                    patchChain(i, { extras: { ...c.extras, [name]: { ...(c.extras[name] || {}), ...patch } } });
+                    setEditedCues((prev) => new Set(prev).add(name));
+                  }}
                 />
 
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
@@ -478,6 +487,7 @@ const GUIDE_PARTS = [
 ];
 
 function ChainCues({ chain, onExtras }) {
+  const shared = useSharedGuides();
   const [editing, setEditing] = useState(null);
   const [resets, setResets] = useState(0); // remounts the boxes when cues are filled or cleared from outside
   const names = [...new Set(
@@ -496,19 +506,20 @@ function ChainCues({ chain, onExtras }) {
     <div className="fh-workout-builder__cues">
       <label>How-to cues</label>
       <p className="fh-workout-card__sub" style={{ marginBottom: 6 }}>
-        Shown behind each exercise's "How to" button. Exercises the hub already knows have built-in cues; anything
-        written here replaces them. Cues follow the exercise's name, so renaming a line starts it fresh.
+        Shown behind each exercise's "How to" button. Cues you write or edit here are saved to the family's shared
+        library when you save, so every workout with the same exercise uses them. Cues follow the exercise's name.
       </p>
       {names.map((name) => {
         const own = chain.extras[name]?.guide;
-        const builtIn = guideFor(name);
+        const builtIn = sharedGuideFor(shared, name) ?? guideFor(name);
+        const source = sharedGuideFor(shared, name) ? "shared" : guideFor(name) ? "built-in" : null;
         const open = editing === name;
         const textOf = (key) => (own?.[key] || []).join("\n");
         return (
           <div key={name} className="fh-workout-builder__cue">
             <div className="fh-workout-builder__cue-head">
               <span>{name}</span>
-              <span className="fh-workout-pill">{own ? "your cues" : builtIn ? "built-in cues" : "no cues yet"}</span>
+              <span className="fh-workout-pill">{own ? "cues set here" : source ? `${source} cues` : "no cues yet"}</span>
               <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => setEditing(open ? null : name)}>
                 {open ? "Done" : own ? "Edit cues" : "Write cues"}
               </button>
@@ -521,7 +532,7 @@ function ChainCues({ chain, onExtras }) {
                     style={{ marginBottom: 8 }}
                     onClick={() => { onExtras(name, { guide: { setup: builtIn.setup, cues: builtIn.cues, mistakes: builtIn.mistakes } }); setResets((n) => n + 1); }}
                   >
-                    Start from the built-in cues
+                    Start from the {source} cues
                   </button>
                 )}
                 {GUIDE_PARTS.map((part) => (
@@ -538,7 +549,7 @@ function ChainCues({ chain, onExtras }) {
                 ))}
                 {own && (
                   <button className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm" onClick={() => { onExtras(name, { guide: undefined }); setResets((n) => n + 1); }}>
-                    Remove my cues{builtIn ? " (use the built-in ones)" : ""}
+                    Remove from this programme{source ? ` (use the ${source} ones)` : ""}
                   </button>
                 )}
               </div>

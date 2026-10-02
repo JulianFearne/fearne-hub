@@ -3,10 +3,11 @@
 // then load it against your profile.
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { validateProgram, describeTarget, toProgramFile } from "../lib/workoutSchema";
 import WorkoutBuilder from "../components/WorkoutBuilder";
+import CueLibrary from "../components/CueLibrary";
 import {
   listPrograms,
   createProgram,
@@ -29,12 +30,14 @@ const TABS = [
   { id: "library", label: "Choose a workout" },
   { id: "upload", label: "Upload JSON" },
   { id: "create", label: "Build your own" },
+  { id: "cues", label: "Exercise cues" },
 ];
 
 export default function WorkoutHub() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState("library");
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(() => (TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "library"));
   const [programs, setPrograms] = useState([]);
   const [activeEnrollment, setActiveEnrollment] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -156,6 +159,7 @@ export default function WorkoutHub() {
                 onSaved={(p) => { showToast("Workout added."); refresh(); setTab("library"); setPendingProgram(p); }}
               />
             )}
+            {tab === "cues" && <CueLibrary />}
             {tab === "create" && (
               <WorkoutBuilder
                 key={builderSeed ? builderSeed.name : "blank"}

@@ -1027,11 +1027,16 @@ export function guideKey(name) {
 const INDEX = new Map();
 FAMILIES.forEach((family) => {
   Object.entries(family.variants).forEach(([name, focus]) => {
-    INDEX.set(guideKey(name), { focus, setup: family.setup, cues: family.cues, mistakes: family.mistakes });
+    INDEX.set(guideKey(name), { name, focus, setup: family.setup, cues: family.cues, mistakes: family.mistakes });
   });
 });
 
 /** `{ focus, setup, cues, mistakes }` for an exercise name, or null. */
 export function guideFor(name) {
   return INDEX.get(guideKey(name)) ?? null;
+}
+
+/** Every built-in guide, one per distinct name, for the cue library page. */
+export function allGuides() {
+  return [...INDEX.entries()].map(([key, g]) => ({ key, ...g }));
 }

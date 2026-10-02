@@ -369,6 +369,24 @@ Day assignment (`day`), supersets (`superset_group`), the `"metres"` unit
 and `video_url` are all fields inside the `definition` jsonb on
 `workout_programs`, so none of them need a database column of their own.
 
+## `exercise_guides`
+
+The family's shared library of exercise how-to cues, read and written by
+`src/lib/sharedGuides.js`. See
+[`_reference/workout-schema-v6.sql`](../_reference/workout-schema-v6.sql).
+
+| Column | Type | Notes |
+|---|---|---|
+| `key` | text | PK; the exercise name loosened by `guideKey()` (lower case, hyphens and plurals ignored) |
+| `name` | text | the name as first written, for display |
+| `guide` | jsonb | `{ setup: [], cues: [], mistakes: [] }` |
+| `created_by` / `updated_by` | uuid | default `auth.uid()` |
+| `created_at` / `updated_at` | timestamptz | |
+
+Approved users can read, insert and update; nobody deletes through the app.
+Saving a programme inserts with "ignore duplicates", so the first version of
+an exercise's cues is kept; edits from the builder or the cue library replace.
+
 ## `body_weight_logs`
 
 Optional body-weight tracker, gated to adults/admins by the `is_adult()` RPC

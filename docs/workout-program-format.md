@@ -147,11 +147,19 @@ Each entry in `exercises` can be either:
   | `video_url` | string | optional link to a form video, shown in the exercise's "How to" panel. Must start with `http://` or `https://` and be 300 characters or fewer, otherwise it's dropped with a warning. |
   | `guide` | object | optional how-to: `{ "setup": [...], "cues": [...], "mistakes": [...] }`, each a list of short lines (8 kept, 240 characters each). Shown behind the exercise's "How to" button in the tracker. |
 
-**Where the "How to" panel comes from.** An exercise's own `guide` is used
-first. Without one, the tracker looks the exercise up by name in the
-built-in library, `src/data/exerciseGuides.js` (case, hyphens and plurals
-ignored, so "Pull-up" and "Pull up" both match), which covers every exercise
-in the built-in programmes. An exercise with neither just shows its `note`.
+**Where the "How to" panel comes from**, in order: the exercise's own
+`guide`; the family's shared cue library (`exercise_guides`, see
+`_reference/workout-schema-v6.sql`); the cues built into the app,
+`src/data/exerciseGuides.js`, which cover every exercise in the built-in
+programmes. Names are matched loosely (case, hyphens and plurals ignored, so
+"Pull-up" and "Pull up" both match). An exercise with none of these just
+shows its `note`.
+
+Uploading or saving a programme adds its guides to the shared library, but
+only for exercises that have no cues there yet: the first version is kept.
+Shared cues change only when someone edits them on purpose, in the builder or
+on the "Exercise cues" tab of `/workouts` (a searchable A to Z of every
+exercise and its cues).
 So a new programme should carry a `guide` per exercise: the prompt in
 [workout-import-prompt.md](workout-import-prompt.md) asks for one, and the
 builder's "How-to cues" section lets you write or edit them by hand.

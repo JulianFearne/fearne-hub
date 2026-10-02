@@ -9,6 +9,10 @@
 //
 // A superset passes several chains: ticking a set on one moves straight to
 // the next, and the rest only starts after the last one in the round.
+//
+// Two layouts: a bottom sheet over the overview (`page` false), or the
+// whole page during a session (`page` true), where Close becomes "Skip for
+// now" and `header` carries the session's progress.
 
 import { useState, useEffect } from "react";
 import { effectiveTarget, describeTarget, judgeSide } from "../lib/workoutSchema";
@@ -64,7 +68,8 @@ function digestHistory(rows, idx) {
 
 export default function WorkoutLogger({
   program, programId, chains, progress, drafts, busy, timer,
-  onDraft, onTick, onFinish, onClose,
+  page = false, header = null,
+  onDraft, onTick, onFinish, onClose, onSkip,
 }) {
   const [tab, setTab] = useState(0);
   const [history, setHistory] = useState({}); // chainId -> digest
@@ -172,13 +177,15 @@ export default function WorkoutLogger({
   })();
 
   return (
-    <div className="fh-workout-overlay" onClick={onClose}>
-      <div className="fh-workout-modal fh-workout-logger" onClick={(e) => e.stopPropagation()}>
+    <Frame page={page} onClose={onClose}>
+        {header}
         <div className="fh-workout-logger__head">
           <div className="fh-workout-kicker" style={{ color: chain.color }}>
             {chain.section} · {chain.label}
           </div>
-          <button className="fh-workout-logger__close" onClick={onClose} aria-label="Close, keeping your ticked sets">×</button>
+          {!page && (
+            <button className="fh-workout-logger__close" onClick={onClose} aria-label="Close, keeping your ticked sets">×</button>
+          )}
         </div>
 
         {chains.length > 1 && (
@@ -313,9 +320,15 @@ export default function WorkoutLogger({
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onClose}>
-            Close
-          </button>
+          {page ? (
+            <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onSkip} disabled={busy}>
+              Skip for now
+            </button>
+          ) : (
+            <button className="fh-workout-btn fh-workout-btn--ghost" style={{ flex: 1 }} onClick={onClose}>
+              Close
+            </button>
+          )}
           <button
             className="fh-workout-btn fh-workout-btn--primary"
             style={{ flex: 2 }}
@@ -325,6 +338,16 @@ export default function WorkoutLogger({
             {busy ? "Saving…" : chains.length > 1 ? "Finish superset" : "Finish exercise"}
           </button>
         </div>
+    </Frame>
+  );
+}
+
+function Frame({ page, onClose, children }) {
+  if (page) return <div className="fh-workout-logger fh-workout-logger--page">{children}</div>;
+  return (
+    <div className="fh-workout-overlay" onClick={onClose}>
+      <div className="fh-workout-modal fh-workout-logger" onClick={(e) => e.stopPropagation()}>
+        {children}
       </div>
     </div>
   );

@@ -375,6 +375,33 @@
 }
 .fh-workout-notes .when { display: block; font-size: var(--fs-caption); color: var(--ink-3); }
 
+/* ---------- guided session ---------- */
+.fh-workout-logger--page { padding-bottom: var(--sp-8); }
+.fh-workout-logger--page .fh-workout-timer--inline { top: calc(var(--header-h) + var(--sp-3)); z-index: 5; }
+.fh-workout-run__bar { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-5); }
+.fh-workout-run__clock {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-black);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-1);
+}
+.fh-workout-run__steps { list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-3); margin: var(--sp-6) 0 var(--sp-3); padding: 0; }
+.fh-workout-run__steps button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: var(--bw-hair) solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--ink-2);
+  font: var(--fw-bold) var(--fs-caption)/1 var(--font-text);
+  cursor: pointer;
+}
+.fh-workout-run__steps button[data-state="current"] { background: var(--primary); border-color: var(--primary); color: var(--ink-on-primary); }
+.fh-workout-run__steps button[data-state="done"] { background: var(--success); border-color: var(--success); color: var(--white); }
+.fh-workout-run__count { font-size: var(--fs-caption); color: var(--ink-3); margin-bottom: var(--sp-6); }
+.fh-workout-run__start { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-5); }
+
 /* ---------- rest timer ---------- */
 .fh-workout-timer {
   position: fixed;

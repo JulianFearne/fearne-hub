@@ -141,7 +141,13 @@ Each entry in `exercises` can be either:
   | `reps` | number or `{ min, max }` | overrides the chain/program target for this exercise (1–100 for reps, 1–3600 for seconds, 1–5000 for metres) |
   | `sets` | number | overrides the chain/program target for this exercise, 1–10 |
   | `note` | string | short tip shown under the exercise name, truncated to 200 characters |
-  | `video_url` | string | optional link to a form video, shown as a small "form video" link next to the exercise name. Must start with `http://` or `https://` and be 300 characters or fewer, otherwise it's dropped with a warning. |
+  | `video_url` | string | optional link to a form video, shown in the exercise's "How to" panel. Must start with `http://` or `https://` and be 300 characters or fewer, otherwise it's dropped with a warning. |
+
+Setup steps, key cues and common mistakes don't go in the file: the tracker
+looks the exercise up by name in `src/data/exerciseGuides.js` (case, hyphens
+and plurals ignored, so "Pull-up" and "Pull up" both match). Reusing a name
+that's already there gets the "How to" panel for free; a new exercise just
+shows its `note` until a guide is added for it.
 
 ### Load chains
 

@@ -610,9 +610,14 @@ export default function WorkoutTracker() {
               moves a chain on: to the next rung, or up in weight for load chains.
             </p>
           </div>
-          <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => navigate("/workouts")}>
-            Change
-          </button>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => navigate("/workouts?tab=cues")}>
+              Cues
+            </button>
+            <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => navigate("/workouts")}>
+              Change
+            </button>
+          </div>
         </div>
 
         {error && <div className="fh-workout-alert fh-workout-alert--error">{error}</div>}

@@ -5,11 +5,14 @@
 // tick-lists and a deload schedule. It can start blank or from a copy of an
 // existing programme (`seed`, in the file format from toProgramFile), and
 // anything per-exercise it has no field for (rep overrides, form videos) is
-// carried over untouched for any exercise line that keeps its name.
+// carried over untouched for any exercise line that keeps its name. Each
+// exercise can carry its own how-to cues (`guide`), edited in ChainCues.
 
 import { useState, useId } from "react";
 import { validateProgram } from "../lib/workoutSchema";
 import { createProgram } from "../lib/workoutApi";
+import { guideFor } from "../data/exerciseGuides";
+import { useSharedGuides, sharedGuideFor, saveSharedGuides } from "../lib/sharedGuides";
 
 const PALETTE = ["#7a2e4e", "#1f3d2b", "#e8743b", "#3b9ee8", "#9b51e0", "#c9a227", "#2a9d8f", "#d1495b"];
 
@@ -199,6 +202,7 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(() => (seed ? null : 0)); // which chain card is expanded
+  const [editedCues, setEditedCues] = useState(() => new Set()); // exercise names whose cues were written or edited here
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const patchChain = (i, patch) => set({ chains: form.chains.map((c, j) => (j === i ? { ...c, ...patch } : c)) });
@@ -220,7 +224,12 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
     setSaving(true);
     setError(null);
     try {
-      onSaved(await createProgram(r.program, "custom"));
+      const saved = await createProgram(r.program, "custom");
+      // cues written or edited here on purpose replace the shared copy;
+      // createProgram has already filled any other gaps
+      const edited = r.program.chains.flatMap((c) => c.exercises).filter((e) => e.guide && editedCues.has(e.name));
+      try { await saveSharedGuides(edited); } catch { /* the library is a nicety */ }
+      onSaved(saved);
     } catch (e) {
       setError(e.message || "Could not save that workout.");
     } finally {
@@ -367,6 +376,14 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
                 />
                 <p className="fh-workout-card__sub">Add a tip after a bar: <code>Name | tip</code>.</p>
 
+                <ChainCues
+                  chain={c}
+                  onExtras={(name, patch) => {
+                    patchChain(i, { extras: { ...c.extras, [name]: { ...(c.extras[name] || {}), ...patch } } });
+                    setEditedCues((prev) => new Set(prev).add(name));
+                  }}
+                />
+
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => moveChain(i, -1)} disabled={i === 0}>Move up</button>
                   <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => moveChain(i, 1)} disabled={i === form.chains.length - 1}>Move down</button>
@@ -458,6 +475,103 @@ export default function WorkoutBuilder({ seed = null, onSaved }) {
         {saving ? "Saving…" : seed ? "Save as a new workout" : "Create workout"}
       </button>
     </div>
+  );
+}
+
+/* ---- how-to cues per exercise ------------------------------------------ */
+
+const GUIDE_PARTS = [
+  { key: "setup", label: "Setup", hint: "Getting into position, one step per line" },
+  { key: "cues", label: "Key cues", hint: "What to think about during each rep" },
+  { key: "mistakes", label: "Watch out for", hint: "Common mistakes" },
+];
+
+function ChainCues({ chain, onExtras }) {
+  const shared = useSharedGuides();
+  const [editing, setEditing] = useState(null);
+  const [resets, setResets] = useState(0); // remounts the boxes when cues are filled or cleared from outside
+  const names = [...new Set(
+    chain.exercisesText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean)
+  )];
+  if (!names.length) return null;
+
+  const setPart = (name, key, text) => {
+    const guide = { setup: [], cues: [], mistakes: [], ...(chain.extras[name]?.guide || {}) };
+    guide[key] = text.split("\n").map((x) => x.trim()).filter(Boolean);
+    const empty = !guide.setup.length && !guide.cues.length && !guide.mistakes.length;
+    onExtras(name, { guide: empty ? undefined : guide });
+  };
+
+  return (
+    <div className="fh-workout-builder__cues">
+      <label>How-to cues</label>
+      <p className="fh-workout-card__sub" style={{ marginBottom: 6 }}>
+        Shown behind each exercise's "How to" button. Cues you write or edit here are saved to the family's shared
+        library when you save, so every workout with the same exercise uses them. Cues follow the exercise's name.
+      </p>
+      {names.map((name) => {
+        const own = chain.extras[name]?.guide;
+        const builtIn = sharedGuideFor(shared, name) ?? guideFor(name);
+        const source = sharedGuideFor(shared, name) ? "shared" : guideFor(name) ? "built-in" : null;
+        const open = editing === name;
+        const textOf = (key) => (own?.[key] || []).join("\n");
+        return (
+          <div key={name} className="fh-workout-builder__cue">
+            <div className="fh-workout-builder__cue-head">
+              <span>{name}</span>
+              <span className="fh-workout-pill">{own ? "cues set here" : source ? `${source} cues` : "no cues yet"}</span>
+              <button className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm" onClick={() => setEditing(open ? null : name)}>
+                {open ? "Done" : own ? "Edit cues" : "Write cues"}
+              </button>
+            </div>
+            {open && (
+              <div style={{ marginTop: 8 }}>
+                {!own && builtIn && (
+                  <button
+                    className="fh-workout-btn fh-workout-btn--ghost fh-workout-btn--sm"
+                    style={{ marginBottom: 8 }}
+                    onClick={() => { onExtras(name, { guide: { setup: builtIn.setup, cues: builtIn.cues, mistakes: builtIn.mistakes } }); setResets((n) => n + 1); }}
+                  >
+                    Start from the {source} cues
+                  </button>
+                )}
+                {GUIDE_PARTS.map((part) => (
+                  <div key={part.key} style={{ marginBottom: 8 }}>
+                    <label>{part.label}</label>
+                    <LinesBox
+                      key={`${part.key}:${resets}`}
+                      label={`${name}: ${part.label}`}
+                      initial={textOf(part.key)}
+                      placeholder={part.hint}
+                      onLines={(text) => setPart(name, part.key, text)}
+                    />
+                  </div>
+                ))}
+                {own && (
+                  <button className="fh-workout-btn fh-workout-btn--danger fh-workout-btn--sm" onClick={() => { onExtras(name, { guide: undefined }); setResets((n) => n + 1); }}>
+                    Remove from this programme{source ? ` (use the ${source} ones)` : ""}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A textarea of lines that keeps what you type (blank lines and all) while it's open. */
+function LinesBox({ label, initial, placeholder, onLines }) {
+  const [text, setText] = useState(initial);
+  return (
+    <textarea
+      aria-label={label}
+      value={text}
+      placeholder={placeholder}
+      onChange={(e) => { setText(e.target.value); onLines(e.target.value); }}
+      style={{ minHeight: 64, fontSize: 13 }}
+    />
   );
 }
 

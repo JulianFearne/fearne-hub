@@ -3,6 +3,7 @@
 // Pages import from this file only, so the query surface stays in one place.
 
 import { supabase } from "../supabaseClient";
+import { addMissingGuides } from "./sharedGuides";
 import { effectiveTarget, cleanSets, judgeSide, decideProgression, mergeSplitSets, deloadKg } from "./workoutSchema";
 
 // ---------------------------------------------------------------------------
@@ -66,6 +67,8 @@ export async function createProgram(definition, source = "custom") {
     .select()
     .single();
   if (error) throw error;
+  // its cues fill any gaps in the shared library (never replacing what's there)
+  try { await addMissingGuides(definition); } catch { /* the library is a nicety */ }
   return data;
 }
 

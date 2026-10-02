@@ -3,7 +3,9 @@
 Paste this whole document into a Claude chat (no repo access needed) along
 with what programme you want, e.g. "generate a 3-day upper/lower split for
 a novice using this format." Claude should return one JSON object matching
-the shape below, output only, no commentary. Drop the result straight into
+the shape below, output only, no commentary. **Give every exercise a
+`guide`** (setup, key cues, common mistakes; see [Exercises](#exercises)):
+it's what the tracker shows behind each exercise's "How to" button. Drop the result straight into
 the "Upload JSON" tab on `/workouts`, or hand it back to a Claude Code
 session to save as `src/data/programs/<name>.json`.
 
@@ -83,7 +85,15 @@ between them.
       "start_load_kg": 20,
       "per_side": false,
       "exercises": [
-        { "name": "Back squat", "reps": 5 }
+        {
+          "name": "Back squat",
+          "reps": 5,
+          "guide": {
+            "setup": ["Bar on the upper back, hands just outside the shoulders", "Feet shoulder width, toes slightly out"],
+            "cues": ["Brace before each rep", "Knees track over the toes", "Push the floor away to stand"],
+            "mistakes": ["Knees caving in", "Hips rising before the chest"]
+          }
+        }
       ]
     }
   ]
@@ -145,6 +155,10 @@ Either a plain string, or an object:
 | `sets` | number | overrides sets target for this exercise, 1-10 |
 | `note` | string | short tip, up to 200 characters |
 | `video_url` | string | optional form-video link. Must start with `http://` or `https://`, up to 300 characters. |
+| `guide` | object | `{ "setup": [...], "cues": [...], "mistakes": [...] }`, each a list of short plain sentences (up to 8 lines of 240 characters each). **Include one for every exercise.** `setup`: getting into position, in order. `cues`: 3 or 4 things to think about during each rep. `mistakes`: 2 or 3 common faults. Write for someone training alone with no coach, in UK English, without em dashes. For a ladder chain, make each rung's guide specific to that rung (what changes from the one before) rather than repeating the same text. |
+
+An exercise with a `guide` is never just a string, since the guide needs the
+object form.
 
 ### Record sections
 
@@ -234,5 +248,6 @@ Either a plain string, or an object:
 
 **RPE** (1-10, optional) can be recorded against any logged set, and a load
 chain has a **deload** action (drop the working weight 10%, reset the
-streak) available in the tracker. Neither needs anything in the JSON, they
+streak) available in the tracker. (A *scheduled* deload week does go in the
+file, as top-level `"deload": { "every_weeks": 4, "percent": 10 }`.) Neither needs anything in the JSON, they
 just happen once the programme is loaded.

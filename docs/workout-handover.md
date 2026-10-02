@@ -56,8 +56,10 @@ handle barbell training. Both models now work in one schema.
 | `src/pages/WorkoutTracker.jsx` | Overview, guided session (one exercise at a time, then a summary) and reposition modal. Owns the in-progress workout state. |
 | `src/components/WorkoutLogger.jsx` | Set logger: sets ticked off one at a time, per-set weight, greyed "last time" values, exercise notes. A bottom sheet from the overview, or the whole page in a session. |
 | `src/components/WorkoutRestTimer.jsx` | Rest timer, counts down to a stored end time. |
-| `src/data/exerciseGuides.js` | "How to" content (setup, key cues, common mistakes) for every exercise in the built-in programmes, grouped into families, looked up loosely by name (`guideFor`). Lives in code because built-in programmes are copied into the database once. Add a variant line here when a programme gains a new exercise. |
-| `src/components/ExerciseGuide.jsx` | The programme note plus the "How to" button and panel, in the logger and on overview cards. |
+| `src/data/exerciseGuides.js` | "How to" content (setup, key cues, common mistakes) for every exercise in the built-in programmes, grouped into families, looked up loosely by name (`guideFor`). Lives in code because built-in programmes are copied into the database once. New programmes carry their own `guide` per exercise instead (from the import prompt or the builder), so this only needs adding to for built-in programmes. |
+| `src/lib/sharedGuides.js` | The family's shared cue library (`exercise_guides`, `_reference/workout-schema-v6.sql`): cached fetch, `addMissingGuides` (on programme save, fills gaps only) and `saveSharedGuides` (deliberate edits, replaces). |
+| `src/components/CueLibrary.jsx` | The "Exercise cues" tab on `/workouts` (also the tracker's "Cues" button): every exercise A to Z, searchable, view and edit. |
+| `src/components/ExerciseGuide.jsx` | The programme note plus the "How to" button and panel, in the logger and on overview cards. Uses the exercise's own `guide` from the programme first, then the shared library, then the built-in cues. |
 | `src/lib/workoutLive.js` | The in-progress workout kept in localStorage (session, ticked sets, rest end time), plus the rest-over beep. |
 | `src/pages/WorkoutHistory.jsx` | Progress dashboard (a tile per chain: start to now, change, sparkline, best estimated max; tap for the detailed charts), sessions, symmetry, body weight. |
 | `src/lib/workoutStats.js` | Pure summaries for the dashboard (`summariseChain`, `estimateOneRepMax`). |

@@ -53,8 +53,8 @@ handle barbell training. Both models now work in one schema.
 | `src/lib/workoutApi.js` | Every Supabase call. Pages import from here only. Contains the progression engine in `logSet`. |
 | `src/styles/workout.css` | Scoped under `.workout`. |
 | `src/pages/WorkoutHub.jsx` | Library, upload panel, builder form, start-position modal. |
-| `src/pages/WorkoutTracker.jsx` | Live tracker and reposition modal. Owns the in-progress workout state. |
-| `src/components/WorkoutLogger.jsx` | Set logger: sets ticked off one at a time, per-set weight, greyed "last time" values, exercise notes. |
+| `src/pages/WorkoutTracker.jsx` | Overview, guided session (one exercise at a time, then a summary) and reposition modal. Owns the in-progress workout state. |
+| `src/components/WorkoutLogger.jsx` | Set logger: sets ticked off one at a time, per-set weight, greyed "last time" values, exercise notes. A bottom sheet from the overview, or the whole page in a session. |
 | `src/components/WorkoutRestTimer.jsx` | Rest timer, counts down to a stored end time. |
 | `src/lib/workoutLive.js` | The in-progress workout kept in localStorage (session, ticked sets, rest end time), plus the rest-over beep. |
 | `src/pages/WorkoutHistory.jsx` | Sessions, progress charts, symmetry, body weight. |
@@ -177,6 +177,15 @@ requests a screen wake lock (re-taken when the page is shown again), beeps when 
 up while the page is open (iPhones ignore vibrate), and vibrates where supported. It can't
 alert while the page is fully closed: that would need push notifications.
 
+**Guided session.** The overview's Start card (next-up day, or the selected day tab)
+starts a session for that day: its chains in programme order, a superset kept together as
+one item (`buildRunItems` in `workoutLive.js`). One item fills the page at a time. "Finish
+exercise" saves it and moves to the next item not yet done; "Skip for now" moves on and
+leaves it open; the numbered dots jump anywhere. When everything is done (or on "End
+workout") a summary shows time, sets, kg lifted, each exercise's outcome and anything
+still open, then "Save workout". Where it has got to is kept in `live.run`, so it survives
+a reload, and "Overview" peeks at the full programme without ending it.
+
 Per-set weights (`loads_kg`) and exercise notes (`note`) on `workout_sets` need
 `_reference/workout-schema-v5.sql`. Until it's run, logging still works and saves
 without them.
@@ -228,6 +237,9 @@ rule counts logged entries, not calendar days.
 - [ ] Greyed boxes show last session's numbers; ticking an empty set uses them
 - [ ] Add a drop set at a lighter weight: it's saved, and doesn't count against the target
 - [ ] Notes on an exercise show under it next time
+- [ ] Start a day: one exercise per page, Skip moves on, Finish ticks its dot and moves to the next open one
+- [ ] Reload mid-session: back on the same exercise with the elapsed clock still running
+- [ ] End workout early: the summary lists what's not done with "Do it now"; Save works without them
 - [ ] Finish a workout, confirm it appears in History with its sets
 - [ ] Left vs right tab charts both lines once two paired sessions exist
 - [ ] Body weight tab shows the adult-only message on a kid account

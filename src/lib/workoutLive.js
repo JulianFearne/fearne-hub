@@ -1,7 +1,8 @@
 // src/lib/workoutLive.js
 // Fearne Hub :: the in-progress workout, kept on the device so closing the
 // page (or the phone locking) loses nothing: the open session, the sets
-// ticked off so far for each exercise, and the rest timer's end time.
+// ticked off so far for each exercise, the rest timer's end time, and where
+// a guided session has got to.
 // No Supabase here; sets reach the database when an exercise is finished.
 
 const key = (programId) => `fh-workout-live-${programId}`;
@@ -9,7 +10,37 @@ const key = (programId) => `fh-workout-live-${programId}`;
 // a session left open longer than this is treated as abandoned
 const STALE_MS = 12 * 60 * 60 * 1000;
 
-export const emptyLive = () => ({ sessionId: null, sessionStart: null, drafts: {}, rest: null });
+// `run` is the guided session, when one has been started from a day:
+// { day, items: [[chainId, ...], ...], current, done: [itemIndex], log: [...] }
+// (an item holds 2+ chain ids for a superset; `current` is null on the summary)
+export const emptyLive = () => ({ sessionId: null, sessionStart: null, drafts: {}, rest: null, run: null });
+
+/** The day's exercises in programme order, a superset kept together as one item. */
+export function buildRunItems(program, day) {
+  const chains = (program.chains || []).filter((c) => !day || !c.day || c.day === day);
+  const items = [];
+  const seenGroups = new Set();
+  chains.forEach((c) => {
+    if (c.superset_group) {
+      if (seenGroups.has(c.superset_group)) return;
+      seenGroups.add(c.superset_group);
+      items.push(chains.filter((x) => x.superset_group === c.superset_group).map((x) => x.id));
+    } else {
+      items.push([c.id]);
+    }
+  });
+  return items;
+}
+
+/** The next item still to do after `from`, wrapping round; null when all are done. */
+export function nextOpenItem(run, from) {
+  const n = run.items.length;
+  for (let step = 1; step <= n; step++) {
+    const i = (from + step) % n;
+    if (!run.done.includes(i)) return i;
+  }
+  return null;
+}
 
 export function loadLive(programId) {
   try {

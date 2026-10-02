@@ -3,7 +3,7 @@
 // Pure functions, no Supabase imports, so this is easy to unit test.
 
 export const SCHEMA_VERSION = 2;
-export const MAX_BYTES = 256 * 1024;
+export const MAX_BYTES = 512 * 1024; // room for a how-to guide on every exercise
 
 const ID_RE = /^[a-z0-9_]+$/;
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
@@ -375,6 +375,8 @@ function normaliseExercises(list, where, errors, warnings) {
       }
     }
 
+    const guide = normaliseGuide(ex.guide, at, warnings);
+
     out.push({
       name: nm.slice(0, 120),
       unit,
@@ -383,11 +385,39 @@ function normaliseExercises(list, where, errors, warnings) {
       sets: clampInt(ex.sets, 1, 10),
       note: typeof ex.note === "string" ? ex.note.trim().slice(0, 200) : "",
       video_url: videoUrl,
+      ...(guide ? { guide } : {}),
     });
   });
 
   if (!out.length) errors.push(`${where}: no usable exercises after validation.`);
   return out;
+}
+
+/**
+ * An exercise's own how-to guide: `{ setup: [], cues: [], mistakes: [] }`,
+ * each a list of short lines. Shown in the tracker's "How to" panel ahead of
+ * the built-in library (src/data/exerciseGuides.js). Null when there's
+ * nothing usable, so the library is used instead.
+ */
+function normaliseGuide(g, at, warnings) {
+  if (g == null) return null;
+  if (typeof g !== "object" || Array.isArray(g)) {
+    warnings.push(`${at}: guide must be an object with setup, cues and mistakes lists; ignored.`);
+    return null;
+  }
+  const list = (key) => {
+    const v = g[key];
+    if (v == null) return [];
+    if (!Array.isArray(v)) {
+      warnings.push(`${at}: guide.${key} must be a list of strings; ignored.`);
+      return [];
+    }
+    const items = v.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().slice(0, 240));
+    if (items.length > 8) warnings.push(`${at}: guide.${key}: only the first 8 lines were kept.`);
+    return items.slice(0, 8);
+  };
+  const out = { setup: list("setup"), cues: list("cues"), mistakes: list("mistakes") };
+  return out.setup.length || out.cues.length || out.mistakes.length ? out : null;
 }
 
 function pickColor(c, where, warnings) {
@@ -602,6 +632,7 @@ export function toProgramFile(def) {
             ...(e.sets != null ? { sets: e.sets } : {}),
             ...(e.note ? { note: e.note } : {}),
             ...(e.video_url ? { video_url: e.video_url } : {}),
+            ...(e.guide ? { guide: e.guide } : {}),
           };
           return Object.keys(extra).length ? { name: e.name, ...extra } : e.name;
         }),

@@ -145,12 +145,16 @@ Each entry in `exercises` can be either:
   | `sets` | number | overrides the chain/program target for this exercise, 1–10 |
   | `note` | string | short tip shown under the exercise name, truncated to 200 characters |
   | `video_url` | string | optional link to a form video, shown in the exercise's "How to" panel. Must start with `http://` or `https://` and be 300 characters or fewer, otherwise it's dropped with a warning. |
+  | `guide` | object | optional how-to: `{ "setup": [...], "cues": [...], "mistakes": [...] }`, each a list of short lines (8 kept, 240 characters each). Shown behind the exercise's "How to" button in the tracker. |
 
-Setup steps, key cues and common mistakes don't go in the file: the tracker
-looks the exercise up by name in `src/data/exerciseGuides.js` (case, hyphens
-and plurals ignored, so "Pull-up" and "Pull up" both match). Reusing a name
-that's already there gets the "How to" panel for free; a new exercise just
-shows its `note` until a guide is added for it.
+**Where the "How to" panel comes from.** An exercise's own `guide` is used
+first. Without one, the tracker looks the exercise up by name in the
+built-in library, `src/data/exerciseGuides.js` (case, hyphens and plurals
+ignored, so "Pull-up" and "Pull up" both match), which covers every exercise
+in the built-in programmes. An exercise with neither just shows its `note`.
+So a new programme should carry a `guide` per exercise: the prompt in
+[workout-import-prompt.md](workout-import-prompt.md) asks for one, and the
+builder's "How-to cues" section lets you write or edit them by hand.
 
 ### Load chains
 

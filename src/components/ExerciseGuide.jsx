@@ -1,6 +1,7 @@
 // src/components/ExerciseGuide.jsx
-// "How to" button and panel for one exercise: what's particular to this
-// version, setup, key cues and common mistakes from src/data/exerciseGuides.js,
+// "How to" button and panel for one exercise: setup, key cues and common
+// mistakes, from the programme's own `guide` for the exercise if it has one,
+// otherwise from src/data/exerciseGuides.js (with a line on that version),
 // plus the form video when the programme has one. The programme's own note
 // (e.g. "Reps are each side") stays visible above the button.
 
@@ -9,7 +10,8 @@ import { guideFor } from "../data/exerciseGuides";
 
 export default function ExerciseGuide({ exercise }) {
   const [open, setOpen] = useState(false);
-  const guide = guideFor(exercise.name);
+  // the programme's own guide wins; otherwise the built-in library by name
+  const guide = exercise.guide ?? guideFor(exercise.name);
   if (!guide && !exercise.note && !exercise.video_url) return null;
 
   return (

@@ -200,17 +200,18 @@ without them.
 Everything here is optional and worked-around-able: nothing blocks using the barbell
 programme day to day.
 
-1. **The builder form is v1-shaped.** It cannot express rep ranges, load mode, per-side,
-   day assignment, supersets, a metres unit or video links. Upload handles all of them,
-   so the form is the weak link. Worth extending, but it's a chunk of UI work on its own.
+1. ~~The builder form is v1-shaped.~~ Done: `src/components/WorkoutBuilder.jsx` covers the whole
+   format (rep ranges, ladder or weight, per side, days, supersets, units, overrides, tick-lists
+   with start/end placement, deload schedule) and "Edit a copy" starts it from any programme.
 2. **No session notes UI.** The column exists and `finishSession` accepts notes, but
    nothing collects them.
-3. **No export.** Recipes have a JSON export pipeline; workouts do not.
+3. ~~No export.~~ Done: "Download" on a library card gives the programme file, and History's
+   Sessions tab downloads every logged set as CSV.
 4. **Volume and tonnage.** Sets, reps and load are all stored, so `sum(reps × load)`
    per session is available and not yet surfaced.
-5. **No automatic periodisation.** The manual deload button covers "drop the weight
-   after a bad run"; there's still nothing that plans a deload week on a schedule (e.g.
-   every 4th week) the way a coached programme might.
+5. ~~No automatic periodisation.~~ Done: an optional `deload` schedule on the programme, plus a
+   "Take a deload week" switch in the tracker (kept on the device for seven days). In a deload
+   week load chains are lighter, sets are saved at that weight, and nothing progresses or resets.
 
 Resolved across the last three rounds: the barbell programme file, the start-position
 modal's starting-load field, day assignment with day tabs and a "next up" hint,

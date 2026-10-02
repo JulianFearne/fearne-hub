@@ -15,7 +15,7 @@
 // now" and `header` carries the session's progress.
 
 import { useState, useEffect } from "react";
-import { effectiveTarget, describeTarget, judgeSide } from "../lib/workoutSchema";
+import { effectiveTarget, describeTarget, judgeSide, deloadKg } from "../lib/workoutSchema";
 import { getChainHistory } from "../lib/workoutApi";
 import { primeBeep } from "../lib/workoutLive";
 import ExerciseGuide from "./ExerciseGuide";
@@ -69,7 +69,7 @@ function digestHistory(rows, idx) {
 
 export default function WorkoutLogger({
   program, programId, chains, progress, drafts, busy, timer,
-  page = false, header = null,
+  page = false, header = null, deloadPercent = null,
   onDraft, onTick, onFinish, onClose, onSkip,
 }) {
   const [tab, setTab] = useState(0);
@@ -96,7 +96,9 @@ export default function WorkoutLogger({
   const exercise = chain.exercises[cur.idx];
   const target = effectiveTarget(program, chain, exercise);
   const mode = chain.progression?.mode === "load" ? "load" : "ladder";
-  const workingKg = mode === "load" ? (cur.loadKg ?? 0) : null;
+  const workingKg = mode === "load"
+    ? (deloadPercent != null ? deloadKg(cur.loadKg ?? 0, deloadPercent) : (cur.loadKg ?? 0))
+    : null;
   const draft = draftFor(drafts, chain, cur.idx, program);
   const hist = history[chain.id];
   const unitWord = target.unit === "seconds" ? "secs" : target.unit === "metres" ? "metres" : "reps";
@@ -207,6 +209,7 @@ export default function WorkoutLogger({
         <p className="fh-workout-card__sub">
           Target {describeTarget(target)}
           {mode === "load" && ` at ${workingKg}kg`}
+          {deloadPercent != null && " (deload)"}
           {` · ${done} of ${target.sets} done`}
         </p>
         {lastSummary && <p className="fh-workout-logger__last">{lastSummary}</p>}
@@ -274,7 +277,12 @@ export default function WorkoutLogger({
             {target.sets - done} to go. Greyed numbers are last time's: tick a set to use them, or type over them.
           </p>
         )}
-        {done >= target.sets && (
+        {done >= target.sets && deloadPercent != null && (
+          <div className="fh-workout-alert fh-workout-alert--ok">
+            Deload week: this is saved, and nothing moves up or resets.
+          </div>
+        )}
+        {done >= target.sets && deloadPercent == null && (
           <div className={`fh-workout-alert ${willMiss ? "fh-workout-alert--warn" : "fh-workout-alert--ok"}`}>
             {willMiss
                 ? "Below target, so the streak resets. Still worth logging."

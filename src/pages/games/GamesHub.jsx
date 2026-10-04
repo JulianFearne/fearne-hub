@@ -1,7 +1,9 @@
 // src/pages/games/GamesHub.jsx
 // Landing page for the games section. New games slot in by adding an entry to
 // GAMES below and a route. `live: false` renders a "coming soon" card so the
-// roadmap is visible without needing a route yet.
+// roadmap is visible without needing a route yet. An entry with `href` instead
+// of `to` is a static page outside the React app (e.g. CARVE's Godot web build in
+// public/carve/), so it gets a plain link and a full page load.
 //
 // The list is sorted and grouped alphabetically at render time (source order
 // above doesn't matter), with a search box and an A-Z index rail down the
@@ -141,6 +143,15 @@ const GAMES = [
     tags: ['1-6 cards, offline'],
     live: true,
   },
+  {
+    key: 'carve',
+    title: 'CARVE',
+    blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',
+    icon: 'swords',
+    href: '/carve/',
+    tags: ['1 player', 'Work in progress'],
+    live: true,
+  },
 ];
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -155,8 +166,9 @@ function groupLetter(title) {
 }
 
 function GameCard({ game }) {
+  const link = !game.live ? {} : game.href ? { href: game.href } : { as: Link, to: game.to };
   return (
-    <Card as={game.live ? Link : 'div'} to={game.live ? game.to : undefined} tile>
+    <Card as={game.live ? undefined : 'div'} {...link} tile>
       <span className="fh-recipes__mark">
         <Icon name={game.icon} size={18} />
       </span>

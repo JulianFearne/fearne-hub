@@ -58,6 +58,7 @@ import {
   Anchor,
   Dot,
   Ticket,
+  Swords,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -122,6 +123,7 @@ const ICONS = {
   anchor: Anchor,
   dot: Dot,
   ticket: Ticket,
+  swords: Swords,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

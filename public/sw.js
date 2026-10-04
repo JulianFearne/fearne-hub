@@ -8,11 +8,14 @@
      mean a new deploy fetches new files (cache miss -> network) automatically.
    - Cross-origin requests (Supabase REST/realtime, Google Fonts CDN) are left
      completely alone.
+   - /carve/ (CARVE's Godot web build, pushed in by the carve repo's workflow)
+     is left alone too: its files keep the same names on every build, so
+     cache-first would pin an old build forever.
 
    IMPORTANT: bump CACHE_VERSION on every deploy. The activate step deletes old
    caches, which clears any stale bundles from a previous release. */
 
-const CACHE_VERSION = 'fearne-hub-v5';
+const CACHE_VERSION = 'fearne-hub-v6';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -37,6 +40,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   // Only handle same-origin requests. Supabase and font CDNs pass straight through.
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/carve/')) return;
 
   // App navigations: network-first with an offline fallback to index.html.
   if (req.mode === 'navigate') {

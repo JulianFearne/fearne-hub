@@ -512,3 +512,16 @@ append-only `gf_events` log of "who asked whom for what rank" rows. Full
 definition, RLS policies and realtime setup live in
 [`_reference/go-fish-schema.sql`](../_reference/go-fish-schema.sql) — run
 that file to create these tables.
+
+## Games: `carve_saves`
+
+Cloud save for CARVE (the Godot game published into this site at `public/carve/` and
+`public/carve-preview/`, built in the `JulianFearne/carve` repo). CARVE's page picks up the
+hub's Supabase session from the same origin, so there is no second sign-in. One row per
+user and slot: `slot` is `live` (fearne.org/carve) or `preview` (fearne.org/carve-preview),
+`profile` is the whole save as text (at most 400,000 characters), with `hunts`, `build` and
+`updated_at` shown when two saves differ. Approved users read and write only their own rows
+(`is_approved()` and `user_id = auth.uid()`). Nothing in `src/` queries it. Full definition
+and RLS policies live in
+[`_reference/carve-saves.sql`](../_reference/carve-saves.sql), a copy of CARVE's
+`docs/carve-saves.sql` (CARVE decision 0012); run that file to create the table.

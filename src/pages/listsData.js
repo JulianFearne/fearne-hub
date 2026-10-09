@@ -11,6 +11,8 @@ import { supabase } from '../supabaseClient'
 //   resetAll   a button to untick everything, for lists you reuse
 //   assignees  items can be given to someone who has access to the list
 //   dueDates   items can have a due date; open items sort soonest first
+//   notepad    no items: one free-text page instead (see fetchNote/saveNote)
+//   unit       what one of these is called in counts and buttons (default 'list')
 export const LIST_KINDS = {
   shopping: {
     title: 'Shopping lists',
@@ -51,6 +53,16 @@ export const LIST_KINDS = {
     emptyBody: 'Create one above, then untick it all and reuse it next time.',
     emptyItemsBody: 'Add steps above.',
     resetAll: true,
+  },
+  notes: {
+    title: 'Notes',
+    noun: 'notepad',
+    unit: 'notepad',
+    icon: 'notebook-pen',
+    blurb: 'Jot things down, saved as you type',
+    namePlaceholder: 'New notepad name, e.g. Gift ideas',
+    emptyBody: 'Create one above to start writing.',
+    notepad: true,
   },
 }
 
@@ -183,4 +195,31 @@ export async function uncheckAllItems(listId) {
 export async function deleteCheckedItems(listId) {
   const { error } = await supabase.from('list_items').delete().eq('list_id', listId).eq('checked', true)
   if (error) throw error
+}
+
+// ---------- notepads ----------
+// A notepad's text is kept in a single list_items row (in `name`), so it
+// reuses the items table's sharing rules as they are: View can read it,
+// Edit and Manage can change it. No schema change needed.
+
+// The note's row, or null if nothing has been written yet.
+export async function fetchNote(listId) {
+  const { data, error } = await supabase
+    .from('list_items')
+    .select('*')
+    .eq('list_id', listId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+  if (error) throw error
+  return data[0] ?? null
+}
+
+// Pass the existing row's id to update it, or null to create the row.
+export async function saveNote(listId, noteId, text) {
+  if (noteId) {
+    const { data, error } = await supabase.from('list_items').update({ name: text }).eq('id', noteId).select().single()
+    if (error) throw error
+    return data
+  }
+  return addListItem(listId, { name: text })
 }

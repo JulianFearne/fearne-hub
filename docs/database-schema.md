@@ -91,7 +91,7 @@ rename.
 |---|---|---|
 | `id` | uuid / bigint | PK |
 | `name` | text | |
-| `kind` | text | not null, default `'shopping'`; `shopping` \| `todo` \| `checklist`, matching the keys of `LIST_KINDS`. No check constraint, so new kinds need no schema change |
+| `kind` | text | not null, default `'shopping'`; `shopping` \| `todo` \| `checklist` \| `notes`, matching the keys of `LIST_KINDS`. No check constraint, so new kinds need no schema change |
 | `created_by` | uuid | references `auth.users.id` |
 | `created_at` | timestamptz | |
 
@@ -108,6 +108,8 @@ rename or delete it. See
 Formerly `shopping_list_items`. The same columns serve every kind of list;
 `amount`, `source` and `recipe_title` are only used by shopping lists;
 `assigned_to` and `due_date` only by to-do lists.
+A `notes` list (notepad) has a single row whose `name` holds the whole
+note's text.
 Readable by anyone who can view the list; added to, ticked and removed by
 the owner or an `edit` / `manage` share.
 

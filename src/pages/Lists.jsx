@@ -43,7 +43,7 @@ export default function Lists() {
               </span>
               <div>
                 <CardTitle>{k.title}</CardTitle>
-                <CardMeta>{counts ? `${n} ${n === 1 ? 'list' : 'lists'} · ${k.blurb}` : k.blurb}</CardMeta>
+                <CardMeta>{counts ? `${n} ${k.unit || 'list'}${n === 1 ? '' : 's'} · ${k.blurb}` : k.blurb}</CardMeta>
               </div>
             </Card>
           )

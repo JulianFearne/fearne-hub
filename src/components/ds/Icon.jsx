@@ -59,6 +59,7 @@ import {
   Dot,
   Ticket,
   Swords,
+  NotebookPen,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -124,6 +125,7 @@ const ICONS = {
   dot: Dot,
   ticket: Ticket,
   swords: Swords,
+  'notebook-pen': NotebookPen,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

@@ -1,4 +1,4 @@
-/* Lists (shopping, to-do, checklists). Scoped under .fh-lists. */
+/* Lists (shopping, to-do, checklists, notes). Scoped under .fh-lists. */
 .fh-lists__toolbar{display:flex;gap:var(--sp-4);margin-bottom:var(--sp-6)}
 .fh-lists__toolbar .fh-input{flex:1}
 .fh-lists__actions{display:flex;justify-content:flex-end;gap:var(--sp-4);margin-bottom:var(--sp-5)}
@@ -19,3 +19,5 @@
 .fh-lists__itemmeta{display:block;font:var(--type-meta);color:var(--ink-3);margin-top:2px;text-decoration:none}
 .fh-lists__overdue{color:var(--danger)}
 .fh-lists__form{display:flex;flex-direction:column;gap:var(--sp-5)}
+.fh-lists__note{display:block;width:100%;min-height:min(60vh,480px);line-height:var(--lh-normal)}
+.fh-lists__note--read{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--type-body);color:var(--ink-1)}

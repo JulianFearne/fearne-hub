@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
@@ -21,6 +21,8 @@ import {
   deleteListItem,
   uncheckAllItems,
   deleteCheckedItems,
+  fetchNote,
+  saveNote,
 } from './listsData'
 import { fetchFamilyMembers } from './choresData'
 import { displayName } from './accountData'
@@ -173,8 +175,9 @@ function KindLists({ kind }) {
   const activeList = lists.find((l) => l.id === activeId)
 
   if (activeList) {
+    const Detail = k.notepad ? NoteDetail : ListDetail
     return (
-      <ListDetail
+      <Detail
         list={activeList}
         kind={kind}
         access={accessFor(activeList, user.id)}
@@ -283,7 +286,7 @@ function KindLists({ kind }) {
                           else handleLeaveList(l.id)
                         }}
                       >
-                        {canManage(access) ? 'Delete list' : 'Leave list'}
+                        {canManage(access) ? 'Delete' : 'Leave'} {k.unit || 'list'}
                       </Button>
                     )}
                   </div>
@@ -511,6 +514,146 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
 
       {editingItem && (
         <ItemSheet item={editingItem} k={k} people={people} onClose={() => setEditingItem(null)} onSave={handleSaveItem} />
+      )}
+
+      {showShare && (
+        <ShareSheet list={list} kind={kind} members={members} onClose={() => setShowShare(false)} onListChange={onListChange} />
+      )}
+    </div>
+  )
+}
+
+// A notepad: one block of free text instead of items. Saves itself a moment
+// after typing stops, and on leaving the page.
+const NOTE_SAVE_DELAY = 800
+
+function NoteDetail({ list, kind, access, members, onBack, onListChange }) {
+  const k = LIST_KINDS[kind]
+  const editable = canEdit(access)
+  const [text, setText] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState('idle') // idle | dirty | saving | saved
+  const [error, setError] = useState(null)
+  const [showShare, setShowShare] = useState(false)
+  // Kept in refs so the timer and the unmount flush see the latest values.
+  const noteRef = useRef(null)
+  const textRef = useRef('')
+  const savedTextRef = useRef('')
+  const timerRef = useRef(null)
+  const savingRef = useRef(Promise.resolve())
+
+  useEffect(() => {
+    fetchNote(list.id)
+      .then((note) => {
+        noteRef.current = note
+        const body = note?.name ?? ''
+        textRef.current = body
+        savedTextRef.current = body
+        setText(body)
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+    return () => {
+      clearTimeout(timerRef.current)
+      flush()
+    }
+  }, [list.id])
+
+  // Saves are chained so a second one never races the first (which could
+  // otherwise create the note's row twice).
+  function flush() {
+    savingRef.current = savingRef.current.then(async () => {
+      const body = textRef.current
+      if (body === savedTextRef.current) return
+      try {
+        noteRef.current = await saveNote(list.id, noteRef.current?.id ?? null, body)
+        savedTextRef.current = body
+        setStatus((s) => (textRef.current === body ? 'saved' : s))
+      } catch (err) {
+        setError(err.message)
+        setStatus('dirty')
+      }
+    })
+    return savingRef.current
+  }
+
+  function handleChange(e) {
+    const body = e.target.value
+    setText(body)
+    textRef.current = body
+    setStatus('dirty')
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      setStatus('saving')
+      flush()
+    }, NOTE_SAVE_DELAY)
+  }
+
+  function handleBack() {
+    clearTimeout(timerRef.current)
+    onBack()
+  }
+
+  const statusLabel = { dirty: 'Unsaved changes', saving: 'Saving…', saved: 'Saved' }[status]
+
+  return (
+    <div>
+      <Button variant="quiet" icon="chevron-left" style={{ marginBottom: 'var(--sp-6)' }} onClick={handleBack}>
+        All {k.title.toLowerCase()}
+      </Button>
+
+      <div className="fh-lists__head">
+        <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)' }}>{list.name}</p>
+        {canManage(access) ? (
+          <Button variant="quiet" icon="users" onClick={() => setShowShare(true)}>
+            Share
+          </Button>
+        ) : (
+          <Badge>{PERMISSION_LABEL[access]}</Badge>
+        )}
+      </div>
+
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
+
+      {loading && <p className="fh-loading">Loading…</p>}
+
+      {!loading && editable && (
+        <>
+          <Input
+            as="textarea"
+            className="fh-lists__note"
+            value={text}
+            onChange={handleChange}
+            onBlur={() => {
+              clearTimeout(timerRef.current)
+              if (textRef.current !== savedTextRef.current) {
+                setStatus('saving')
+                flush()
+              }
+            }}
+            placeholder="Start typing…"
+            aria-label={`${list.name} notes`}
+          />
+          <p className="fh-lists__hint" aria-live="polite">{statusLabel || 'Saved as you type'}</p>
+        </>
+      )}
+
+      {!loading && !editable && (
+        text ? (
+          <div className="fh-lists__note fh-lists__note--read">{text}</div>
+        ) : (
+          <div className="fh-empty">
+            <span className="fh-empty__mark">
+              <Icon name={k.icon} size={22} />
+            </span>
+            <p className="fh-empty__title">Nothing written yet</p>
+          </div>
+        )
       )}
 
       {showShare && (

@@ -33,8 +33,9 @@ the client in `src/supabaseClient.js`.
 - **Meal Planner** — a weekly grid (breakfast/lunch/dinner × 7 days), fed by
   the recipe book, that can push its ingredients straight into a shopping
   list.
-- **Lists** — shopping lists, to-do lists and reusable checklists, each
-  with multiple named lists and checkable items. Shopping lists take
+- **Lists** — shopping lists, to-do lists, reusable checklists and
+  notepads, each with multiple named lists. Notepads hold free text that
+  saves as you type; the others have checkable items. Shopping lists take
   amounts and can be combined into one before a shop; to-do lists can clear
   their done items and give tasks to someone with a due date; checklists
   can be unticked in one go for reuse. Chores sit on the same Lists page. Lists

@@ -3,15 +3,7 @@
 // from the design tokens on the canvas element, so it follows light/dark mode;
 // the pieces keep their own colours in both.
 
-import {
-  BLOCK,
-  GROUND_Y,
-  PIECE_COLOURS,
-  VIEW_HEIGHT,
-  WORLD_WIDTH,
-  holdRemaining,
-  shapeCells,
-} from './engine'
+import { BLOCK, GROUND_Y, MEDALS, PIECE_COLOURS, WORLD_WIDTH, shapeCells } from './engine'
 
 function readColours(el) {
   const css = getComputedStyle(el)
@@ -45,11 +37,13 @@ function drawBody(ctx, body, colour, alpha = 1) {
   ctx.globalAlpha = 1
 }
 
-export function drawGame(canvas, game) {
+// personalBest (blocks) draws a "best" line so there's something to beat.
+export function drawGame(canvas, game, personalBest = 0) {
   const ctx = canvas.getContext('2d')
   const colours = readColours(canvas)
   const scale = canvas.width / WORLD_WIDTH
   const cam = game.cameraY
+  const viewBottom = cam + canvas.height / scale
 
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.fillStyle = colours.sky
@@ -69,7 +63,7 @@ export function drawGame(canvas, game) {
   ctx.lineWidth = 1 / scale
   for (let n = 5; GROUND_Y - n * BLOCK > cam - BLOCK; n += 5) {
     const y = GROUND_Y - n * BLOCK
-    if (y > cam + VIEW_HEIGHT + BLOCK) continue
+    if (y > viewBottom + BLOCK) continue
     ctx.strokeStyle = colours.muted
     ctx.globalAlpha = 0.25
     ctx.beginPath()
@@ -82,20 +76,27 @@ export function drawGame(canvas, game) {
     ctx.globalAlpha = 1
   }
 
-  // Finish line.
-  ctx.save()
-  ctx.strokeStyle = colours.goal
-  ctx.lineWidth = 4 / scale
-  ctx.setLineDash([BLOCK * 0.5, BLOCK * 0.3])
-  ctx.beginPath()
-  ctx.moveTo(0, game.goalY)
-  ctx.lineTo(WORLD_WIDTH, game.goalY)
-  ctx.stroke()
-  ctx.restore()
-  ctx.fillStyle = colours.goal
+  // Medal heights, and the player's best so far.
+  const marks = MEDALS.map((m) => ({ y: GROUND_Y - m.blocks * BLOCK, text: `${m.emoji} ${m.blocks}`, gold: true }))
+  if (personalBest > 0) marks.push({ y: GROUND_Y - personalBest * BLOCK, text: `Best ${personalBest}`, gold: false })
   ctx.font = `bold ${BLOCK * 0.45}px system-ui, sans-serif`
   ctx.textAlign = 'right'
-  ctx.fillText('FINISH', WORLD_WIDTH - BLOCK * 0.25, game.goalY - BLOCK * 0.4)
+  for (const mark of marks) {
+    if (mark.y < cam - BLOCK || mark.y > viewBottom) continue
+    const reached = game.best * BLOCK >= GROUND_Y - mark.y
+    ctx.save()
+    ctx.strokeStyle = mark.gold ? colours.goal : colours.ink
+    ctx.globalAlpha = reached ? 0.35 : 0.9
+    ctx.lineWidth = 3 / scale
+    ctx.setLineDash([BLOCK * 0.5, BLOCK * 0.3])
+    ctx.beginPath()
+    ctx.moveTo(0, mark.y)
+    ctx.lineTo(WORLD_WIDTH, mark.y)
+    ctx.stroke()
+    ctx.fillStyle = ctx.strokeStyle
+    ctx.fillText(mark.text, WORLD_WIDTH - BLOCK * 0.25, mark.y - BLOCK * 0.4)
+    ctx.restore()
+  }
   ctx.textAlign = 'left'
 
   // Where the active piece will land: a faint guide straight down.
@@ -115,15 +116,6 @@ export function drawGame(canvas, game) {
   // Pieces. A thin dark outline keeps adjacent squares readable.
   for (const p of game.pieces) drawBody(ctx, p, PIECE_COLOURS[p.plugin.kind])
   if (game.active) drawBody(ctx, game.active, PIECE_COLOURS[game.active.plugin.kind])
-
-  // Tower top marker while counting down to a win.
-  if (game.holdTime > 0 && game.status === 'playing') {
-    ctx.fillStyle = colours.ink
-    ctx.font = `bold ${BLOCK * 1.4}px system-ui, sans-serif`
-    ctx.textAlign = 'center'
-    ctx.fillText(String(Math.ceil(holdRemaining(game))), WORLD_WIDTH / 2, cam + BLOCK * 1.6)
-    ctx.textAlign = 'left'
-  }
 }
 
 // Small preview of the next piece, centred in its own canvas.

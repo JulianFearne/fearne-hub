@@ -3,31 +3,42 @@
 // drawing: the component calls step() on a fixed timestep and draw.js paints
 // whatever is in the world.
 //
-// How a turn works (the Tricky Towers rule): the falling piece is under the
-// player's control and falls at a steady speed, ignoring gravity. The moment
-// it touches anything it is let go and becomes an ordinary physics body, and
-// the next piece appears at the top. Pieces that fall off the platform cost a
-// life. Hold the tower's top above the finish line for a few seconds to win.
+// How a turn works: the falling piece is under the player's control and falls
+// at a steady speed, ignoring gravity. The moment it touches anything it is
+// let go, lands without bouncing, and once it has settled it locks in place
+// (becomes static), so the tower never collapses under itself. A piece that
+// misses and falls off the platform costs a life. Endless: the score is the
+// tallest the tower has stood, and pieces fall faster as it grows.
 
 import Matter from 'matter-js'
 
-const { Engine, Bodies, Body, Composite, Events } = Matter
+const { Engine, Bodies, Body, Composite, Events, Sleeping } = Matter
 
 export const BLOCK = 30 // one square of a piece, in world units
 export const WORLD_WIDTH = BLOCK * 12
-export const VIEW_HEIGHT = BLOCK * 16 // world units visible on screen at once
 export const GROUND_Y = 0 // top surface of the platform; up is negative y
+const PLATFORM_WIDTH = BLOCK * 6
 export const STEP_MS = 1000 / 60
 
 export const LIVES = 3
-const HOLD_SECONDS = 3 // how long the tower must stay above the line
-const SPAWN_GAP = BLOCK * 9 // spawn this far above the tower top
 const FALL_LIMIT = BLOCK * 8 // below the platform by this much = lost
+const FALL_START = 1.3 // world units per step
+const FALL_PER_BLOCK = 0.03 // extra speed per block of tower height
+const FALL_MAX = 3.6
+const SETTLE_STEPS = 18 // steps a piece must sit still before it locks
 
-export const DIFFICULTIES = {
-  easy: { label: 'Easy', goalBlocks: 10, platformBlocks: 8, fall: 1.2, fast: 6 },
-  medium: { label: 'Medium', goalBlocks: 16, platformBlocks: 6, fall: 1.5, fast: 7 },
-  hard: { label: 'Hard', goalBlocks: 22, platformBlocks: 5, fall: 1.9, fast: 8 },
+// Heights (in blocks) that earn a medal, lowest first.
+export const MEDALS = [
+  { key: 'bronze', label: 'Bronze', emoji: '🥉', blocks: 10 },
+  { key: 'silver', label: 'Silver', emoji: '🥈', blocks: 20 },
+  { key: 'gold', label: 'Gold', emoji: '🥇', blocks: 30 },
+  { key: 'diamond', label: 'Diamond', emoji: '💎', blocks: 50 },
+]
+
+export function medalFor(blocks) {
+  let medal = null
+  for (const m of MEDALS) if (blocks >= m.blocks) medal = m
+  return medal
 }
 
 // Cells as [col, row] with row increasing downwards.
@@ -77,18 +88,20 @@ function makePiece(kind, x, y) {
     Bodies.rectangle(c * BLOCK, r * BLOCK, BLOCK, BLOCK, { chamfer: { radius: 2 } }),
   )
   const body = Body.create({ parts })
-  body.friction = 0.9
-  body.frictionStatic = 1.2
+  body.friction = 1
+  body.frictionStatic = 2
+  body.frictionAir = 0.04
   body.restitution = 0
   body.slop = 0.02
   body.label = 'piece'
-  body.plugin = { kind }
+  body.plugin = { kind, still: 0 }
   Body.setPosition(body, { x, y })
   return body
 }
 
-export function createGame(difficulty) {
-  const settings = DIFFICULTIES[difficulty]
+// viewHeight is how many world units tall the screen is; it depends on the
+// phone's shape, so the component passes it in (and updates game.viewHeight).
+export function createGame(viewHeight) {
   const engine = Engine.create({
     enableSleeping: true,
     positionIterations: 12,
@@ -96,35 +109,36 @@ export function createGame(difficulty) {
   })
   engine.gravity.y = 1
 
-  const platform = Bodies.rectangle(
-    WORLD_WIDTH / 2,
-    GROUND_Y + BLOCK,
-    settings.platformBlocks * BLOCK,
-    BLOCK * 2,
-    { isStatic: true, friction: 1, frictionStatic: 1.5, label: 'platform', chamfer: { radius: 4 } },
-  )
+  const platform = Bodies.rectangle(WORLD_WIDTH / 2, GROUND_Y + BLOCK, PLATFORM_WIDTH, BLOCK * 2, {
+    isStatic: true,
+    friction: 1,
+    frictionStatic: 2,
+    label: 'platform',
+    chamfer: { radius: 4 },
+  })
   Composite.add(engine.world, platform)
 
   const game = {
-    difficulty,
-    settings,
     engine,
     platform,
-    goalY: GROUND_Y - settings.goalBlocks * BLOCK,
+    viewHeight,
     bag: refillBag(),
     active: null, // the piece under control
     target: null, // { x, angle } the active piece is easing towards
     next: null,
     pieces: [], // released pieces
     lives: LIVES,
-    status: 'playing', // 'playing' | 'won' | 'lost'
+    status: 'ready', // 'ready' | 'playing' | 'over'
     elapsed: 0, // seconds
-    holdTime: 0, // seconds the tower has stayed above the line
-    towerTop: GROUND_Y, // top of the settled pieces, which is what counts
-    stackTop: GROUND_Y, // top of every piece still on the tower, settled or not
-    cameraY: GROUND_Y - VIEW_HEIGHT + BLOCK * 4, // world y at the top of the view
+    towerTop: GROUND_Y, // top of the locked pieces, which is what scores
+    stackTop: GROUND_Y, // top of every piece still on the tower
+    best: 0, // tallest the tower has stood this game, in blocks
+    medal: null, // best medal reached this game
+    newMedal: null, // set for one step when a medal is reached; read by the UI
+    cameraY: 0,
     flash: 0, // seconds left of the "lost a piece" flash
   }
+  game.cameraY = restingCamera(game)
   game.next = nextKind(game)
 
   Events.on(engine, 'collisionStart', (event) => {
@@ -138,14 +152,29 @@ export function createGame(difficulty) {
     }
   })
 
-  spawn(game)
   return game
+}
+
+export function startGame(game) {
+  if (game.status !== 'ready') return
+  game.status = 'playing'
+  spawn(game)
+}
+
+function restingCamera(game) {
+  return GROUND_Y - game.viewHeight + BLOCK * 3
+}
+
+function fallSpeed(game) {
+  return Math.min(FALL_MAX, FALL_START + towerHeightBlocks(game) * FALL_PER_BLOCK)
 }
 
 function spawn(game) {
   const kind = game.next
   game.next = nextKind(game)
-  const y = game.stackTop - SPAWN_GAP
+  // Appear just inside the top of the screen, whatever its shape.
+  const gap = Math.max(BLOCK * 5, Math.min(BLOCK * 10, game.viewHeight * 0.6 - BLOCK * 1.5))
+  const y = game.stackTop - gap
   const piece = makePiece(kind, WORLD_WIDTH / 2, y)
   // Snap the centre of mass onto the half-block grid so steps line up.
   const snapX = Math.round(piece.position.x / (BLOCK / 2)) * (BLOCK / 2)
@@ -159,13 +188,12 @@ function release(game) {
   const piece = game.active
   if (!piece) return
   game.active = null
-  game.target = null
-  // Land at the gentle speed even after a fast drop, so dropping fast saves
-  // time without smashing the tower.
-  Body.setVelocity(piece, { x: 0, y: Math.min(piece.velocity.y, game.settings.fall) })
+  // Square it up if it was caught mid-turn, and land dead: no bounce, no spin.
+  Body.setAngle(piece, game.target.angle)
+  Body.setVelocity(piece, { x: 0, y: Math.min(piece.velocity.y, 0.5) })
   Body.setAngularVelocity(piece, 0)
+  game.target = null
   game.pieces.push(piece)
-  piece.plugin.releasedAt = game.elapsed
   if (game.status === 'playing') spawn(game)
 }
 
@@ -174,21 +202,21 @@ function loseLife(game) {
   game.flash = 0.6
   if (game.lives <= 0) {
     game.lives = 0
-    game.status = 'lost'
+    game.status = 'over'
+    if (game.active) {
+      Composite.remove(game.engine.world, game.active)
+      game.active = null
+    }
   }
 }
 
-// Input is { left, right, rotate, fast } where left/right/rotate are one-shot
-// presses this step and fast is held.
+// Input is { left, right, rotate }: one-shot presses this step.
 export function step(game, input) {
-  if (game.status !== 'playing') {
-    // Let the tower keep wobbling after the game ends; it looks nicer.
-    Engine.update(game.engine, STEP_MS)
-    return
-  }
+  if (game.status === 'ready') return
   const dt = STEP_MS / 1000
-  game.elapsed += dt
+  if (game.status === 'playing') game.elapsed += dt
   if (game.flash > 0) game.flash = Math.max(0, game.flash - dt)
+  game.newMedal = null
 
   const active = game.active
   if (active) {
@@ -199,16 +227,15 @@ export function step(game, input) {
     t.x = Math.max(BLOCK, Math.min(WORLD_WIDTH - BLOCK, t.x))
     if (input.rotate) t.angle += Math.PI / 2
 
-    const fall = input.fast ? game.settings.fast : game.settings.fall
     const dx = Math.max(-8, Math.min(8, (t.x - active.position.x) * 0.45))
     const da = Math.max(-0.35, Math.min(0.35, (t.angle - active.angle) * 0.4))
-    if (active.isSleeping) Matter.Sleeping.set(active, false)
-    Body.setVelocity(active, { x: dx, y: fall })
+    if (active.isSleeping) Sleeping.set(active, false)
+    Body.setVelocity(active, { x: dx, y: fallSpeed(game) })
     Body.setAngularVelocity(active, da)
   }
 
-  // Two half steps: a fast-dropped piece sinks less far into the tower before
-  // the contact is caught, so it lands without bouncing.
+  // Two half steps: the falling piece sinks less far into the tower before
+  // the contact is caught, so it lands cleanly.
   Engine.update(game.engine, STEP_MS / 2)
   Engine.update(game.engine, STEP_MS / 2)
 
@@ -220,56 +247,53 @@ export function step(game, input) {
     if (game.status === 'playing') spawn(game)
   }
 
-  // Released pieces that have tumbled off.
   for (let i = game.pieces.length - 1; i >= 0; i--) {
     const p = game.pieces[i]
+    if (p.isStatic) continue
+    // Tumbled off the edge.
     if (p.position.y > GROUND_Y + FALL_LIMIT) {
       Composite.remove(game.engine.world, p)
       game.pieces.splice(i, 1)
       loseLife(game)
+      continue
+    }
+    // Lock pieces that have come to rest on the tower.
+    const still = p.isSleeping || (p.speed < 0.15 && Math.abs(p.angularSpeed) < 0.004)
+    p.plugin.still = still ? p.plugin.still + 1 : 0
+    if (p.plugin.still >= SETTLE_STEPS && p.bounds.max.y <= GROUND_Y + BLOCK) {
+      Body.setStatic(p, true)
     }
   }
 
-  // Tower top: only count pieces that have come to rest on something, so a
-  // piece mid-tumble doesn't count towards the finish line.
   let top = GROUND_Y
   let stackTop = GROUND_Y
   for (const p of game.pieces) {
-    if (p.bounds.max.y > GROUND_Y + BLOCK) continue // falling off
+    if (p.bounds.max.y > GROUND_Y + BLOCK) continue // on its way off the edge
     if (p.bounds.min.y < stackTop) stackTop = p.bounds.min.y
-    const resting = p.isSleeping || (p.speed < 0.25 && Math.abs(p.angularSpeed) < 0.01)
-    if (resting && p.bounds.min.y < top) top = p.bounds.min.y
+    if (p.isStatic && p.bounds.min.y < top) top = p.bounds.min.y
   }
   game.towerTop = top
   game.stackTop = stackTop
 
-  if (game.status === 'playing') {
-    if (top <= game.goalY) {
-      game.holdTime += dt
-      if (game.holdTime >= HOLD_SECONDS) {
-        game.status = 'won'
-        if (game.active) {
-          Composite.remove(game.engine.world, game.active)
-          game.active = null
-        }
-      }
-    } else {
-      game.holdTime = 0
+  const height = towerHeightBlocks(game)
+  if (height > game.best) {
+    game.best = height
+    const medal = medalFor(height)
+    if (medal && medal !== game.medal) {
+      game.medal = medal
+      game.newMedal = medal
     }
   }
 
-  // Camera: keep the tower top about two thirds of the way down, leaving room
-  // above for the falling piece, and never scroll below the ground.
-  const wanted = Math.min(GROUND_Y - VIEW_HEIGHT + BLOCK * 4, stackTop - VIEW_HEIGHT * 0.65)
+  // Camera: keep the stack top a bit over halfway down, leaving room above
+  // for the falling piece, and never scroll below the ground.
+  const wanted = Math.min(restingCamera(game), stackTop - game.viewHeight * 0.6)
   game.cameraY += (wanted - game.cameraY) * 0.06
 }
 
-export function holdRemaining(game) {
-  return Math.max(0, HOLD_SECONDS - game.holdTime)
-}
-
 export function towerHeightBlocks(game) {
-  return Math.max(0, (GROUND_Y - game.towerTop) / BLOCK)
+  // Rounded to the half block so wobble of a pixel or two doesn't count.
+  return Math.max(0, Math.round(((GROUND_Y - game.towerTop) / BLOCK) * 2) / 2)
 }
 
 export function destroyGame(game) {

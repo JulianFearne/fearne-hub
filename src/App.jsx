@@ -47,7 +47,8 @@ const TAB_ITEMS = [
 ]
 
 // Header per route. `tab: true` marks a tab-bar destination (no back
-// button); everything else gets a back arrow to the path given.
+// button); everything else gets a back arrow to the path given. `fill: true`
+// makes the body exactly one screen tall (no page scroll) for full-screen games.
 const ROUTE_HEADERS = {
   '/': { wordmark: true, tab: true },
   '/recipes': { title: 'Recipes', tab: true },
@@ -72,7 +73,7 @@ const ROUTE_HEADERS = {
   '/games/battleship': { title: 'Battleship', back: '/games' },
   '/games/ludo': { title: 'Ludo', back: '/games' },
   '/games/bingo': { title: 'Bingo', back: '/games' },
-  '/games/wobbly-towers': { title: 'Wobbly Towers', back: '/games' },
+  '/games/wobbly-towers': { title: 'Wobbly Towers', back: '/games', fill: true },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -99,7 +100,7 @@ function HubShell({ children }) {
   )
 
   return (
-    <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}`}>
+    <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}${meta.fill ? ' fh-app--fill' : ''}`}>
       <HubHeader
         wordmark={meta.wordmark}
         title={meta.title}

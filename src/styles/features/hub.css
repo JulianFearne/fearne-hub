@@ -3,6 +3,10 @@
 .fh-app{min-height:100dvh;display:flex;flex-direction:column;background:var(--surface-page)}
 .fh-app__body{flex:1;width:100%;max-width:var(--content-max);margin:0 auto;padding:var(--sp-6) var(--gutter) var(--sp-11)}
 .fh-app--wide .fh-app__body{max-width:1100px}
+/* Full-screen games: the page is exactly one screen tall and the body hands
+   its height to the page inside (which should flex:1 / min-height:0). */
+.fh-app--fill{height:100dvh;min-height:0}
+.fh-app--fill .fh-app__body{display:flex;flex-direction:column;min-height:0;overflow:hidden;padding-top:var(--sp-5);padding-bottom:var(--sp-5)}
 
 .fh-home__greet{font:var(--type-display-sm);color:var(--ink-1);margin-bottom:var(--sp-2)}
 .fh-home__sub{font:var(--type-body-lg);color:var(--ink-3);margin-bottom:var(--sp-7)}

@@ -1,69 +1,100 @@
 // src/pages/games/wobbly-towers/WobblyTowers.jsx
 // Offline single-player physics stacker in the style of Tricky Towers. The
 // physics and rules live in engine.js (matter-js), drawing in draw.js; this
-// component owns the frame loop, input (keyboard and on-screen buttons) and
-// the heads-up display. Best times per difficulty are kept in localStorage.
+// component owns the frame loop, input (keyboard and on-screen buttons), the
+// heads-up display and the scoreboard.
+//
+// Endless: the score is the tallest the tower stood before three pieces fell
+// off. Medals at set heights. The top 10 scores live in localStorage, so the
+// scoreboard is per device, with the signed-in person's name on each entry.
+//
+// The route is marked `fill` in App.jsx, so the hub body is exactly one screen
+// tall and the game stretches into it: no scrolling to reach the controls.
 
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext.jsx'
+import { displayName } from '../../accountData'
 import {
-  DIFFICULTIES,
   LIVES,
+  MEDALS,
   STEP_MS,
-  VIEW_HEIGHT,
   WORLD_WIDTH,
   createGame,
   destroyGame,
+  medalFor,
+  startGame,
   step,
   towerHeightBlocks,
 } from './engine'
 import { drawGame, drawPreview } from './draw'
 import './wobbly-towers.css'
 
-const BEST_KEY = 'wt-best-times'
+const SCORES_KEY = 'wt-scores'
+const MAX_SCORES = 10
 const REPEAT_DELAY = 220
 const REPEAT_EVERY = 90
 
-function loadBest() {
+function loadScores() {
   try {
-    return JSON.parse(localStorage.getItem(BEST_KEY)) || {}
+    const scores = JSON.parse(localStorage.getItem(SCORES_KEY))
+    return Array.isArray(scores) ? scores : []
   } catch {
-    return {}
+    return []
   }
 }
 
-function saveBest(best) {
+function saveScores(scores) {
   try {
-    localStorage.setItem(BEST_KEY, JSON.stringify(best))
+    localStorage.setItem(SCORES_KEY, JSON.stringify(scores))
   } catch {
-    // Private browsing or storage full: best times just won't stick.
+    // Private browsing or storage full: the scoreboard just won't stick.
   }
 }
 
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60)
-  const s = (seconds % 60).toFixed(1).padStart(4, '0')
-  return `${m}:${s}`
+// Adds a score and returns { scores, rank } with rank 0-based, or -1 if it
+// didn't make the top 10.
+function addScore(scores, entry) {
+  const all = [...scores, entry].sort((a, b) => b.score - a.score || a.at - b.at)
+  const top = all.slice(0, MAX_SCORES)
+  return { scores: top, rank: top.indexOf(entry) }
 }
 
 function hudFrom(game) {
   return {
-    lives: game.lives,
-    height: Math.floor(towerHeightBlocks(game) * 2) / 2,
-    time: Math.floor(game.elapsed * 10) / 10,
     status: game.status,
+    lives: game.lives,
+    height: towerHeightBlocks(game),
+    best: game.best,
     next: game.next,
   }
 }
 
-// A button that fires once on press and keeps firing while held.
-function HoldButton({ label, children, onPress, onRelease, repeat = false }) {
+function Scoreboard({ scores, highlight = -1 }) {
+  if (scores.length === 0) return <p className="wt-board-empty">No scores yet. Be the first!</p>
+  return (
+    <ol className="wt-board">
+      {scores.map((s, i) => {
+        const medal = medalFor(s.score)
+        return (
+          <li key={`${s.at}-${i}`} className={i === highlight ? 'is-new' : ''}>
+            <span className="wt-board-rank">{i + 1}</span>
+            <span className="wt-board-name">{s.name}</span>
+            <span className="wt-board-medal">{medal ? medal.emoji : ''}</span>
+            <span className="wt-board-score">{s.score}</span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+// A button that fires once on press and, if `repeat`, keeps firing while held.
+function HoldButton({ label, children, onPress, repeat = false }) {
   const timers = useRef([])
 
   function stop() {
     timers.current.forEach(clearTimeout)
     timers.current = []
-    onRelease?.()
   }
 
   function start(e) {
@@ -101,50 +132,67 @@ function HoldButton({ label, children, onPress, onRelease, repeat = false }) {
 }
 
 export default function WobblyTowers() {
-  const [difficulty, setDifficulty] = useState('easy')
-  const [round, setRound] = useState(0) // bump to restart
+  const { profile, user } = useAuth()
+  const [round, setRound] = useState(0) // bump for a fresh game
   const [paused, setPaused] = useState(false)
-  const [hud, setHud] = useState({ lives: LIVES, height: 0, time: 0, status: 'playing', next: null })
-  const [best, setBest] = useState(loadBest)
-  const [newBest, setNewBest] = useState(false)
+  const [hud, setHud] = useState({ status: 'ready', lives: LIVES, height: 0, best: 0, next: null })
+  const [scores, setScores] = useState(loadScores)
+  const [result, setResult] = useState(null) // { score, rank } after a game
+  const [toast, setToast] = useState(null) // medal just reached
 
-  const wrapRef = useRef(null)
+  const stageRef = useRef(null)
   const canvasRef = useRef(null)
   const previewRef = useRef(null)
   const gameRef = useRef(null)
   const pausedRef = useRef(false)
-  const input = useRef({ left: 0, right: 0, rotate: 0, fast: false })
-
-  const bestRef = useRef(best)
+  const viewHeightRef = useRef(WORLD_WIDTH * 1.5)
+  const scoresRef = useRef(scores)
+  const nameRef = useRef('')
+  const input = useRef({ left: 0, right: 0, rotate: 0 })
+  const autoStartRef = useRef(false) // start the next game as soon as it exists
 
   pausedRef.current = paused
-  bestRef.current = best
+  scoresRef.current = scores
+  nameRef.current = displayName(profile, user?.email)
+  const personalBest = scores.reduce((m, s) => Math.max(m, s.score), 0)
+  const bestRef = useRef(personalBest)
+  bestRef.current = personalBest
 
-  // Keep the canvas sharp and sized to its container.
+  // Size the canvas to fill the stage. The world is always 12 blocks wide, so
+  // a taller phone simply sees more of the tower.
   useEffect(() => {
-    const wrap = wrapRef.current
+    const stage = stageRef.current
     const canvas = canvasRef.current
     function resize() {
       const dpr = window.devicePixelRatio || 1
-      const width = wrap.clientWidth
-      const height = (width * VIEW_HEIGHT) / WORLD_WIDTH
-      canvas.style.height = `${height}px`
-      canvas.width = Math.round(width * dpr)
-      canvas.height = Math.round(height * dpr)
-      if (gameRef.current) drawGame(canvas, gameRef.current)
+      const { clientWidth: w, clientHeight: h } = stage
+      if (!w || !h) return
+      canvas.style.width = `${w}px`
+      canvas.style.height = `${h}px`
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+      viewHeightRef.current = (WORLD_WIDTH * h) / w
+      const game = gameRef.current
+      if (game) {
+        game.viewHeight = viewHeightRef.current
+        drawGame(canvas, game, bestRef.current)
+      }
     }
     resize()
     const ro = new ResizeObserver(resize)
-    ro.observe(wrap)
+    ro.observe(stage)
     return () => ro.disconnect()
   }, [])
 
   // One game per round: fixed-timestep physics inside a rAF loop.
   useEffect(() => {
-    const game = createGame(difficulty)
+    const game = createGame(viewHeightRef.current)
     gameRef.current = game
-    input.current = { left: 0, right: 0, rotate: 0, fast: false }
-    setNewBest(false)
+    if (autoStartRef.current) {
+      autoStartRef.current = false
+      startGame(game)
+    }
+    input.current = { left: 0, right: 0, rotate: 0 }
     let last = performance.now()
     let acc = 0
     let raf = 0
@@ -154,18 +202,19 @@ export default function WobblyTowers() {
     function frame(now) {
       const dt = Math.min(100, now - last)
       last = now
-      if (!pausedRef.current) {
+      if (!pausedRef.current && game.status !== 'ready') {
         acc += dt
         while (acc >= STEP_MS) {
           const i = input.current
-          step(game, { left: i.left > 0, right: i.right > 0, rotate: i.rotate > 0, fast: i.fast })
+          step(game, { left: i.left > 0, right: i.right > 0, rotate: i.rotate > 0 })
           if (i.left > 0) i.left -= 1
           if (i.right > 0) i.right -= 1
           if (i.rotate > 0) i.rotate -= 1
+          if (game.newMedal) setToast(game.newMedal)
           acc -= STEP_MS
         }
       }
-      drawGame(canvasRef.current, game)
+      drawGame(canvasRef.current, game, bestRef.current)
 
       const next = hudFrom(game)
       const key = JSON.stringify(next)
@@ -173,14 +222,16 @@ export default function WobblyTowers() {
         lastHud = key
         setHud(next)
       }
-      if (game.status === 'won' && !recorded) {
+      if (game.status === 'over' && !recorded) {
         recorded = true
-        const old = bestRef.current[difficulty]
-        if (old == null || game.elapsed < old) {
-          const updated = { ...bestRef.current, [difficulty]: game.elapsed }
-          saveBest(updated)
-          setBest(updated)
-          setNewBest(true)
+        const score = game.best
+        if (score > 0) {
+          const added = addScore(scoresRef.current, { name: nameRef.current, score, at: Date.now() })
+          saveScores(added.scores)
+          setScores(added.scores)
+          setResult({ score, rank: added.rank })
+        } else {
+          setResult({ score, rank: -1 })
         }
       }
       raf = requestAnimationFrame(frame)
@@ -192,13 +243,19 @@ export default function WobblyTowers() {
       destroyGame(game)
       gameRef.current = null
     }
-  }, [difficulty, round])
+  }, [round])
 
   useEffect(() => {
     if (previewRef.current) drawPreview(previewRef.current, hud.next)
   }, [hud.next])
 
-  // Keyboard: arrows or WASD, space/up to rotate, down to drop faster, P to pause.
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2200)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  // Keyboard: left/right (or A/D) to move, up/space/W to rotate, P to pause.
   useEffect(() => {
     function onKeyDown(e) {
       const k = e.key
@@ -206,158 +263,143 @@ export default function WobblyTowers() {
       else if (k === 'ArrowRight' || k === 'd' || k === 'D') input.current.right += 1
       else if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === ' ') {
         if (!e.repeat) input.current.rotate += 1
-      } else if (k === 'ArrowDown' || k === 's' || k === 'S') input.current.fast = true
-      else if (k === 'p' || k === 'P' || k === 'Escape') setPaused((p) => !p)
+      } else if (k === 'p' || k === 'P' || k === 'Escape') setPaused((p) => !p)
       else return
       e.preventDefault()
-    }
-    function onKeyUp(e) {
-      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') input.current.fast = false
     }
     function onHide() {
       if (document.hidden) setPaused(true)
     }
     window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
     document.addEventListener('visibilitychange', onHide)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
       document.removeEventListener('visibilitychange', onHide)
     }
   }, [])
 
-  function restart(nextDifficulty = difficulty) {
-    setDifficulty(nextDifficulty)
+  function play() {
+    const game = gameRef.current
+    if (game?.status === 'ready') {
+      startGame(game)
+    } else {
+      autoStartRef.current = true
+      setRound((r) => r + 1)
+    }
+    setResult(null)
+    setToast(null)
     setPaused(false)
-    setRound((r) => r + 1)
   }
 
-  const goal = DIFFICULTIES[difficulty].goalBlocks
-  const over = hud.status !== 'playing'
+  const playing = hud.status === 'playing'
+  const lifetimeMedal = medalFor(personalBest)
 
   return (
     <div className="wt">
-      <header className="wt-header">
-        <Link to="/games" className="wt-back">
-          ← Games
-        </Link>
-        <h1 className="wt-title">Wobbly Towers</h1>
-      </header>
-
-      <div className="wt-panel">
-        <div className="wt-difficulty">
-          {Object.entries(DIFFICULTIES).map(([key, d]) => (
-            <button
-              key={key}
-              className={`wt-chip ${difficulty === key ? 'active' : ''}`}
-              onClick={() => restart(key)}
-            >
-              {d.label}
-            </button>
-          ))}
+      <div className="wt-hud">
+        <div className="wt-stat">
+          <span className="wt-stat-label">Height</span>
+          <span className="wt-stat-value">{hud.height}</span>
         </div>
+        <div className="wt-stat">
+          <span className="wt-stat-label">Best</span>
+          <span className="wt-stat-value">{Math.max(personalBest, hud.best)}</span>
+        </div>
+        <div className="wt-stat">
+          <span className="wt-stat-label">Lives</span>
+          <span className="wt-lives" aria-label={`${hud.lives} lives left`}>
+            {Array.from({ length: LIVES }, (_, i) => (
+              <span key={i} className={i < hud.lives ? 'on' : ''}>
+                ♥
+              </span>
+            ))}
+          </span>
+        </div>
+        <canvas ref={previewRef} width={88} height={88} className="wt-preview" aria-label="Next piece" />
+        <button
+          type="button"
+          className="wt-icon-btn"
+          aria-label={paused ? 'Resume' : 'Pause'}
+          onClick={() => setPaused((p) => !p)}
+          disabled={!playing}
+        >
+          {paused ? '▶' : '❚❚'}
+        </button>
+      </div>
 
-        <div className="wt-hud">
-          <div className="wt-stat">
-            <span className="wt-stat-label">Lives</span>
-            <span className="wt-lives" aria-label={`${hud.lives} lives left`}>
-              {Array.from({ length: LIVES }, (_, i) => (
-                <span key={i} className={i < hud.lives ? 'on' : ''}>♥</span>
-              ))}
-            </span>
+      <div ref={stageRef} className="wt-stage">
+        <canvas ref={canvasRef} className="wt-canvas" />
+
+        {toast && playing && (
+          <div className="wt-toast" key={toast.key}>
+            {toast.emoji} {toast.label}! {toast.blocks} blocks
           </div>
-          <div className="wt-stat">
-            <span className="wt-stat-label">Height</span>
-            <span className="wt-stat-value">
-              {hud.height} / {goal}
-            </span>
-          </div>
-          <div className="wt-stat">
-            <span className="wt-stat-label">Time</span>
-            <span className="wt-stat-value">{formatTime(hud.time)}</span>
-          </div>
-          <div className="wt-stat wt-next">
-            <span className="wt-stat-label">Next</span>
-            <canvas ref={previewRef} width={56} height={56} className="wt-preview" />
-          </div>
-        </div>
-
-        <div ref={wrapRef} className="wt-stage">
-          <canvas ref={canvasRef} className="wt-canvas" />
-          {(over || paused) && (
-            <div className="wt-overlay">
-              {hud.status === 'won' && (
-                <>
-                  <p className="wt-overlay-title">You made it! 🎉</p>
-                  <p className="wt-overlay-sub">
-                    {formatTime(hud.time)}
-                    {newBest ? ' · new best!' : best[difficulty] != null ? ` · best ${formatTime(best[difficulty])}` : ''}
-                  </p>
-                </>
-              )}
-              {hud.status === 'lost' && (
-                <>
-                  <p className="wt-overlay-title">Timber!</p>
-                  <p className="wt-overlay-sub">Out of lives at {hud.height} blocks high.</p>
-                </>
-              )}
-              {!over && paused && <p className="wt-overlay-title">Paused</p>}
-              <div className="wt-overlay-actions">
-                {!over && (
-                  <button className="wt-btn primary" onClick={() => setPaused(false)}>
-                    Resume
-                  </button>
-                )}
-                <button className={`wt-btn ${over ? 'primary' : ''}`} onClick={() => restart()}>
-                  {over ? 'Play again' : 'Restart'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="wt-controls">
-          <HoldButton label="Move left" repeat onPress={() => (input.current.left += 1)}>
-            ◀
-          </HoldButton>
-          <HoldButton label="Rotate" onPress={() => (input.current.rotate += 1)}>
-            ⟳
-          </HoldButton>
-          <HoldButton
-            label="Drop faster"
-            onPress={() => (input.current.fast = true)}
-            onRelease={() => (input.current.fast = false)}
-          >
-            ▼
-          </HoldButton>
-          <HoldButton label="Move right" repeat onPress={() => (input.current.right += 1)}>
-            ▶
-          </HoldButton>
-        </div>
-
-        <div className="wt-footer">
-          <p className="wt-help">
-            Stack the pieces past the finish line and keep them there for 3 seconds. A piece lets go as soon as it
-            touches anything. Drop three off the edge and it's over. Keys: arrows to move, up or space to rotate, down to
-            drop faster, P to pause.
-          </p>
-          {!over && (
-            <button className="wt-btn" onClick={() => setPaused((p) => !p)}>
-              {paused ? 'Resume' : 'Pause'}
-            </button>
-          )}
-        </div>
-
-        {Object.keys(best).length > 0 && (
-          <p className="wt-best">
-            Best times:{' '}
-            {Object.entries(DIFFICULTIES)
-              .filter(([key]) => best[key] != null)
-              .map(([key, d]) => `${d.label} ${formatTime(best[key])}`)
-              .join(' · ')}
-          </p>
         )}
+
+        {hud.status === 'ready' && (
+          <div className="wt-overlay">
+            <p className="wt-overlay-title">Wobbly Towers</p>
+            <p className="wt-overlay-sub">
+              Steer and turn the falling pieces to build as high as you can. Three pieces off the edge and it's over.
+            </p>
+            <p className="wt-medals">
+              {MEDALS.map((m) => (
+                <span key={m.key} className={personalBest >= m.blocks ? 'won' : ''} title={`${m.label}: ${m.blocks} blocks`}>
+                  {m.emoji}
+                  <small>{m.blocks}</small>
+                </span>
+              ))}
+            </p>
+            <button className="wt-btn primary" onClick={play}>
+              Start
+            </button>
+            <Scoreboard scores={scores} />
+          </div>
+        )}
+
+        {hud.status === 'over' && result && (
+          <div className="wt-overlay">
+            <p className="wt-overlay-title">Timber!</p>
+            <p className="wt-overlay-score">
+              {result.score} {result.score === 1 ? 'block' : 'blocks'}
+              {medalFor(result.score) ? ` ${medalFor(result.score).emoji}` : ''}
+            </p>
+            <p className="wt-overlay-sub">
+              {result.rank === 0 && scores.length > 1
+                ? 'New top score!'
+                : result.rank >= 0
+                  ? `Number ${result.rank + 1} on the scoreboard`
+                  : lifetimeMedal
+                    ? `Best so far: ${personalBest} ${lifetimeMedal.emoji}`
+                    : 'Keep stacking!'}
+            </p>
+            <button className="wt-btn primary" onClick={play}>
+              Play again
+            </button>
+            <Scoreboard scores={scores} highlight={result.rank} />
+          </div>
+        )}
+
+        {paused && playing && (
+          <div className="wt-overlay">
+            <p className="wt-overlay-title">Paused</p>
+            <button className="wt-btn primary" onClick={() => setPaused(false)}>
+              Resume
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="wt-controls">
+        <HoldButton label="Move left" repeat onPress={() => (input.current.left += 1)}>
+          ◀
+        </HoldButton>
+        <HoldButton label="Rotate" onPress={() => (input.current.rotate += 1)}>
+          ⟳
+        </HoldButton>
+        <HoldButton label="Move right" repeat onPress={() => (input.current.right += 1)}>
+          ▶
+        </HoldButton>
       </div>
     </div>
   )

@@ -144,6 +144,15 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'wobbly-towers',
+    title: 'Wobbly Towers',
+    blurb: 'Stack falling blocks into a tower that really wobbles. Reach the finish line before it topples.',
+    icon: 'castle',
+    to: '/games/wobbly-towers',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
     key: 'carve',
     title: 'CARVE',
     blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',

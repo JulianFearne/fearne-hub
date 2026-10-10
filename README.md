@@ -59,6 +59,7 @@ the client in `src/supabaseClient.js`.
   charts, and an optional body-weight tracker (adults/admins only). See
   [`docs/workout-program-format.md`](docs/workout-program-format.md).
 - **Games** — Connect Four, Sudoku, Hangman, Freecell, Would You Rather,
+  Wobbly Towers (a physics tower stacker built on matter-js),
   and two realtime multiplayer games played with a join code: "Animal
   Place Thing" (categories) and Go Fish, both scored live via Supabase
   Realtime.

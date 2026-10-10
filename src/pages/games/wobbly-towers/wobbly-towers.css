@@ -1,0 +1,204 @@
+/* src/pages/games/wobbly-towers/wobbly-towers.css
+   Scoped under .wt, never leaks into the hub shell. */
+
+.wt {
+  --wt-accent: var(--primary);
+  --wt-on-accent: var(--ink-on-primary);
+  --wt-card: var(--surface-card);
+  --wt-ink: var(--ink-1);
+  --wt-line: var(--border);
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.wt-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.wt-back {
+  text-decoration: none;
+  color: var(--wt-accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.wt-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.wt-panel {
+  background: var(--wt-card);
+  border: 1px solid var(--wt-line);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.wt-difficulty {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.wt-chip {
+  border: 1px solid var(--wt-line);
+  background: var(--surface-card);
+  color: var(--wt-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.wt-chip.active {
+  background: var(--wt-accent);
+  color: var(--wt-on-accent);
+  border-color: var(--wt-accent);
+}
+
+.wt-hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+.wt-stat {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.wt-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.wt-stat-value {
+  font-weight: 700;
+  color: var(--wt-ink);
+  font-variant-numeric: tabular-nums;
+}
+.wt-lives {
+  font-size: 1.1rem;
+  line-height: 1.2;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+.wt-lives .on {
+  color: var(--red-600);
+}
+.wt-next {
+  justify-items: center;
+}
+.wt-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+}
+
+.wt-stage {
+  position: relative;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--wt-line);
+  touch-action: none;
+  user-select: none;
+}
+.wt-canvas {
+  display: block;
+  width: 100%;
+}
+
+.wt-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--surface-veil);
+  backdrop-filter: blur(2px);
+  text-align: center;
+  padding: 1rem;
+}
+.wt-overlay-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--wt-ink);
+}
+.wt-overlay-sub {
+  margin: 0;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.wt-overlay-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.wt-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.wt-pad {
+  height: 3.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--wt-line);
+  background: var(--surface-sunken);
+  color: var(--wt-ink);
+  font-size: 1.4rem;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.wt-pad:active {
+  background: var(--wt-accent);
+  color: var(--wt-on-accent);
+  border-color: var(--wt-accent);
+}
+
+.wt-btn {
+  border: 1px solid var(--wt-line);
+  background: var(--surface-card);
+  color: var(--wt-ink);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wt-btn.primary {
+  background: var(--wt-accent);
+  color: var(--wt-on-accent);
+  border-color: var(--wt-accent);
+}
+
+.wt-footer {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.wt-help {
+  flex: 1;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wt-best {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

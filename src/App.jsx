@@ -27,6 +27,7 @@ import SnakesAndLadders from './pages/games/snakes-and-ladders/SnakesAndLadders.
 import Battleship from './pages/games/battleship/Battleship.jsx'
 import Ludo from './pages/games/ludo/Ludo.jsx'
 import Bingo from './pages/games/bingo/Bingo.jsx'
+import WobblyTowers from './pages/games/wobbly-towers/WobblyTowers.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -71,6 +72,7 @@ const ROUTE_HEADERS = {
   '/games/battleship': { title: 'Battleship', back: '/games' },
   '/games/ludo': { title: 'Ludo', back: '/games' },
   '/games/bingo': { title: 'Bingo', back: '/games' },
+  '/games/wobbly-towers': { title: 'Wobbly Towers', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -313,6 +315,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Bingo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/wobbly-towers"
+          element={
+            <ProtectedRoute>
+              <WobblyTowers />
             </ProtectedRoute>
           }
         />

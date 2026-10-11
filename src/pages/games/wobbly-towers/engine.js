@@ -3,16 +3,19 @@
 // drawing: the component calls step() on a fixed timestep and draw.js paints
 // whatever is in the world.
 //
-// How a turn works: the falling piece is under the player's control and falls
-// at a steady speed, ignoring gravity. The moment it touches anything it is
-// let go, lands without bouncing, and once it has settled it locks in place
-// (becomes static), so the tower never collapses under itself. A piece that
-// misses and falls off the platform costs a life. Endless: the score is the
-// tallest the tower has stood, and pieces fall faster as it grows.
+// How a turn works: the falling piece is under the player's control. While it
+// is, it's a static sensor that the physics ignores: we move it ourselves and
+// only ever into free space (every move, turn and step down is checked first),
+// so it can never shove the tower. When it touches down the player gets
+// LOCK_DELAY seconds to slide or turn it, then it's let go from a resting,
+// non-overlapping pose, and once it has settled it locks in place (becomes
+// static), so the tower never collapses under itself. A piece that misses and
+// falls off the platform costs a life. Endless: the score is the tallest the
+// tower has stood, and pieces fall faster as it grows.
 
 import Matter from 'matter-js'
 
-const { Engine, Bodies, Body, Composite, Events, Sleeping } = Matter
+const { Engine, Bodies, Body, Composite, Events, Query, Sleeping } = Matter
 
 export const BLOCK = 30 // one square of a piece, in world units
 export const WORLD_WIDTH = BLOCK * 12
@@ -23,9 +26,22 @@ export const STEP_MS = 1000 / 60
 export const LIVES = 3
 const FALL_LIMIT = BLOCK * 8 // below the platform by this much = lost
 const FALL_START = 1.3 // world units per step
-const FALL_PER_BLOCK = 0.03 // extra speed per block of tower height
-const FALL_MAX = 3.6
+const FALL_PER_BLOCK = 0.05 // extra speed per block of tower height
+const FALL_MAX = 7
 const SETTLE_STEPS = 18 // steps a piece must sit still before it locks
+const MAX_RISE = 0.6 // fastest a loose piece may move upwards, per step
+const LOCK_DELAY = 0.5 // seconds a touched-down piece stays under control
+const SLIDE_SPEED = 6 // world units per step the piece eases sideways
+const TURN_SPEED = 0.35 // radians per step the piece eases round
+// Nudges tried, in order, when a turn doesn't fit where the piece is.
+const KICKS = [
+  [0, 0],
+  [-BLOCK / 2, 0],
+  [BLOCK / 2, 0],
+  [-BLOCK, 0],
+  [BLOCK, 0],
+  [0, -BLOCK / 2],
+]
 
 // Heights (in blocks) that earn a medal, lowest first.
 export const MEDALS = [
@@ -94,7 +110,9 @@ function makePiece(kind, x, y) {
   body.restitution = 0
   body.slop = 0.02
   body.label = 'piece'
-  body.plugin = { kind, still: 0 }
+  // Where each square sits relative to the centre of mass, for fit checks.
+  const offsets = body.parts.slice(1).map((p) => ({ x: p.position.x - body.position.x, y: p.position.y - body.position.y }))
+  body.plugin = { kind, still: 0, offsets }
   Body.setPosition(body, { x, y })
   return body
 }
@@ -124,7 +142,8 @@ export function createGame(viewHeight) {
     viewHeight,
     bag: refillBag(),
     active: null, // the piece under control
-    target: null, // { x, angle } the active piece is easing towards
+    pose: null, // { x, y, angle } where the active piece logically is
+    grounded: 0, // seconds the active piece has been touching down
     next: null,
     pieces: [], // released pieces
     lives: LIVES,
@@ -140,18 +159,10 @@ export function createGame(viewHeight) {
   }
   game.cameraY = restingCamera(game)
   game.next = nextKind(game)
-
-  Events.on(engine, 'collisionStart', (event) => {
-    const active = game.active
-    if (!active) return
-    for (const pair of event.pairs) {
-      if (pair.bodyA.parent === active || pair.bodyB.parent === active) {
-        release(game)
-        return
-      }
-    }
-  })
-
+  // Four loose squares, never added to the world, posed to test whether the
+  // active piece would fit somewhere. A hair smaller than a block so pieces
+  // can sit flush against each other.
+  game.ghost = [0, 1, 2, 3].map(() => Bodies.rectangle(0, 0, BLOCK - 1, BLOCK - 1))
   return game
 }
 
@@ -179,22 +190,93 @@ function spawn(game) {
   // Snap the centre of mass onto the half-block grid so steps line up.
   const snapX = Math.round(piece.position.x / (BLOCK / 2)) * (BLOCK / 2)
   Body.setPosition(piece, { x: snapX, y })
+  Body.setStatic(piece, true)
+  for (const part of piece.parts) part.isSensor = true
   Composite.add(game.engine.world, piece)
   game.active = piece
-  game.target = { x: snapX, angle: 0 }
+  game.pose = { x: snapX, y, angle: 0 }
+  game.grounded = 0
+}
+
+// Would the active piece overlap anything at this pose?
+function fits(game, x, y, angle) {
+  const others = [game.platform, ...game.pieces]
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+  const offsets = game.active.plugin.offsets
+  for (let i = 0; i < offsets.length; i++) {
+    const o = offsets[i]
+    const sq = game.ghost[i]
+    Body.setAngle(sq, angle)
+    Body.setPosition(sq, { x: x + o.x * cos - o.y * sin, y: y + o.x * sin + o.y * cos })
+    if (Query.collides(sq, others).length > 0) return false
+  }
+  return true
 }
 
 function release(game) {
   const piece = game.active
   if (!piece) return
   game.active = null
-  // Square it up if it was caught mid-turn, and land dead: no bounce, no spin.
-  Body.setAngle(piece, game.target.angle)
-  Body.setVelocity(piece, { x: 0, y: Math.min(piece.velocity.y, 0.5) })
+  const { x, y, angle } = game.pose
+  game.pose = null
+  // Hand it to the physics where it logically is, at rest. The fit checks use
+  // squares a hair smaller than the real ones, so lift it clear by that much;
+  // it drops the last pixel instead of being shoved out of an overlap.
+  Body.setAngle(piece, angle)
+  Body.setPosition(piece, { x, y: y - 1.5 })
+  Body.setStatic(piece, false)
+  for (const part of piece.parts) part.isSensor = false
+  Body.setVelocity(piece, { x: 0, y: 0 })
   Body.setAngularVelocity(piece, 0)
-  game.target = null
+  Sleeping.set(piece, false) // static bodies are left asleep; it must fall
   game.pieces.push(piece)
   if (game.status === 'playing') spawn(game)
+}
+
+// Player input and gravity for the active piece, all checked against the
+// tower so it only ever moves into free space.
+function controlActive(game, input) {
+  const pose = game.pose
+  const half = BLOCK / 2
+  const clampX = (x) => Math.max(BLOCK, Math.min(WORLD_WIDTH - BLOCK, x))
+
+  if (input.left && fits(game, clampX(pose.x - half), pose.y, pose.angle)) pose.x = clampX(pose.x - half)
+  if (input.right && fits(game, clampX(pose.x + half), pose.y, pose.angle)) pose.x = clampX(pose.x + half)
+  if (input.rotate) {
+    const angle = pose.angle + Math.PI / 2
+    for (const [kx, ky] of KICKS) {
+      const x = clampX(pose.x + kx)
+      if (fits(game, x, pose.y + ky, angle)) {
+        pose.x = x
+        pose.y += ky
+        pose.angle = angle
+        break
+      }
+    }
+  }
+
+  // Fall, stopping flush on whatever is below.
+  const fall = fallSpeed(game)
+  if (fits(game, pose.x, pose.y + fall, pose.angle)) {
+    pose.y += fall
+    game.grounded = 0
+  } else {
+    let dy = 0
+    while (dy + 0.5 <= fall && fits(game, pose.x, pose.y + dy + 0.5, pose.angle)) dy += 0.5
+    pose.y += dy
+    game.grounded += STEP_MS / 1000
+  }
+
+  // The drawn piece eases towards the logical pose; it's a sensor, so the
+  // in-between frames can't knock anything.
+  const piece = game.active
+  const dx = Math.max(-SLIDE_SPEED, Math.min(SLIDE_SPEED, pose.x - piece.position.x))
+  const da = Math.max(-TURN_SPEED, Math.min(TURN_SPEED, pose.angle - piece.angle))
+  Body.setAngle(piece, piece.angle + da)
+  Body.setPosition(piece, { x: piece.position.x + dx, y: pose.y })
+
+  if (game.grounded >= LOCK_DELAY) release(game)
 }
 
 function loseLife(game) {
@@ -218,29 +300,19 @@ export function step(game, input) {
   if (game.flash > 0) game.flash = Math.max(0, game.flash - dt)
   game.newMedal = null
 
-  const active = game.active
-  if (active) {
-    const t = game.target
-    const half = BLOCK / 2
-    if (input.left) t.x -= half
-    if (input.right) t.x += half
-    t.x = Math.max(BLOCK, Math.min(WORLD_WIDTH - BLOCK, t.x))
-    if (input.rotate) t.angle += Math.PI / 2
+  if (game.active) controlActive(game, input)
 
-    const dx = Math.max(-8, Math.min(8, (t.x - active.position.x) * 0.45))
-    const da = Math.max(-0.35, Math.min(0.35, (t.angle - active.angle) * 0.4))
-    if (active.isSleeping) Sleeping.set(active, false)
-    Body.setVelocity(active, { x: dx, y: fallSpeed(game) })
-    Body.setAngularVelocity(active, da)
+  Engine.update(game.engine, STEP_MS)
+
+  // Nothing in this game should ever fly upwards. When two pieces end up a
+  // pixel into each other the engine can shove them apart hard enough to
+  // make one leap; cap that so they just ease apart.
+  for (const p of game.pieces) {
+    if (!p.isStatic && p.velocity.y < -MAX_RISE) Body.setVelocity(p, { x: p.velocity.x, y: -MAX_RISE })
   }
 
-  // Two half steps: the falling piece sinks less far into the tower before
-  // the contact is caught, so it lands cleanly.
-  Engine.update(game.engine, STEP_MS / 2)
-  Engine.update(game.engine, STEP_MS / 2)
-
   // The active piece fell straight past the platform without touching anything.
-  if (game.active && game.active.position.y > GROUND_Y + FALL_LIMIT) {
+  if (game.active && game.pose.y > GROUND_Y + FALL_LIMIT) {
     Composite.remove(game.engine.world, game.active)
     game.active = null
     loseLife(game)

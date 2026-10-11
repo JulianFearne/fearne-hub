@@ -3,7 +3,7 @@
 // from the design tokens on the canvas element, so it follows light/dark mode;
 // the pieces keep their own colours in both.
 
-import { BLOCK, GROUND_Y, MEDALS, PIECE_COLOURS, WORLD_WIDTH, shapeCells } from './engine'
+import { BLOCK, GROUND_Y, IVY_COLOUR, MEDALS, PIECE_COLOURS, WORLD_WIDTH, shapeCells } from './engine'
 
 function readColours(el) {
   const css = getComputedStyle(el)
@@ -38,6 +38,18 @@ function drawBody(ctx, body, colour, alpha = 1) {
 }
 
 // personalBest (blocks) draws a "best" line so there's something to beat.
+function drawOutline(ctx, body) {
+  const parts = body.parts.length > 1 ? body.parts.slice(1) : body.parts
+  for (const part of parts) {
+    const v = part.vertices
+    ctx.beginPath()
+    ctx.moveTo(v[0].x, v[0].y)
+    for (let i = 1; i < v.length; i++) ctx.lineTo(v[i].x, v[i].y)
+    ctx.closePath()
+    ctx.stroke()
+  }
+}
+
 export function drawGame(canvas, game, personalBest = 0) {
   const ctx = canvas.getContext('2d')
   const colours = readColours(canvas)
@@ -115,6 +127,13 @@ export function drawGame(canvas, game, personalBest = 0) {
 
   // Pieces. A thin dark outline keeps adjacent squares readable.
   for (const p of game.pieces) drawBody(ctx, p, PIECE_COLOURS[p.plugin.kind])
+  // Ivy: a green vine outline on pieces it has fixed in place.
+  ctx.save()
+  ctx.strokeStyle = IVY_COLOUR
+  ctx.lineWidth = 3.5 / scale
+  ctx.setLineDash([BLOCK * 0.25, BLOCK * 0.12])
+  for (const p of game.pieces) if (p.plugin.ivy) drawOutline(ctx, p)
+  ctx.restore()
   if (game.active) drawBody(ctx, game.active, PIECE_COLOURS[game.active.plugin.kind])
 }
 

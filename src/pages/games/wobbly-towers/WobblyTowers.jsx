@@ -5,8 +5,9 @@
 // heads-up display and the scoreboard.
 //
 // Endless: the score is the tallest the tower stood before three pieces fell
-// off. Medals at set heights. The top 10 scores live in localStorage, so the
-// scoreboard is per device, with the signed-in person's name on each entry.
+// off. Medals at set heights. Two modes, Classic and Power-ups, each with its
+// own top 10 in localStorage, so scoreboards are per device, with the
+// signed-in person's name on each entry.
 //
 // The route is marked `fill` in App.jsx, so the hub body is exactly one screen
 // tall and the game stretches into it: no scrolling to reach the controls.
@@ -17,6 +18,9 @@ import { displayName } from '../../accountData'
 import {
   LIVES,
   MEDALS,
+  MODES,
+  POWERS,
+  POWER_EVERY,
   STEP_MS,
   WORLD_WIDTH,
   createGame,
@@ -25,30 +29,59 @@ import {
   startGame,
   step,
   towerHeightBlocks,
+  usePower as activatePower,
 } from './engine'
 import { drawGame, drawPreview } from './draw'
 import './wobbly-towers.css'
 
-const SCORES_KEY = 'wt-scores'
+const MODE_KEY = 'wt-mode'
 const MAX_SCORES = 10
 const REPEAT_DELAY = 220
 const REPEAT_EVERY = 90
 
-function loadScores() {
+// Classic keeps the original key so scores from before modes existed stay.
+function scoresKey(mode) {
+  return mode === 'classic' ? 'wt-scores' : `wt-scores-${mode}`
+}
+
+function loadScores(mode) {
   try {
-    const scores = JSON.parse(localStorage.getItem(SCORES_KEY))
+    const scores = JSON.parse(localStorage.getItem(scoresKey(mode)))
     return Array.isArray(scores) ? scores : []
   } catch {
     return []
   }
 }
 
-function saveScores(scores) {
+function saveScores(mode, scores) {
   try {
-    localStorage.setItem(SCORES_KEY, JSON.stringify(scores))
+    localStorage.setItem(scoresKey(mode), JSON.stringify(scores))
   } catch {
     // Private browsing or storage full: the scoreboard just won't stick.
   }
+}
+
+function loadMode() {
+  try {
+    const mode = localStorage.getItem(MODE_KEY)
+    return MODES[mode] ? mode : 'classic'
+  } catch {
+    return 'classic'
+  }
+}
+
+function saveMode(mode) {
+  try {
+    localStorage.setItem(MODE_KEY, mode)
+  } catch {
+    // Not remembered; defaults to Classic next time.
+  }
+}
+
+let toastId = 0
+function makeToast(text) {
+  toastId += 1
+  return { id: toastId, text }
 }
 
 // Adds a score and returns { scores, rank } with rank 0-based, or -1 if it
@@ -66,6 +99,10 @@ function hudFrom(game) {
     height: towerHeightBlocks(game),
     best: game.best,
     next: game.next,
+    power: game.power,
+    charge: game.charge,
+    ivy: game.ivy,
+    slow: game.slow,
   }
 }
 
@@ -133,12 +170,13 @@ function HoldButton({ label, children, onPress, repeat = false }) {
 
 export default function WobblyTowers() {
   const { profile, user } = useAuth()
+  const [mode, setMode] = useState(loadMode)
   const [round, setRound] = useState(0) // bump for a fresh game
   const [paused, setPaused] = useState(false)
-  const [hud, setHud] = useState({ status: 'ready', lives: LIVES, height: 0, best: 0, next: null })
-  const [scores, setScores] = useState(loadScores)
+  const [hud, setHud] = useState({ status: 'ready', lives: LIVES, height: 0, best: 0, next: null, power: null, charge: 0, ivy: 0, slow: 0 })
+  const [scores, setScores] = useState(() => loadScores(mode))
   const [result, setResult] = useState(null) // { score, rank } after a game
-  const [toast, setToast] = useState(null) // medal just reached
+  const [toast, setToast] = useState(null) // { id, text }: medal reached, power-up earned or used
 
   const stageRef = useRef(null)
   const canvasRef = useRef(null)
@@ -184,9 +222,9 @@ export default function WobblyTowers() {
     return () => ro.disconnect()
   }, [])
 
-  // One game per round: fixed-timestep physics inside a rAF loop.
+  // One game per round (and per mode): fixed-timestep physics inside a rAF loop.
   useEffect(() => {
-    const game = createGame(viewHeightRef.current)
+    const game = createGame(viewHeightRef.current, mode)
     gameRef.current = game
     if (autoStartRef.current) {
       autoStartRef.current = false
@@ -210,7 +248,14 @@ export default function WobblyTowers() {
           if (i.left > 0) i.left -= 1
           if (i.right > 0) i.right -= 1
           if (i.rotate > 0) i.rotate -= 1
-          if (game.newMedal) setToast(game.newMedal)
+          if (game.newMedal) {
+            const m = game.newMedal
+            setToast(makeToast(`${m.emoji} ${m.label}! ${m.blocks} blocks`))
+          }
+          if (game.event?.type === 'earned') {
+            const p = POWERS[game.event.power]
+            setToast(makeToast(`${p.emoji} ${p.label} ready. Tap it to use`))
+          }
           acc -= STEP_MS
         }
       }
@@ -227,7 +272,7 @@ export default function WobblyTowers() {
         const score = game.best
         if (score > 0) {
           const added = addScore(scoresRef.current, { name: nameRef.current, score, at: Date.now() })
-          saveScores(added.scores)
+          saveScores(mode, added.scores)
           setScores(added.scores)
           setResult({ score, rank: added.rank })
         } else {
@@ -243,7 +288,7 @@ export default function WobblyTowers() {
       destroyGame(game)
       gameRef.current = null
     }
-  }, [round])
+  }, [round, mode])
 
   useEffect(() => {
     if (previewRef.current) drawPreview(previewRef.current, hud.next)
@@ -255,7 +300,20 @@ export default function WobblyTowers() {
     return () => clearTimeout(t)
   }, [toast])
 
-  // Keyboard: left/right (or A/D) to move, up/space/W to rotate, P to pause.
+  function triggerPower() {
+    const game = gameRef.current
+    if (!game || pausedRef.current) return
+    activatePower(game)
+    if (game.event?.type === 'used') {
+      const p = POWERS[game.event.power]
+      setToast(makeToast(`${p.emoji} ${p.hint}`))
+    }
+  }
+  const triggerPowerRef = useRef(triggerPower)
+  triggerPowerRef.current = triggerPower
+
+  // Keyboard: left/right (or A/D) to move, up/space/W to rotate, P to pause,
+  // E/Shift/Enter to use a power-up.
   useEffect(() => {
     function onKeyDown(e) {
       const k = e.key
@@ -264,6 +322,7 @@ export default function WobblyTowers() {
       else if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === ' ') {
         if (!e.repeat) input.current.rotate += 1
       } else if (k === 'p' || k === 'P' || k === 'Escape') setPaused((p) => !p)
+      else if (k === 'e' || k === 'E' || k === 'Shift' || k === 'Enter') triggerPowerRef.current()
       else return
       e.preventDefault()
     }
@@ -291,8 +350,26 @@ export default function WobblyTowers() {
     setPaused(false)
   }
 
+  function chooseMode(next) {
+    if (next === mode) return
+    saveMode(next)
+    setMode(next)
+    setScores(loadScores(next))
+    setResult(null)
+  }
+
   const playing = hud.status === 'playing'
   const lifetimeMedal = medalFor(personalBest)
+  const powerMode = mode === 'powerups'
+  const modePicker = (
+    <div className="wt-modes" role="group" aria-label="Game mode">
+      {Object.entries(MODES).map(([key, m]) => (
+        <button key={key} className={`wt-chip ${mode === key ? 'active' : ''}`} onClick={() => chooseMode(key)}>
+          {m.label}
+        </button>
+      ))}
+    </div>
+  )
 
   return (
     <div className="wt">
@@ -316,6 +393,18 @@ export default function WobblyTowers() {
           </span>
         </div>
         <canvas ref={previewRef} width={88} height={88} className="wt-preview" aria-label="Next piece" />
+        {powerMode && (
+          <button
+            type="button"
+            className={`wt-power ${hud.power ? 'is-ready' : ''}`}
+            aria-label={hud.power ? `Use ${POWERS[hud.power].label}` : `Power-up in ${POWER_EVERY - hud.charge} pieces`}
+            onClick={triggerPower}
+            disabled={!playing || !hud.power}
+            style={{ '--wt-charge': `${(hud.charge / POWER_EVERY) * 100}%` }}
+          >
+            {hud.power ? POWERS[hud.power].emoji : <span className="wt-power-count">{POWER_EVERY - hud.charge}</span>}
+          </button>
+        )}
         <button
           type="button"
           className="wt-icon-btn"
@@ -331,8 +420,15 @@ export default function WobblyTowers() {
         <canvas ref={canvasRef} className="wt-canvas" />
 
         {toast && playing && (
-          <div className="wt-toast" key={toast.key}>
-            {toast.emoji} {toast.label}! {toast.blocks} blocks
+          <div className="wt-toast" key={toast.id}>
+            {toast.text}
+          </div>
+        )}
+
+        {playing && (hud.ivy > 0 || hud.slow > 0) && (
+          <div className="wt-effects">
+            {hud.ivy > 0 && <span>{POWERS.ivy.emoji} {hud.ivy}</span>}
+            {hud.slow > 0 && <span>{POWERS.slow.emoji} {hud.slow}</span>}
           </div>
         )}
 
@@ -342,6 +438,13 @@ export default function WobblyTowers() {
             <p className="wt-overlay-sub">
               Steer and turn the falling pieces to build as high as you can. Three pieces off the edge and it's over.
             </p>
+            {modePicker}
+            {powerMode && (
+              <p className="wt-overlay-note">
+                Every {POWER_EVERY} pieces earns a power-up: {Object.values(POWERS).map((p) => p.emoji).join(' ')}. Tap it
+                (top right) when you need it.
+              </p>
+            )}
             <p className="wt-medals">
               {MEDALS.map((m) => (
                 <span key={m.key} className={personalBest >= m.blocks ? 'won' : ''} title={`${m.label}: ${m.blocks} blocks`}>
@@ -353,6 +456,7 @@ export default function WobblyTowers() {
             <button className="wt-btn primary" onClick={play}>
               Start
             </button>
+            <p className="wt-board-title">{MODES[mode].label} scoreboard</p>
             <Scoreboard scores={scores} />
           </div>
         )}
@@ -376,6 +480,8 @@ export default function WobblyTowers() {
             <button className="wt-btn primary" onClick={play}>
               Play again
             </button>
+            {modePicker}
+            <p className="wt-board-title">{MODES[mode].label} scoreboard</p>
             <Scoreboard scores={scores} highlight={result.rank} />
           </div>
         )}

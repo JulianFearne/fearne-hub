@@ -12,6 +12,9 @@
 // static), so the tower never collapses under itself. A piece that misses and
 // falls off the platform costs a life. Endless: the score is the tallest the
 // tower has stood, and pieces fall faster as it grows.
+//
+// Two modes: 'classic', and 'powerups', where every POWER_EVERY pieces placed
+// earns a power-up (see POWERS) that the player holds and uses when they like.
 
 import Matter from 'matter-js'
 
@@ -20,7 +23,8 @@ const { Engine, Bodies, Body, Composite, Events, Query, Sleeping } = Matter
 export const BLOCK = 30 // one square of a piece, in world units
 export const WORLD_WIDTH = BLOCK * 12
 export const GROUND_Y = 0 // top surface of the platform; up is negative y
-const PLATFORM_WIDTH = BLOCK * 6
+const PLATFORM_BLOCKS = 6
+const PLATFORM_MAX_BLOCKS = 10
 export const STEP_MS = 1000 / 60
 
 export const LIVES = 3
@@ -30,7 +34,11 @@ const FALL_PER_BLOCK = 0.05 // extra speed per block of tower height
 const FALL_MAX = 7
 const SETTLE_STEPS = 18 // steps a piece must sit still before it locks
 const MAX_RISE = 0.6 // fastest a loose piece may move upwards, per step
-const LOCK_DELAY = 0.5 // seconds a touched-down piece stays under control
+const LOCK_DELAY = 0.8 // seconds a touched-down piece stays under control
+// Each slide or turn while touched down restarts LOCK_DELAY, so a piece can
+// be wiggled into a gap, but only up to this long in total.
+const LOCK_LIMIT = 3
+const STEP_UP = [0, -3, -6] // lifts tried when sliding over a small bump
 const SLIDE_SPEED = 6 // world units per step the piece eases sideways
 const TURN_SPEED = 0.35 // radians per step the piece eases round
 // Nudges tried, in order, when a turn doesn't fit where the piece is.
@@ -57,7 +65,24 @@ export function medalFor(blocks) {
   return medal
 }
 
-// Cells as [col, row] with row increasing downwards.
+export const MODES = {
+  classic: { label: 'Classic' },
+  powerups: { label: 'Power-ups' },
+}
+
+export const POWER_EVERY = 6 // pieces placed per power-up earned
+export const POWERS = {
+  ivy: { label: 'Ivy', emoji: '🌿', hint: 'Tower locked solid. Next 3 pieces stick where they land.' },
+  wide: { label: 'Wider base', emoji: '🧱', hint: 'The platform grows a block each side.' },
+  slow: { label: 'Slow-mo', emoji: '🐢', hint: 'Next 5 pieces fall at half speed.' },
+  tiny: { label: 'Little block', emoji: '🧊', hint: 'Your next piece is a single square.' },
+  life: { label: 'Extra life', emoji: '❤️', hint: 'One life back.' },
+}
+const IVY_PIECES = 3
+const SLOW_PIECES = 5
+
+// Cells as [col, row] with row increasing downwards. 'dot' only comes from
+// the Little block power-up, never from the bag.
 const SHAPES = {
   I: [[0, 0], [1, 0], [2, 0], [3, 0]],
   O: [[0, 0], [1, 0], [0, 1], [1, 1]],
@@ -66,8 +91,9 @@ const SHAPES = {
   J: [[1, 0], [1, 1], [1, 2], [0, 2]],
   S: [[1, 0], [2, 0], [0, 1], [1, 1]],
   Z: [[0, 0], [1, 0], [1, 1], [2, 1]],
+  dot: [[0, 0]],
 }
-export const PIECE_KINDS = Object.keys(SHAPES)
+export const PIECE_KINDS = ['I', 'O', 'T', 'L', 'J', 'S', 'Z']
 
 export const PIECE_COLOURS = {
   I: '#2f8fa6',
@@ -77,7 +103,9 @@ export const PIECE_COLOURS = {
   J: '#2f5d8c',
   S: '#4b8a5e',
   Z: '#b02a21',
+  dot: '#8a7f87',
 }
+export const IVY_COLOUR = '#3f8f3a'
 
 export function shapeCells(kind) {
   return SHAPES[kind]
@@ -117,9 +145,19 @@ function makePiece(kind, x, y) {
   return body
 }
 
+function makePlatform(blocks) {
+  return Bodies.rectangle(WORLD_WIDTH / 2, GROUND_Y + BLOCK, blocks * BLOCK, BLOCK * 2, {
+    isStatic: true,
+    friction: 1,
+    frictionStatic: 2,
+    label: 'platform',
+    chamfer: { radius: 4 },
+  })
+}
+
 // viewHeight is how many world units tall the screen is; it depends on the
 // phone's shape, so the component passes it in (and updates game.viewHeight).
-export function createGame(viewHeight) {
+export function createGame(viewHeight, mode = 'classic') {
   const engine = Engine.create({
     enableSleeping: true,
     positionIterations: 12,
@@ -127,23 +165,20 @@ export function createGame(viewHeight) {
   })
   engine.gravity.y = 1
 
-  const platform = Bodies.rectangle(WORLD_WIDTH / 2, GROUND_Y + BLOCK, PLATFORM_WIDTH, BLOCK * 2, {
-    isStatic: true,
-    friction: 1,
-    frictionStatic: 2,
-    label: 'platform',
-    chamfer: { radius: 4 },
-  })
+  const platform = makePlatform(PLATFORM_BLOCKS)
   Composite.add(engine.world, platform)
 
   const game = {
     engine,
+    mode,
     platform,
+    platformBlocks: PLATFORM_BLOCKS,
     viewHeight,
     bag: refillBag(),
     active: null, // the piece under control
     pose: null, // { x, y, angle } where the active piece logically is
-    grounded: 0, // seconds the active piece has been touching down
+    grounded: 0, // seconds since the touched-down piece last moved
+    groundedTotal: 0, // seconds it has been touched down in all
     next: null,
     pieces: [], // released pieces
     lives: LIVES,
@@ -156,6 +191,12 @@ export function createGame(viewHeight) {
     newMedal: null, // set for one step when a medal is reached; read by the UI
     cameraY: 0,
     flash: 0, // seconds left of the "lost a piece" flash
+    // Power-ups mode only.
+    power: null, // key of the power-up being held, if any
+    charge: 0, // pieces placed towards the next power-up
+    ivy: 0, // pieces left that lock the moment they're let go
+    slow: 0, // pieces left that fall at half speed
+    event: null, // { type: 'earned' | 'used', power } for one step; read by the UI
   }
   game.cameraY = restingCamera(game)
   game.next = nextKind(game)
@@ -177,7 +218,8 @@ function restingCamera(game) {
 }
 
 function fallSpeed(game) {
-  return Math.min(FALL_MAX, FALL_START + towerHeightBlocks(game) * FALL_PER_BLOCK)
+  const speed = Math.min(FALL_MAX, FALL_START + towerHeightBlocks(game) * FALL_PER_BLOCK)
+  return game.slow > 0 ? speed / 2 : speed
 }
 
 function spawn(game) {
@@ -196,6 +238,7 @@ function spawn(game) {
   game.active = piece
   game.pose = { x: snapX, y, angle: 0 }
   game.grounded = 0
+  game.groundedTotal = 0
 }
 
 // Would the active piece overlap anything at this pose?
@@ -224,14 +267,61 @@ function release(game) {
   // squares a hair smaller than the real ones, so lift it clear by that much;
   // it drops the last pixel instead of being shoved out of an overlap.
   Body.setAngle(piece, angle)
-  Body.setPosition(piece, { x, y: y - 1.5 })
+  // Ivy pieces lock where they are instead, so they mustn't hover.
+  Body.setPosition(piece, { x, y: game.ivy > 0 ? y : y - 1.5 })
   Body.setStatic(piece, false)
   for (const part of piece.parts) part.isSensor = false
   Body.setVelocity(piece, { x: 0, y: 0 })
   Body.setAngularVelocity(piece, 0)
   Sleeping.set(piece, false) // static bodies are left asleep; it must fall
   game.pieces.push(piece)
+  if (game.ivy > 0) {
+    game.ivy -= 1
+    lockPiece(piece, true)
+  }
+  if (game.slow > 0) game.slow -= 1
+  if (game.mode === 'powerups') chargePower(game)
   if (game.status === 'playing') spawn(game)
+}
+
+function lockPiece(piece, ivy = false) {
+  Body.setStatic(piece, true)
+  if (ivy) piece.plugin.ivy = true
+}
+
+function chargePower(game) {
+  if (game.power) return // hold one at a time; the meter waits until it's used
+  game.charge += 1
+  if (game.charge < POWER_EVERY) return
+  game.charge = 0
+  const pool = Object.keys(POWERS).filter(
+    (key) =>
+      (key !== 'life' || game.lives < LIVES) && (key !== 'wide' || game.platformBlocks < PLATFORM_MAX_BLOCKS),
+  )
+  game.power = pool[Math.floor(Math.random() * pool.length)]
+  game.event = { type: 'earned', power: game.power }
+}
+
+export function usePower(game) {
+  const key = game.power
+  if (!key || game.status !== 'playing') return
+  game.power = null
+  game.event = { type: 'used', power: key }
+  if (key === 'ivy') {
+    for (const p of game.pieces) if (!p.isStatic) lockPiece(p, true)
+    game.ivy = IVY_PIECES
+  } else if (key === 'wide') {
+    game.platformBlocks = Math.min(PLATFORM_MAX_BLOCKS, game.platformBlocks + 2)
+    Composite.remove(game.engine.world, game.platform)
+    game.platform = makePlatform(game.platformBlocks)
+    Composite.add(game.engine.world, game.platform)
+  } else if (key === 'slow') {
+    game.slow = SLOW_PIECES
+  } else if (key === 'tiny') {
+    game.next = 'dot'
+  } else if (key === 'life') {
+    game.lives = Math.min(LIVES, game.lives + 1)
+  }
 }
 
 // Player input and gravity for the active piece, all checked against the
@@ -241,8 +331,22 @@ function controlActive(game, input) {
   const half = BLOCK / 2
   const clampX = (x) => Math.max(BLOCK, Math.min(WORLD_WIDTH - BLOCK, x))
 
-  if (input.left && fits(game, clampX(pose.x - half), pose.y, pose.angle)) pose.x = clampX(pose.x - half)
-  if (input.right && fits(game, clampX(pose.x + half), pose.y, pose.angle)) pose.x = clampX(pose.x + half)
+  let moved = false
+  // Slide one half block, stepping up over a small bump if need be.
+  function slide(dir) {
+    const x = clampX(pose.x + dir * half)
+    if (x === pose.x) return
+    for (const lift of STEP_UP) {
+      if (fits(game, x, pose.y + lift, pose.angle)) {
+        pose.x = x
+        pose.y += lift
+        moved = true
+        return
+      }
+    }
+  }
+  if (input.left) slide(-1)
+  if (input.right) slide(1)
   if (input.rotate) {
     const angle = pose.angle + Math.PI / 2
     for (const [kx, ky] of KICKS) {
@@ -251,6 +355,7 @@ function controlActive(game, input) {
         pose.x = x
         pose.y += ky
         pose.angle = angle
+        moved = true
         break
       }
     }
@@ -261,11 +366,14 @@ function controlActive(game, input) {
   if (fits(game, pose.x, pose.y + fall, pose.angle)) {
     pose.y += fall
     game.grounded = 0
+    game.groundedTotal = 0
   } else {
     let dy = 0
     while (dy + 0.5 <= fall && fits(game, pose.x, pose.y + dy + 0.5, pose.angle)) dy += 0.5
     pose.y += dy
-    game.grounded += STEP_MS / 1000
+    const dt = STEP_MS / 1000
+    game.grounded = moved ? 0 : game.grounded + dt
+    game.groundedTotal += dt
   }
 
   // The drawn piece eases towards the logical pose; it's a sensor, so the
@@ -276,7 +384,7 @@ function controlActive(game, input) {
   Body.setAngle(piece, piece.angle + da)
   Body.setPosition(piece, { x: piece.position.x + dx, y: pose.y })
 
-  if (game.grounded >= LOCK_DELAY) release(game)
+  if (game.grounded >= LOCK_DELAY || game.groundedTotal >= LOCK_LIMIT) release(game)
 }
 
 function loseLife(game) {
@@ -299,6 +407,7 @@ export function step(game, input) {
   if (game.status === 'playing') game.elapsed += dt
   if (game.flash > 0) game.flash = Math.max(0, game.flash - dt)
   game.newMedal = null
+  game.event = null
 
   if (game.active) controlActive(game, input)
 

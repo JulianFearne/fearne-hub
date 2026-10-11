@@ -90,7 +90,7 @@
 
 .wt-toast {
   position: absolute;
-  top: 0.75rem;
+  top: 2.75rem;
   left: 50%;
   transform: translateX(-50%);
   padding: 0.4rem 0.9rem;
@@ -98,7 +98,9 @@
   background: var(--secondary);
   color: var(--ink-on-secondary);
   font-weight: 700;
-  white-space: nowrap;
+  width: max-content;
+  max-width: calc(100% - 1.5rem);
+  text-align: center;
   box-shadow: var(--shadow-1);
   animation: wt-pop 0.35s ease-out;
   pointer-events: none;
@@ -248,4 +250,88 @@
   background: var(--wt-accent);
   color: var(--wt-on-accent);
   border-color: var(--wt-accent);
+}
+
+.wt-modes {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.wt-chip {
+  border: 1px solid var(--wt-line);
+  background: var(--surface-card);
+  color: var(--wt-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.wt-chip.active {
+  background: var(--wt-accent);
+  color: var(--wt-on-accent);
+  border-color: var(--wt-accent);
+}
+.wt-overlay-note {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.wt-board-title {
+  margin: 0.25rem 0 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+
+/* Power-up slot: fills up as pieces are placed, glows when one is ready. */
+.wt-power {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--wt-line);
+  background: linear-gradient(to top, var(--secondary-soft, rgba(240, 163, 43, 0.3)) var(--wt-charge), var(--surface-card) var(--wt-charge));
+  color: var(--wt-ink);
+  font-size: 1.3rem;
+  cursor: pointer;
+  overflow: hidden;
+}
+.wt-power:disabled {
+  cursor: default;
+}
+.wt-power.is-ready {
+  background: var(--secondary);
+  border-color: var(--secondary);
+  animation: wt-glow 1.2s ease-in-out infinite;
+}
+.wt-power-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+@keyframes wt-glow {
+  50% {
+    box-shadow: 0 0 0 4px rgba(240, 163, 43, 0.35);
+  }
+}
+
+.wt-effects {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+.wt-effects span {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--surface-card);
+  border: 1px solid var(--wt-line);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--wt-ink);
+  font-variant-numeric: tabular-nums;
 }

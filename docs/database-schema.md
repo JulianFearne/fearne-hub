@@ -514,3 +514,18 @@ append-only `gf_events` log of "who asked whom for what rank" rows. Full
 definition, RLS policies and realtime setup live in
 [`_reference/go-fish-schema.sql`](../_reference/go-fish-schema.sql) — run
 that file to create these tables.
+
+## Games: `bs_sessions`, `bs_players`, `bs_shots`
+
+Backing store for online Battleship (`src/pages/games/battleship/`). Same
+`is_approved()`-gated pattern as Connect Four and Go Fish. Each player's
+fleet (ship positions only) is saved to their `bs_players.fleet` row when
+they tap Ready, and can't be changed after that. Hits, sunk ships, whose turn
+it is and the winner are never stored; they're derived by `deriveOnline()` in
+`engine.js` from the two fleets plus the append-only `bs_shots` log. A
+finished game's `rematch_id` points at the follow-up game so the other player
+can join it with one tap. Invite links look like
+`/games/battleship?code=ABCD`. Full definition, RLS policies and realtime
+setup live in
+[`_reference/battleship-schema.sql`](../_reference/battleship-schema.sql) —
+run that file to create these tables.

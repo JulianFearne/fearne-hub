@@ -1,69 +1,32 @@
 // src/pages/games/battleship/Battleship.jsx
-// Offline 2-player pass-and-play. No Supabase, no props: one phone, two
-// fleets. Both fleets are placed randomly (see engine.placeFleet) so there's
-// no manual ship-placement screen to fumble through; a handoff screen
-// between turns keeps each player's board hidden from the other, same
-// pass-the-phone pattern as Pictionary and Would You Rather.
+// One route, three modes: against the computer, pass-and-play on one
+// phone, or online with a family member on their own device. An invite link
+// (/games/battleship?code=ABCD) skips the picker and joins the online game,
+// as does coming back to an online game this device was already in.
 
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { SHIP_SPECS, SIZE, createShotsGrid, fireAt, placeFleet } from './engine'
+import { useCallback, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import BattleshipLocal from './BattleshipLocal'
+import BattleshipOnline, { storedSessionId } from './BattleshipOnline'
 import './battleship.css'
 
-const NAMES = { a: 'Player 1', b: 'Player 2' }
-
-function newMatch() {
-  return {
-    fleets: { a: placeFleet(), b: placeFleet() },
-    shots: { a: createShotsGrid(), b: createShotsGrid() },
-    turn: 'a',
-    phase: 'handoff', // 'handoff' | 'turn' | 'result' | 'over'
-    lastResult: null,
-    winner: null,
-  }
-}
-
-function otherSide(side) {
-  return side === 'a' ? 'b' : 'a'
-}
-
-function shipsRemaining(ships) {
-  return ships.filter((ship) => !ship.hits.every(Boolean)).length
-}
+const MODES = [
+  { key: 'computer', emoji: '🤖', title: 'Play the computer', sub: 'Solo · easy, medium or hard · works offline' },
+  { key: 'pass', emoji: '📱', title: 'Pass and play', sub: 'Two players, one phone · works offline' },
+  { key: 'online', emoji: '🌐', title: 'Play online', sub: 'Two devices · share a link or code · needs internet' },
+]
 
 export default function Battleship() {
-  const [state, setState] = useState(newMatch)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [initialCode, setInitialCode] = useState(() => (searchParams.get('code') || '').toUpperCase())
+  const [mode, setMode] = useState(() => (initialCode || storedSessionId() ? 'online' : null))
 
-  const opponent = otherSide(state.turn)
-
-  function ready() {
-    setState((s) => ({ ...s, phase: 'turn' }))
-  }
-
-  function fire(r, c) {
-    if (state.phase !== 'turn') return
-    const { ships, shotsGrid, result } = fireAt(state.fleets[opponent], state.shots[state.turn], r, c)
-    if (result.alreadyFired) return
-    if (navigator.vibrate) navigator.vibrate(result.hit ? [15, 60, 15] : 15)
-    setState((s) => ({
-      ...s,
-      fleets: { ...s.fleets, [opponent]: ships },
-      shots: { ...s.shots, [s.turn]: shotsGrid },
-      lastResult: result,
-      phase: result.allSunk ? 'over' : 'result',
-      winner: result.allSunk ? s.turn : null,
-    }))
-  }
-
-  function continueTurn() {
-    setState((s) => ({ ...s, turn: otherSide(s.turn), phase: 'handoff', lastResult: null }))
-  }
-
-  function playAgain() {
-    setState(newMatch())
-  }
-
-  const theirShipsLeft = shipsRemaining(state.fleets[opponent])
+  // Drop ?code= once used so a refresh (or switching mode and back)
+  // doesn't try to join again.
+  const clearCode = useCallback(() => {
+    setInitialCode('')
+    setSearchParams({}, { replace: true })
+  }, [setSearchParams])
 
   return (
     <div className="bsh">
@@ -72,76 +35,27 @@ export default function Battleship() {
           ← Games
         </Link>
         <h1 className="bsh-title">Battleship</h1>
+        {mode && (
+          <button className="bsh-back as-button" onClick={() => setMode(null)}>
+            Change mode
+          </button>
+        )}
       </header>
 
-      <div className="bsh-panel">
-        {state.phase === 'handoff' && (
-          <div className="bsh-handoff">
-            <p className="bsh-handoff-title">Pass the phone to {NAMES[state.turn]}</p>
-            <p className="bsh-hint">Make sure {NAMES[opponent]} isn't looking, then tap ready.</p>
-            <button className="bsh-btn primary" onClick={ready}>
-              I'm ready
+      {!mode && (
+        <div className="bsh-modepick">
+          {MODES.map((m) => (
+            <button key={m.key} className="bsh-modecard" onClick={() => setMode(m.key)}>
+              <span className="bsh-modecard-emoji">{m.emoji}</span>
+              <span className="bsh-modecard-title">{m.title}</span>
+              <span className="bsh-modecard-sub">{m.sub}</span>
             </button>
-          </div>
-        )}
+          ))}
+        </div>
+      )}
 
-        {(state.phase === 'turn' || state.phase === 'result') && (
-          <>
-            <div className="bsh-fleetbar">
-              <span>
-                {NAMES[state.turn]}'s fleet <strong>{shipsRemaining(state.fleets[state.turn])}</strong>/{SHIP_SPECS.length}
-              </span>
-              <span>
-                {NAMES[opponent]}'s fleet <strong>{theirShipsLeft}</strong>/{SHIP_SPECS.length}
-              </span>
-            </div>
-
-            <p className="bsh-status">
-              {state.phase === 'result'
-                ? state.lastResult.sunkShip
-                  ? `You sank their ${state.lastResult.sunkShip.name}!`
-                  : state.lastResult.hit
-                    ? 'Hit!'
-                    : 'Miss'
-                : `${NAMES[state.turn]}'s turn, fire at ${NAMES[opponent]}'s waters`}
-            </p>
-
-            <div className="bsh-board">
-              {Array.from({ length: SIZE }, (_, r) =>
-                Array.from({ length: SIZE }, (_, c) => {
-                  const mark = state.shots[state.turn][r][c]
-                  return (
-                    <button
-                      key={`${r}-${c}`}
-                      className={`bsh-cell ${mark ?? ''}`}
-                      disabled={mark != null || state.phase === 'result'}
-                      onClick={() => fire(r, c)}
-                    >
-                      {mark === 'hit' ? '✕' : mark === 'miss' ? '•' : ''}
-                    </button>
-                  )
-                }),
-              )}
-            </div>
-
-            {state.phase === 'result' && (
-              <button className="bsh-btn primary" onClick={continueTurn}>
-                Continue
-              </button>
-            )}
-          </>
-        )}
-
-        {state.phase === 'over' && (
-          <div className="bsh-over">
-            <p className="bsh-over-title">{NAMES[state.winner]} wins! 🎉</p>
-            <p className="bsh-hint">Sank the whole fleet.</p>
-            <button className="bsh-btn primary" onClick={playAgain}>
-              Play again
-            </button>
-          </div>
-        )}
-      </div>
+      {(mode === 'computer' || mode === 'pass') && <BattleshipLocal key={mode} mode={mode} />}
+      {mode === 'online' && <BattleshipOnline initialCode={initialCode} onCodeUsed={clearCode} />}
     </div>
   )
 }

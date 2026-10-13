@@ -6,10 +6,24 @@
   --bsh-forest-dark: var(--primary-press);
   --bsh-cream: var(--ink-on-primary);
   --bsh-card: var(--surface-card);
-  --bsh-gold: var(--secondary);
   --bsh-terracotta: var(--danger);
   --bsh-ink: var(--ink-1);
   --bsh-line: var(--border);
+
+  /* sea + ships: fixed naval colours that read on both themes */
+  --bsh-sea-top: #2f6f9f;
+  --bsh-sea-bottom: #1d4f78;
+  --bsh-sea-line: rgba(255, 255, 255, 0.14);
+  --bsh-hull: #7b8794;
+  --bsh-hull-edge: #4b5560;
+  --bsh-deck: #a3adb8;
+  --bsh-detail: #56616c;
+  --bsh-turret: #3b434c;
+  --bsh-sub: #3f4a55;
+  --bsh-blast: #f26b1d;
+  --bsh-blast-core: #ffd23f;
+  --bsh-splash: #ffffff;
+
   max-width: 480px;
   margin: 0 auto;
 }
@@ -26,6 +40,16 @@
   font-weight: 600;
   font-size: 0.9rem;
 }
+.bsh-back.as-button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
 .bsh-title {
   font-family: var(--font-display);
   margin: 0;
@@ -35,23 +59,63 @@
   background: var(--bsh-card);
   border: 1px solid var(--bsh-line);
   border-radius: 14px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: var(--shadow-1);
   display: grid;
   gap: 1rem;
   justify-items: center;
 }
 
-.bsh-handoff,
-.bsh-over {
+/* ---------- mode picker ---------- */
+
+.bsh-modepick {
+  display: grid;
+  gap: 0.85rem;
+}
+.bsh-modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--bsh-line);
+  background: var(--bsh-card);
+  color: var(--bsh-ink);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.bsh-modecard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+.bsh-modecard-emoji {
+  font-size: 1.7rem;
+}
+.bsh-modecard-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.bsh-modecard-sub {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- handoff / messages ---------- */
+
+.bsh-handoff {
   display: grid;
   gap: 0.5rem;
   justify-items: center;
   text-align: center;
-  padding: 1.5rem 0;
+  padding: 1rem 0;
 }
-.bsh-handoff-title,
-.bsh-over-title {
+.bsh-handoff-emoji {
+  font-size: 2rem;
+}
+.bsh-handoff-title {
   font-family: var(--font-display);
   font-size: 1.2rem;
   font-weight: 700;
@@ -59,16 +123,21 @@
   color: var(--bsh-ink);
 }
 .bsh-hint {
-  margin: 0 0 0.5rem;
+  margin: 0;
   opacity: 0.7;
   font-size: 0.9rem;
+  text-align: center;
+}
+.bsh-error {
+  color: var(--bsh-terracotta);
+  font-size: 0.85rem;
+  text-align: center;
 }
 
-.bsh-fleetbar {
-  display: flex;
-  gap: 1.5rem;
+.bsh-versus {
+  margin: 0;
   font-size: 0.85rem;
-  color: var(--bsh-ink);
+  color: var(--ink-2);
 }
 
 .bsh-status {
@@ -76,44 +145,52 @@
   font-weight: 600;
   color: var(--bsh-ink);
   text-align: center;
+  min-height: 1.5em;
+}
+.bsh-status.hit,
+.bsh-status.win {
+  color: var(--success);
+}
+.bsh-status.incoming,
+.bsh-status.lose {
+  color: var(--bsh-terracotta);
+}
+.bsh-status.win,
+.bsh-status.lose {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
 }
 
-.bsh-board {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 3px;
-  width: 100%;
-  max-width: 320px;
-}
-.bsh-cell {
-  aspect-ratio: 1;
-  border: 1px solid var(--bsh-line);
-  background: var(--surface-card);
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--bsh-ink);
+.bsh-chips {
   display: flex;
-  align-items: center;
+  gap: 0.4rem;
   justify-content: center;
 }
-.bsh-cell:hover:not(:disabled) {
-  border-color: var(--bsh-forest);
-}
-.bsh-cell:disabled {
-  cursor: default;
-}
-.bsh-cell.miss {
+.bsh-chip {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--bsh-line);
+  background: transparent;
   color: var(--bsh-ink);
-  opacity: 0.5;
+  cursor: pointer;
 }
-.bsh-cell.hit {
-  background: var(--bsh-terracotta);
-  border-color: var(--bsh-terracotta);
-  color: var(--white);
+.bsh-chip.active {
+  background: var(--bsh-forest);
+  border-color: var(--bsh-forest);
+  color: var(--bsh-cream);
+}
+
+.bsh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
 }
 
 .bsh-btn {
+  font: inherit;
   border-radius: 999px;
   padding: 0.6rem 1.4rem;
   font-weight: 600;
@@ -126,6 +203,347 @@
   background: var(--bsh-forest);
   color: var(--bsh-cream);
 }
-.bsh-btn.primary:hover {
+.bsh-btn.primary:hover:not(:disabled) {
   background: var(--bsh-forest-dark);
+}
+.bsh-btn.ghost {
+  border-color: var(--bsh-line);
+  color: var(--ink-2);
+}
+.bsh-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- online lobby ---------- */
+
+.bsh-lobby {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+  width: 100%;
+}
+.bsh-lobby-divider {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.bsh-join-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.bsh-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--bsh-line);
+  background: var(--surface-card);
+  color: var(--bsh-ink);
+}
+.bsh-invite {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--bsh-line);
+  width: 100%;
+}
+.bsh-code-label {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+.bsh-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--bsh-forest);
+}
+
+/* ---------- layout ---------- */
+
+.bsh-deploy,
+.bsh-battle {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  justify-items: center;
+}
+.bsh-side {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+  justify-items: center;
+}
+.bsh-battle .bsh-side + .bsh-side {
+  padding-top: 1rem;
+  border-top: 1px solid var(--bsh-line);
+}
+
+/* ---------- board ---------- */
+
+.bsh-board {
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+}
+.bsh-board--lg .bsh-grid {
+  max-width: 360px;
+}
+.bsh-board--sm .bsh-grid {
+  max-width: 250px;
+}
+.bsh-board-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.bsh-grid {
+  display: grid;
+  grid-template-columns: 1.1rem repeat(var(--bsh-size), 1fr);
+  grid-template-rows: 1.1rem repeat(var(--bsh-size), auto);
+  width: 100%;
+}
+.bsh-axis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.bsh-sea {
+  z-index: 0;
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(255, 255, 255, 0.16), transparent 55%),
+    repeating-linear-gradient(170deg, transparent 0 14px, rgba(255, 255, 255, 0.05) 14px 16px),
+    linear-gradient(180deg, var(--bsh-sea-top), var(--bsh-sea-bottom));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* The drawings are absolutely positioned so they never size the grid
+   rows; the square cells alone do that. */
+.bsh-ship {
+  z-index: 1;
+  position: relative;
+  pointer-events: none;
+}
+.bsh-ship .bsh-ship-svg {
+  position: absolute;
+  inset: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+.bsh-ship.is-sunk .bsh-ship-svg {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.85;
+}
+
+.bsh-cell {
+  z-index: 2;
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: inset 0 0 0 0.5px var(--bsh-sea-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+}
+.bsh-board.is-live button.bsh-cell {
+  cursor: crosshair;
+}
+.bsh-board.is-live button.bsh-cell:hover,
+.bsh-board.is-live button.bsh-cell:focus-visible {
+  outline: none;
+  background:
+    radial-gradient(circle, transparent 0 22%, rgba(255, 255, 255, 0.9) 23% 28%, transparent 29%),
+    rgba(255, 255, 255, 0.2);
+}
+.bsh-cell.is-last {
+  box-shadow: inset 0 0 0 2px var(--bsh-blast-core);
+  border-radius: 3px;
+}
+
+/* ---------- ship drawings ---------- */
+
+.bsh-hull {
+  fill: var(--bsh-hull);
+  stroke: var(--bsh-hull-edge);
+  stroke-width: 3;
+}
+.bsh-hull--sub {
+  fill: var(--bsh-sub);
+}
+.bsh-deck {
+  fill: var(--bsh-deck);
+}
+.bsh-detail {
+  fill: var(--bsh-detail);
+}
+.bsh-funnel {
+  fill: var(--bsh-turret);
+}
+.bsh-turret {
+  fill: var(--bsh-turret);
+}
+.bsh-runway {
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 3;
+  stroke-dasharray: 12 8;
+}
+
+/* ---------- markers ---------- */
+
+.bsh-marker {
+  position: absolute;
+  inset: 11%;
+  width: 78%;
+  height: 78%;
+}
+.bsh-blast-outer {
+  fill: var(--bsh-blast);
+}
+.bsh-blast-inner {
+  fill: var(--bsh-blast-core);
+}
+.bsh-marker--hit {
+  filter: drop-shadow(0 0 3px rgba(242, 107, 29, 0.8));
+}
+.bsh-splash-ring {
+  fill: none;
+  stroke: var(--bsh-splash);
+  stroke-width: 6;
+  opacity: 0.45;
+}
+.bsh-splash-dot {
+  fill: var(--bsh-splash);
+  opacity: 0.85;
+}
+.bsh-cell.is-last .bsh-marker {
+  animation: bsh-pop 0.45s ease-out;
+}
+@keyframes bsh-pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bsh-cell.is-last .bsh-marker {
+    animation: none;
+  }
+}
+
+/* ---------- fleet roster ---------- */
+
+.bsh-roster {
+  width: 100%;
+  max-width: 360px;
+}
+.bsh-roster-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.3rem;
+}
+.bsh-roster-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--bsh-ink);
+}
+.bsh-roster-count {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+.bsh-roster-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+.bsh-roster-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--bsh-ink);
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+}
+.bsh-roster-item.is-sunk {
+  background: var(--surface-sunken);
+}
+.bsh-roster-ship {
+  flex: none;
+  width: 4.75rem;
+  display: flex;
+  justify-content: flex-start;
+}
+.bsh-roster-ship .bsh-ship-svg {
+  height: 0.95rem;
+  width: calc(var(--bsh-len) * 0.95rem);
+}
+.bsh-roster-item.is-sunk .bsh-ship-svg {
+  filter: grayscale(1) brightness(0.85);
+  opacity: 0.7;
+}
+.bsh-roster-name {
+  flex: 1;
+  min-width: 0;
+}
+.bsh-roster-item.is-sunk .bsh-roster-name {
+  text-decoration: line-through;
+  color: var(--ink-3);
+}
+.bsh-roster-pips {
+  display: flex;
+  gap: 2px;
+}
+.bsh-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--bsh-line);
+}
+.bsh-pip.is-hit {
+  background: var(--bsh-blast);
+}
+.bsh-roster-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--success);
+  width: 3.4rem;
+  text-align: right;
+}
+.bsh-roster-status.is-sunk {
+  color: var(--bsh-terracotta);
 }

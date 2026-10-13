@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import Wordmark from '../components/ds/Wordmark.jsx'
 import Card from '../components/ds/Card.jsx'
@@ -10,6 +10,7 @@ import Icon from '../components/ds/Icon.jsx'
 export default function Login() {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
   const [email, setEmail] = useState('')
@@ -36,7 +37,8 @@ export default function Login() {
     if (mode === 'signup') {
       setCheckEmail(true)
     } else {
-      navigate('/')
+      // Back to the page that sent them here (see ProtectedRoute), if any.
+      navigate(location.state?.from ?? '/', { replace: true })
     }
   }
 

@@ -61,9 +61,11 @@ the client in `src/supabaseClient.js`.
 - **Games** — Connect Four, Sudoku, Hangman, Freecell, Would You Rather,
   Wobbly Towers (an endless physics tower stacker built on matter-js, with
   Classic and Power-ups modes, medals and per-device scoreboards),
-  and two realtime multiplayer games played with a join code: "Animal
-  Place Thing" (categories) and Go Fish, both scored live via Supabase
-  Realtime.
+  Battleship (against the computer, pass-and-play, or online via an invite
+  link; run [`_reference/battleship-schema.sql`](_reference/battleship-schema.sql)
+  for the online mode), and two more realtime multiplayer games played with
+  a join code: "Animal Place Thing" (categories) and Go Fish, both scored
+  live via Supabase Realtime.
 - **Admin** — approve sign-ups and manage everyone's role
   (`admin` / `adult` / `kid`).
 

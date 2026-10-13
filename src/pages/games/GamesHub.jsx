@@ -119,10 +119,10 @@ const GAMES = [
   {
     key: 'battleship',
     title: 'Battleship',
-    blurb: 'Call your shots and sink the other player’s fleet.',
+    blurb: 'Call your shots and sink the enemy fleet. Take on the computer, pass the phone, or send a link to play online.',
     icon: 'anchor',
     to: '/games/battleship',
-    tags: ['2 players, offline'],
+    tags: ['1 player, offline', '2 players, offline', '2 players, online'],
     live: true,
   },
   {

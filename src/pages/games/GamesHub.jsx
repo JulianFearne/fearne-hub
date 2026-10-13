@@ -8,8 +8,12 @@
 // The list is sorted and grouped alphabetically at render time (source order
 // above doesn't matter), with a search box and an A-Z index rail down the
 // side, contacts-app style, for jumping straight to a letter.
+//
+// Opening a game and coming back (header back arrow, the game's own
+// "← Games" link or the phone's back button) returns to the same spot in the
+// list, search included: both are kept in sessionStorage while you're away.
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card, { CardTitle, CardMeta } from '../../components/ds/Card.jsx';
 import Icon from '../../components/ds/Icon.jsx';
@@ -146,6 +150,24 @@ const GAMES = [
 ];
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const SCROLL_KEY = 'fh-games-scroll';
+const QUERY_KEY = 'fh-games-query';
+
+function readSession(key) {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(key, value) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    // Storage blocked: the list just opens at the top.
+  }
+}
 
 function normalize(s) {
   return s.toLowerCase();
@@ -178,8 +200,30 @@ function GameCard({ game }) {
 }
 
 export default function GamesHub() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => readSession(QUERY_KEY) ?? '');
   const trimmed = query.trim();
+
+  useEffect(() => writeSession(QUERY_KEY, query), [query]);
+
+  // Back to where you were in the list. Layout effect so it lands before the
+  // first paint instead of flashing the top of the list.
+  useLayoutEffect(() => {
+    const y = Number(readSession(SCROLL_KEY)) || 0;
+    if (y > 0) window.scrollTo(0, y);
+  }, []);
+
+  // Remember the position as you scroll, and open each game at its top
+  // rather than wherever the list was scrolled to.
+  useEffect(() => {
+    function onScroll() {
+      writeSession(SCROLL_KEY, String(Math.round(window.scrollY)));
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.scrollTo(0, 0);
+    };
+  }, []);
 
   const sortedGames = useMemo(
     () => [...GAMES].sort((a, b) => a.title.localeCompare(b.title)),

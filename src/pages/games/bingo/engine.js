@@ -1,7 +1,8 @@
 // src/pages/games/bingo/engine.js
 // Pure 75-ball Bingo (US-style, 5x5 card, B-I-N-G-O columns, free centre)
 // logic. No React. One device acts as the caller for everyone at the table;
-// cards can be marked automatically as numbers are drawn, or by hand.
+// the caller's cards mark themselves as numbers are drawn, players' cards
+// are marked by hand (toggleMark).
 // "Tombola" and "Bingo" are the same call-and-mark game to most families,
 // so this one screen covers both.
 
@@ -95,17 +96,14 @@ function scoreCards(state, cards) {
 }
 
 // Returns { state, number, newly }, a NEW state, never mutates the input.
-// `number` is null once the pool is exhausted or the game is over. With
-// autoMark off the cards are left alone for the players to mark themselves.
-export function drawNumber(state, { autoMark = true } = {}) {
+// `number` is null once the pool is exhausted or the game is over. Cards on
+// the caller's phone are marked automatically.
+export function drawNumber(state) {
   if (state.over || state.queue.length === 0) {
     return { state, number: null, newly: { line: [], fullHouse: [] } }
   }
   const [number, ...queue] = state.queue
   const drawn = [...state.drawn, number]
-  if (!autoMark) {
-    return { state: { ...state, queue, drawn }, number, newly: { line: [], fullHouse: [] } }
-  }
   const { newly, ...scored } = scoreCards(state, state.cards.map((card) => markNumber(card, number)))
   return { state: { ...state, ...scored, queue, drawn }, number, newly }
 }
@@ -131,12 +129,3 @@ export function clearMarks(state) {
   return { ...state, ...scored }
 }
 
-// Marks every number called so far, used when switching to auto-marking
-// part way through a game.
-export function markAllCalled(state) {
-  const cards = state.cards.map((card) =>
-    card.map((row) => row.map((x) => (state.drawn.includes(x.value) ? { ...x, marked: true } : x))),
-  )
-  const { newly, ...scored } = scoreCards(state, cards)
-  return { state: { ...state, ...scored }, newly }
-}

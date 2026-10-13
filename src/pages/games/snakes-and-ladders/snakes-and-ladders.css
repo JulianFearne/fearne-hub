@@ -453,3 +453,34 @@
   color: var(--success);
   text-align: center;
 }
+
+.snl-dice-wrap {
+  flex: none;
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+}
+.snl-dice-tip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.snl-dice-tip.is-hidden {
+  visibility: hidden;
+}
+
+/* Quiet "start a new game" link, centred under everything. */
+.snl-link {
+  justify-self: center;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}

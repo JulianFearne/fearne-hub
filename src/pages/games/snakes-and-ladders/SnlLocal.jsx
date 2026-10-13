@@ -66,11 +66,19 @@ export default function SnlLocal({ mode }) {
         onRoll={roll}
         onAnimating={setAnimating}
         actions={
-          <button className={`snl-btn ${state.winner != null ? 'primary' : 'ghost'}`} onClick={() => restart()}>
-            {state.winner != null ? 'Play again' : 'New game'}
-          </button>
+          state.winner != null && (
+            <button className="snl-btn primary" onClick={() => restart()}>
+              Play again
+            </button>
+          )
         }
       />
+
+      {state.winner == null && (
+        <button className="snl-link" onClick={() => restart()}>
+          Start a new game
+        </button>
+      )}
     </div>
   )
 }

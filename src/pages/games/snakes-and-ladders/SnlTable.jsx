@@ -141,13 +141,17 @@ export default function SnlTable({ state, names, canRoll, onRoll, onAnimating, a
       </div>
 
       <div className="snl-controls">
-        <Dice
-          value={face ?? state.lastEvent?.roll ?? null}
-          colour={PLAYER_KEYS[shownPlayer]}
-          rolling={rolling}
-          ready={ready}
-          onClick={roll}
-        />
+        <div className="snl-dice-wrap">
+          <Dice
+            value={face ?? state.lastEvent?.roll ?? null}
+            colour={PLAYER_KEYS[shownPlayer]}
+            rolling={rolling}
+            ready={ready}
+            onClick={roll}
+          />
+          {/* Space is kept when hidden so the status line doesn't jump. */}
+          <span className={`snl-dice-tip ${ready ? '' : 'is-hidden'}`}>Press to roll</span>
+        </div>
         <p className={`snl-status ${state.winner != null && !animating ? 'is-over' : ''}`} aria-live="polite">
           {statusText(state, names, canRoll, animating)}
         </p>

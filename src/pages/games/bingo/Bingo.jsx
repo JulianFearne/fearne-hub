@@ -1,9 +1,8 @@
 // src/pages/games/bingo/Bingo.jsx
 // Offline. Each phone picks a job:
 //
-//   Caller  draws the numbers for everyone. Can hold cards too, marked
-//           automatically or by hand (by hand, only called numbers can be
-//           marked, since this phone knows what's been called).
+//   Caller  draws the numbers for everyone. Can hold cards too, which are
+//           marked automatically as numbers are drawn.
 //   Player  just your card(s). Numbers are called out loud from the caller's
 //           phone, so you tap them yourself; any number can be marked, and
 //           tapping again undoes a mis-tap.
@@ -15,7 +14,7 @@
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LETTERS, clearMarks, createGame, drawNumber, markAllCalled, toggleMark } from './engine'
+import { LETTERS, clearMarks, createGame, drawNumber, toggleMark } from './engine'
 import './bingo.css'
 
 const STORAGE_KEY = 'bgo-state-v1'
@@ -26,8 +25,8 @@ function columnLetter(number) {
   return LETTERS[Math.floor((number - 1) / 15)]
 }
 
-function freshState(role, numCards, autoMark = true) {
-  return { role, numCards, autoMark, game: createGame(numCards), lastNumber: null }
+function freshState(role, numCards) {
+  return { role, numCards, game: createGame(numCards), lastNumber: null }
 }
 
 function loadState() {
@@ -48,9 +47,9 @@ function winnersText(indices, total) {
 export default function Bingo() {
   const [saved, setSaved] = useState(loadState)
   const [announcement, setAnnouncement] = useState('')
-  const { role, numCards, autoMark, game, lastNumber } = saved
+  const { role, numCards, game, lastNumber } = saved
   const isCaller = role === 'caller'
-  const handMarking = !isCaller || !autoMark
+  const handMarking = !isCaller // the caller's cards mark themselves
 
   useEffect(() => {
     try {
@@ -67,7 +66,7 @@ export default function Bingo() {
 
   function restart(next, { force = false } = {}) {
     if (!force && inProgress && !window.confirm('Start again? This game and its cards will be lost.')) return
-    setSaved(freshState(next.role ?? role, next.numCards ?? numCards, next.autoMark ?? autoMark))
+    setSaved(freshState(next.role ?? role, next.numCards ?? numCards))
     setAnnouncement('')
   }
 
@@ -89,7 +88,7 @@ export default function Bingo() {
   }
 
   function draw() {
-    const { state, number, newly } = drawNumber(game, { autoMark })
+    const { state, number, newly } = drawNumber(game)
     if (number == null) return
     setSaved((s) => ({ ...s, game: state, lastNumber: number }))
     if (navigator.vibrate) navigator.vibrate(15)
@@ -100,20 +99,9 @@ export default function Bingo() {
     if (!handMarking) return
     const cell = game.cards[ci][r][c]
     if (cell.value === 'FREE') return
-    if (isCaller && !cell.marked && !game.drawn.includes(cell.value)) {
-      setAnnouncement(`${columnLetter(cell.value)}${cell.value} hasn't been called yet`)
-      return
-    }
     const { state, newly } = toggleMark(game, ci, r, c)
     setSaved((s) => ({ ...s, game: state }))
     if (navigator.vibrate) navigator.vibrate(10)
-    if (!announce(newly)) setAnnouncement('')
-  }
-
-  function switchToAuto() {
-    if (autoMark) return
-    const { state, newly } = markAllCalled(game)
-    setSaved((s) => ({ ...s, autoMark: true, game: state }))
     if (!announce(newly)) setAnnouncement('')
   }
 
@@ -131,7 +119,7 @@ export default function Bingo() {
   else if (poolEmpty) status = 'All 75 numbers called.'
   else if (announcement) status = announcement
   else if (!lastNumber) status = 'Tap draw to start'
-  else status = numCards === 0 ? 'Call it out!' : handMarking ? 'Call it out, then mark your cards' : 'Call it out!'
+  else status = 'Call it out!'
 
   return (
     <div className="bgo">
@@ -168,22 +156,6 @@ export default function Bingo() {
           ))}
         </div>
 
-        {isCaller && numCards > 0 && (
-          <div className="bgo-themes" role="group" aria-label="Marking">
-            <button
-              className={`bgo-chip ${autoMark ? 'active' : ''}`}
-              onClick={switchToAuto}
-            >
-              Auto-mark
-            </button>
-            <button
-              className={`bgo-chip ${!autoMark ? 'active' : ''}`}
-              onClick={() => setSaved((s) => ({ ...s, autoMark: false }))}
-            >
-              Mark by hand
-            </button>
-          </div>
-        )}
 
         {isCaller ? (
           <>

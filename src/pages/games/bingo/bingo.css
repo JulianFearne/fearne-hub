@@ -115,27 +115,6 @@
   opacity: 0.6;
 }
 
-.bgo-history {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  justify-content: center;
-}
-.bgo-history-chip {
-  font-size: 0.7rem;
-  font-weight: 600;
-  border: 1px solid var(--bgo-line);
-  border-radius: 999px;
-  padding: 0.15rem 0.5rem;
-  color: var(--bgo-ink);
-  opacity: 0.75;
-}
-.bgo-history-chip:first-child {
-  opacity: 1;
-  border-color: var(--bgo-forest);
-  color: var(--bgo-forest-dark);
-}
-
 .bgo-cards {
   display: grid;
   gap: 1rem;
@@ -231,4 +210,113 @@
 .bgo-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* ---------- caller / player choice ---------- */
+
+.bgo-roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
+.bgo-role {
+  font: inherit;
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--bgo-line);
+  background: var(--surface-card);
+  color: var(--bgo-ink);
+  cursor: pointer;
+}
+.bgo-role.active {
+  border-color: var(--bgo-forest);
+  box-shadow: inset 0 0 0 1px var(--bgo-forest);
+  background: color-mix(in srgb, var(--bgo-forest) 8%, var(--surface-card));
+}
+.bgo-role-emoji {
+  font-size: 1.4rem;
+}
+.bgo-role-title {
+  font-weight: 700;
+}
+.bgo-role-sub {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.bgo-player-status {
+  text-align: center;
+  font-weight: 500;
+  opacity: 0.8;
+}
+.bgo-player-status.is-win {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--bgo-forest);
+  opacity: 1;
+}
+
+/* ---------- hand marking ---------- */
+
+button.bgo-cell {
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--surface-card);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.08s ease;
+}
+button.bgo-cell:active {
+  transform: scale(0.92);
+}
+.bgo-card-grid.is-tappable .bgo-cell {
+  font-size: 0.95rem;
+}
+button.bgo-cell.marked {
+  background: var(--bgo-forest);
+  color: var(--bgo-cream);
+}
+
+/* ---------- called-numbers board (caller) ---------- */
+
+.bgo-board {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+}
+.bgo-board-row {
+  display: grid;
+  grid-template-columns: 1.1rem repeat(15, 1fr);
+  gap: 2px;
+}
+.bgo-board-letter {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: var(--bgo-forest);
+  display: flex;
+  align-items: center;
+}
+.bgo-board-num {
+  font-size: 0.6rem;
+  text-align: center;
+  padding: 0.15rem 0;
+  border-radius: 3px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.bgo-board-num.called {
+  background: var(--bgo-forest);
+  color: var(--bgo-cream);
+  font-weight: 700;
+}
+.bgo-board-num.latest {
+  background: var(--bgo-gold);
+  color: var(--ink-on-secondary);
 }

@@ -1,6 +1,7 @@
 // src/pages/games/bingo/engine.js
 // Pure 75-ball Bingo (US-style, 5x5 card, B-I-N-G-O columns, free centre)
-// logic. No React. One device acts as the caller for everyone at the table
+// logic. No React. One device acts as the caller for everyone at the table;
+// cards can be marked automatically as numbers are drawn, or by hand.
 // "Tombola" and "Bingo" are the same call-and-mark game to most families,
 // so this one screen covers both.
 
@@ -75,31 +76,67 @@ export function createGame(numCards, rng = Math.random) {
   }
 }
 
+// Re-checks every card for a line / full house. Winners are recomputed from
+// the marks each time (not just appended) so unmarking a mis-tap takes a
+// card back off the winners list. `newly` lists card indices that have just
+// reached a line / full house compared with the previous state.
+function scoreCards(state, cards) {
+  const lineWinners = []
+  const fullHouseWinners = []
+  cards.forEach((card, i) => {
+    if (hasLine(card)) lineWinners.push(i)
+    if (hasFullHouse(card)) fullHouseWinners.push(i)
+  })
+  const newly = {
+    line: lineWinners.filter((i) => !state.lineWinners.includes(i)),
+    fullHouse: fullHouseWinners.filter((i) => !state.fullHouseWinners.includes(i)),
+  }
+  return { cards, lineWinners, fullHouseWinners, over: fullHouseWinners.length > 0, newly }
+}
+
 // Returns { state, number, newly }, a NEW state, never mutates the input.
-// `newly` lists card indices that just achieved a line / full house on this
-// draw. `number` is null once the pool is exhausted or the game is over.
-export function drawNumber(state) {
+// `number` is null once the pool is exhausted or the game is over. With
+// autoMark off the cards are left alone for the players to mark themselves.
+export function drawNumber(state, { autoMark = true } = {}) {
   if (state.over || state.queue.length === 0) {
     return { state, number: null, newly: { line: [], fullHouse: [] } }
   }
   const [number, ...queue] = state.queue
-  const cards = state.cards.map((card) => markNumber(card, number))
   const drawn = [...state.drawn, number]
+  if (!autoMark) {
+    return { state: { ...state, queue, drawn }, number, newly: { line: [], fullHouse: [] } }
+  }
+  const { newly, ...scored } = scoreCards(state, state.cards.map((card) => markNumber(card, number)))
+  return { state: { ...state, ...scored, queue, drawn }, number, newly }
+}
 
-  const lineWinners = [...state.lineWinners]
-  const fullHouseWinners = [...state.fullHouseWinners]
-  const newly = { line: [], fullHouse: [] }
-  cards.forEach((card, i) => {
-    if (!lineWinners.includes(i) && hasLine(card)) {
-      lineWinners.push(i)
-      newly.line.push(i)
-    }
-    if (!fullHouseWinners.includes(i) && hasFullHouse(card)) {
-      fullHouseWinners.push(i)
-      newly.fullHouse.push(i)
-    }
-  })
+// Flips one cell's mark by hand (the free centre stays marked). Returns
+// { state, newly } like drawNumber.
+export function toggleMark(state, cardIndex, r, c) {
+  const cell = state.cards[cardIndex][r][c]
+  if (cell.value === 'FREE') return { state, newly: { line: [], fullHouse: [] } }
+  const cards = state.cards.map((card, ci) =>
+    ci !== cardIndex
+      ? card
+      : card.map((row, ri) => row.map((x, cj) => (ri === r && cj === c ? { ...x, marked: !x.marked } : x))),
+  )
+  const { newly, ...scored } = scoreCards(state, cards)
+  return { state: { ...state, ...scored }, newly }
+}
 
-  const over = fullHouseWinners.length > 0
-  return { state: { ...state, cards, queue, drawn, lineWinners, fullHouseWinners, over }, number, newly }
+// Clears every hand-made mark (keeps the free centre).
+export function clearMarks(state) {
+  const cards = state.cards.map((card) => card.map((row) => row.map((x) => ({ ...x, marked: x.value === 'FREE' }))))
+  const { newly, ...scored } = scoreCards(state, cards)
+  return { ...state, ...scored }
+}
+
+// Marks every number called so far, used when switching to auto-marking
+// part way through a game.
+export function markAllCalled(state) {
+  const cards = state.cards.map((card) =>
+    card.map((row) => row.map((x) => (state.drawn.includes(x.value) ? { ...x, marked: true } : x))),
+  )
+  const { newly, ...scored } = scoreCards(state, cards)
+  return { state: { ...state, ...scored }, newly }
 }

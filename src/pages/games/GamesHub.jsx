@@ -137,7 +137,7 @@ const GAMES = [
   {
     key: 'bingo',
     title: 'Bingo',
-    blurb: 'One phone calls the numbers, everyone else marks their card.',
+    blurb: 'One phone calls the numbers, everyone else marks their card on their own phone or the caller’s.',
     icon: 'ticket',
     to: '/games/bingo',
     tags: ['1-6 cards, offline'],

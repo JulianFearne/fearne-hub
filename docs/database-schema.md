@@ -541,3 +541,14 @@ stamps `num_players`). Each turn is a `roll` row and, if a token can move, a
 and realtime setup live in
 [`_reference/ludo-schema.sql`](../_reference/ludo-schema.sql) — run that
 file to create these tables.
+
+## Games: `snl_sessions`, `snl_players`, `snl_rolls`
+
+Backing store for online Snakes and Ladders
+(`src/pages/games/snakes-and-ladders/`). Same lobby pattern as Ludo (code or
+invite link `/games/snakes-and-ladders?code=ABCD`, host starts with 2-4
+players). There are no choices in the game, so each turn is one `snl_rolls`
+row; positions, turns and the winner are derived by `deriveOnline()` in
+`engine.js`. Full definition, RLS policies and realtime setup live in
+[`_reference/snakes-and-ladders-schema.sql`](../_reference/snakes-and-ladders-schema.sql)
+— run that file to create these tables.

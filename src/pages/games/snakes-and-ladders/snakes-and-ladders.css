@@ -2,17 +2,22 @@
    Scoped under .snl, never leaks into the hub shell. */
 
 .snl {
-  --snl-forest: var(--primary);
-  --snl-forest-dark: var(--primary-press);
-  --snl-cream: var(--ink-on-primary);
+  --snl-primary: var(--primary);
+  --snl-primary-dark: var(--primary-press);
+  --snl-on-primary: var(--ink-on-primary);
   --snl-card: var(--surface-card);
-  --snl-gold: var(--secondary);
   --snl-ink: var(--ink-1);
   --snl-line: var(--border);
-  --p1: var(--primary);
-  --p2: var(--secondary);
-  --p3: var(--success);
-  --p4: var(--info);
+
+  /* board colours, as on a printed board (same in light and dark) */
+  --snl-sq-a: #fff6dc;
+  --snl-sq-b: #ffe2a8;
+  --snl-sq-ink: rgba(60, 40, 10, 0.55);
+  --snl-red: #e3242b;
+  --snl-blue: #2b62d9;
+  --snl-green: #14a14f;
+  --snl-yellow: #f2c80f;
+
   max-width: 560px;
   margin: 0 auto;
 }
@@ -25,9 +30,19 @@
 }
 .snl-back {
   text-decoration: none;
-  color: var(--snl-forest);
+  color: var(--snl-primary);
   font-weight: 600;
   font-size: 0.9rem;
+}
+.snl-back.as-button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 .snl-title {
   font-family: var(--font-display);
@@ -38,156 +53,403 @@
   background: var(--snl-card);
   border: 1px solid var(--snl-line);
   border-radius: 14px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: var(--shadow-1);
   display: grid;
-  gap: 1rem;
+  gap: 0.85rem;
   justify-items: center;
 }
+
+/* ---------- mode picker ---------- */
+
+.snl-modepick {
+  display: grid;
+  gap: 0.85rem;
+}
+.snl-modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--snl-line);
+  background: var(--snl-card);
+  color: var(--snl-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.snl-modecard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+.snl-modecard-emoji {
+  font-size: 1.7rem;
+}
+.snl-modecard-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.snl-modecard-sub {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- chips, buttons, text ---------- */
 
 .snl-themes {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: center;
 }
 .snl-chip {
-  border: 1px solid var(--snl-line);
-  background: var(--surface-card);
-  color: var(--snl-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
+  border: 1px solid var(--snl-line);
+  background: transparent;
+  color: var(--snl-ink);
   cursor: pointer;
 }
 .snl-chip.active {
-  background: var(--snl-forest);
-  color: var(--snl-cream);
-  border-color: var(--snl-forest);
+  background: var(--snl-primary);
+  border-color: var(--snl-primary);
+  color: var(--snl-on-primary);
 }
 
+.snl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+.snl-btn {
+  font: inherit;
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  font-weight: 600;
+  border: 1px solid var(--snl-primary);
+  background: var(--surface-card);
+  color: var(--snl-primary);
+  cursor: pointer;
+}
+.snl-btn.primary {
+  background: var(--snl-primary);
+  color: var(--snl-on-primary);
+}
+.snl-btn.primary:hover:not(:disabled) {
+  background: var(--snl-primary-dark);
+}
+.snl-btn.ghost {
+  border-color: var(--snl-line);
+  color: var(--ink-2);
+}
+.snl-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.snl-hint {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.snl-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- online lobby ---------- */
+
+.snl-lobby {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  width: 100%;
+}
+.snl-lobby-divider {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.snl-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.snl-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--snl-line);
+  background: var(--surface-card);
+  color: var(--snl-ink);
+}
+.snl-code-label {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+.snl-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--snl-primary);
+}
+.snl-lobby-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+/* ---------- table ---------- */
+
+.snl-table {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  justify-items: center;
+}
 .snl-players {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: center;
 }
 .snl-player-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border: 1px solid var(--snl-line);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.8rem;
+  border: 1px solid var(--snl-line);
   color: var(--snl-ink);
-  opacity: 0.5;
 }
 .snl-player-chip.active {
-  opacity: 1;
-  border-color: currentColor;
-  font-weight: 700;
+  border: 2px solid var(--snl-primary);
+  padding: calc(0.25rem - 1px) calc(0.65rem - 1px);
 }
-.snl-player-chip.p1 { color: var(--p1); }
-.snl-player-chip.p2 { color: var(--p2); }
-.snl-player-chip.p3 { color: var(--p3); }
-.snl-player-chip.p4 { color: var(--p4); }
-
-.snl-board {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
-  gap: 2px;
-  width: 100%;
-  aspect-ratio: 1;
-  background: var(--snl-line);
-  border: 1px solid var(--snl-line);
-  border-radius: 8px;
-  overflow: hidden;
+.snl-player-square {
+  font-weight: 500;
+  font-size: 0.72rem;
+  color: var(--ink-3);
 }
-.snl-square {
-  position: relative;
-  background: var(--surface-card);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.55rem;
-  color: var(--snl-ink);
-  opacity: 0.85;
-}
-.snl-square.ladder {
-  background: color-mix(in srgb, var(--snl-forest) 15%, var(--surface-card));
-}
-.snl-square.snake {
-  background: color-mix(in srgb, var(--danger) 15%, var(--surface-card));
-}
-.snl-num {
-  font-size: 0.5rem;
-  opacity: 0.6;
-  position: absolute;
-  top: 1px;
-  left: 2px;
-}
-.snl-mark {
-  font-size: 0.6rem;
-  line-height: 1;
-  margin-top: 0.5rem;
-  white-space: nowrap;
-}
-.snl-tokens {
-  position: absolute;
-  bottom: 1px;
-  display: flex;
-  gap: 1px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.snl-token {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--snl-cream);
+.snl-dot {
   display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex: none;
 }
-.snl-token.p1 { background: var(--p1); }
-.snl-token.p2 { background: var(--p2); }
-.snl-token.p3 { background: var(--p3); }
-.snl-token.p4 { background: var(--p4); }
+.snl-bg-red { background: var(--snl-red); }
+.snl-bg-blue { background: var(--snl-blue); }
+.snl-bg-green { background: var(--snl-green); }
+.snl-bg-yellow { background: var(--snl-yellow); }
+
+/* ---------- board ---------- */
+
+.snl-board-wrap {
+  width: 100%;
+  max-width: 480px;
+}
+.snl-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.snl-board-bg {
+  fill: #8a5a2b;
+}
+.snl-sq--a { fill: var(--snl-sq-a); }
+.snl-sq--b { fill: var(--snl-sq-b); }
+.snl-sq--finish { fill: #c8f0c4; }
+.snl-sq {
+  stroke: rgba(120, 80, 30, 0.25);
+  stroke-width: 0.02;
+}
+.snl-sq-num {
+  font-size: 0.24px;
+  font-weight: 700;
+  fill: var(--snl-sq-ink);
+  dominant-baseline: hanging;
+  font-family: system-ui, sans-serif;
+}
+.snl-finish-flag {
+  font-size: 0.4px;
+  text-anchor: middle;
+}
+
+/* ladders */
+.snl-rail {
+  stroke: #b97a3c;
+  stroke-width: 0.075;
+  stroke-linecap: round;
+}
+.snl-rail-shadow {
+  stroke: rgba(70, 40, 10, 0.35);
+  stroke-width: 0.13;
+  stroke-linecap: round;
+  transform: translate(0.03px, 0.04px);
+}
+.snl-rung {
+  stroke: #d39a5a;
+  stroke-width: 0.06;
+  stroke-linecap: round;
+}
+
+/* snakes */
+.snl-snake-body {
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 0.03;
+  stroke-linejoin: round;
+  filter: drop-shadow(0.03px 0.05px 0.03px rgba(0, 0, 0, 0.35));
+}
+.snl-snake-spots {
+  fill: none;
+  stroke-width: 0.07;
+  stroke-dasharray: 0.08 0.16;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+.snl-snake-head {
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 0.03;
+}
+.snl-snake-eye { fill: #fff; }
+.snl-snake-pupil { fill: #111; }
+.snl-snake-tongue {
+  fill: none;
+  stroke: #d0102a;
+  stroke-width: 0.03;
+  stroke-linecap: round;
+}
+.snl-snake--green .snl-snake-body, .snl-snake--green .snl-snake-head { fill: #3c9a2e; }
+.snl-snake--green .snl-snake-spots { stroke: #b6e36b; }
+.snl-snake--purple .snl-snake-body, .snl-snake--purple .snl-snake-head { fill: #7a3fb5; }
+.snl-snake--purple .snl-snake-spots { stroke: #e0b8ff; }
+.snl-snake--orange .snl-snake-body, .snl-snake--orange .snl-snake-head { fill: #e26a12; }
+.snl-snake--orange .snl-snake-spots { stroke: #ffd36b; }
+.snl-snake--teal .snl-snake-body, .snl-snake--teal .snl-snake-head { fill: #138a87; }
+.snl-snake--teal .snl-snake-spots { stroke: #9ff0e6; }
+.snl-snake--red .snl-snake-body, .snl-snake--red .snl-snake-head { fill: #c7262e; }
+.snl-snake--red .snl-snake-spots { stroke: #ffb0a8; }
+.snl-snake--olive .snl-snake-body, .snl-snake--olive .snl-snake-head { fill: #7c8a1e; }
+.snl-snake--olive .snl-snake-spots { stroke: #f1f59a; }
+.snl-snake--pink .snl-snake-body, .snl-snake--pink .snl-snake-head { fill: #d23f8a; }
+.snl-snake--pink .snl-snake-spots { stroke: #ffc4e2; }
+.snl-snake--blue .snl-snake-body, .snl-snake--blue .snl-snake-head { fill: #2f5fbf; }
+.snl-snake--blue .snl-snake-spots { stroke: #b4d0ff; }
+
+/* tokens */
+.snl-token-g {
+  transition: transform 0.15s ease-out;
+}
+.snl-board-wrap.is-sliding .snl-token-g {
+  transition: transform 0.65s ease-in-out;
+}
+.snl-token-body {
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 0.05;
+  filter: drop-shadow(0 0.04px 0.05px rgba(0, 0, 0, 0.5));
+}
+.snl-token-g.is-last .snl-token-body {
+  stroke: #000;
+  stroke-width: 0.08;
+}
+.snl-token-shine {
+  fill: rgba(255, 255, 255, 0.5);
+}
+.snl-fill-red { fill: var(--snl-red); }
+.snl-fill-blue { fill: var(--snl-blue); }
+.snl-fill-green { fill: var(--snl-green); }
+.snl-fill-yellow { fill: var(--snl-yellow); }
+
+/* ---------- dice + status ---------- */
+
+.snl-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 480px;
+}
+.snl-dice {
+  flex: none;
+  width: 3.6rem;
+  height: 3.6rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 14px;
+}
+.snl-dice:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+.snl-dice svg {
+  width: 100%;
+  height: 100%;
+}
+.snl-dice-face {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 3;
+}
+.snl-dice--red .snl-dice-face { fill: var(--snl-red); }
+.snl-dice--blue .snl-dice-face { fill: var(--snl-blue); }
+.snl-dice--green .snl-dice-face { fill: var(--snl-green); }
+.snl-dice--yellow .snl-dice-face { fill: var(--snl-yellow); }
+.snl-dice-pip { fill: #fff; }
+.snl-dice--yellow .snl-dice-pip { fill: #3a3000; }
+.snl-dice.is-ready {
+  animation: snl-nudge 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--snl-primary) 35%, transparent);
+}
+.snl-dice.is-rolling svg {
+  animation: snl-spin 0.42s linear;
+}
+@keyframes snl-nudge {
+  0%, 100% { transform: rotate(0); }
+  10% { transform: rotate(-8deg); }
+  20% { transform: rotate(8deg); }
+  30% { transform: rotate(0); }
+}
+@keyframes snl-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snl-dice.is-ready,
+  .snl-dice.is-rolling svg {
+    animation: none;
+  }
+  .snl-token-g,
+  .snl-board-wrap.is-sliding .snl-token-g {
+    transition: none;
+  }
+}
 
 .snl-status {
+  margin: 0;
+  flex: 1;
   font-weight: 600;
+  font-size: 0.92rem;
   color: var(--snl-ink);
-  text-align: center;
-  min-height: 1.4em;
 }
 .snl-status.is-over {
-  color: var(--snl-forest-dark);
-  font-size: 1.05rem;
-}
-
-.snl-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-.snl-btn {
-  border-radius: 999px;
-  padding: 0.6rem 1.4rem;
-  font-weight: 600;
-  border: 1px solid var(--snl-forest);
-  background: var(--surface-card);
-  color: var(--snl-forest);
-  cursor: pointer;
-}
-.snl-btn.primary {
-  background: var(--snl-forest);
-  color: var(--snl-cream);
-}
-.snl-btn.primary:hover:not(:disabled) {
-  background: var(--snl-forest-dark);
-}
-.snl-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--success);
+  text-align: center;
 }

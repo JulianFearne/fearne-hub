@@ -92,10 +92,10 @@ const GAMES = [
   {
     key: 'snakes-and-ladders',
     title: 'Snakes and Ladders',
-    blurb: 'Race to the top of the board. First up the last ladder wins.',
+    blurb: 'Race to the top of the board. Play the computer, pass the phone, or online.',
     icon: 'dice-5',
     to: '/games/snakes-and-ladders',
-    tags: ['2-4 players, offline'],
+    tags: ['1 player, offline', '2-4 players, offline', '2-4 players, online'],
     live: true,
   },
   {

@@ -58,14 +58,15 @@ the client in `src/supabaseClient.js`.
   workout, track sets against it, and see history, per-chain progress
   charts, and an optional body-weight tracker (adults/admins only). See
   [`docs/workout-program-format.md`](docs/workout-program-format.md).
-- **Games** — Connect Four, Sudoku, Hangman, Freecell, Would You Rather,
-  Wobbly Towers (an endless physics tower stacker built on matter-js, with
-  Classic and Power-ups modes, medals and per-device scoreboards),
-  Battleship (against the computer, pass-and-play, or online via an invite
-  link; run [`_reference/battleship-schema.sql`](_reference/battleship-schema.sql)
-  for the online mode), and two more realtime multiplayer games played with
-  a join code: "Animal Place Thing" (categories) and Go Fish, both scored
-  live via Supabase Realtime.
+- **Games** — Connect Four, Sudoku, Hangman, Freecell, Bingo, Pictionary,
+  Tic Tac Toe, Wobbly Towers (an endless physics tower stacker built on
+  matter-js, with Classic and Power-ups modes, medals and per-device
+  scoreboards), and several with a computer opponent, pass-and-play and/or
+  online play via a join code or invite link: Battleship, Ludo, Snakes and
+  Ladders, Go Fish, Connect Four and "Animal Place Thing" (categories), all
+  live via Supabase Realtime. Each online game's tables are in
+  `_reference/*-schema.sql`; run the file once to enable that game's
+  online mode.
 - **Admin** — approve sign-ups and manage everyone's role
   (`admin` / `adult` / `kid`).
 

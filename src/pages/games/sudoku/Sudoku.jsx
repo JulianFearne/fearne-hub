@@ -1,10 +1,14 @@
 // src/pages/games/sudoku/Sudoku.jsx
-// Offline single-player. No Supabase, no props. Difficulty tiers via
-// generatePuzzle() in engine.js — pure logic, no dependency.
+// Offline single-player. Difficulty tiers via generatePuzzle() in
+// engine.js, pure logic, no dependency. A solved puzzle's time goes on the
+// family high-score board for its difficulty (lib/scores.js), queued on the
+// phone if there's no signal.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { findConflicts, generatePuzzle, isSolved } from './engine'
+import { useHighScores } from '../lib/scores'
+import Leaderboard from '../lib/Leaderboard'
 import './sudoku.css'
 
 const DIFFICULTIES = ['easy', 'medium', 'hard']
@@ -28,6 +32,8 @@ export default function Sudoku() {
   const [selected, setSelected] = useState(null)
   const [seconds, setSeconds] = useState(0)
   const [running, setRunning] = useState(true)
+  const [record, setRecord] = useState(null) // submit() result for the solved puzzle
+  const family = useHighScores('sudoku', difficulty)
 
   const solved = useMemo(() => isSolved(game.grid, game.solution), [game])
   const conflicts = useMemo(() => findConflicts(game.grid), [game.grid])
@@ -39,7 +45,11 @@ export default function Sudoku() {
   }, [running, solved])
 
   useEffect(() => {
-    if (solved) setRunning(false)
+    if (!solved) return
+    setRunning(false)
+    family.submit(seconds).then(setRecord)
+    // Once per solved puzzle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [solved])
 
   function startGame(nextDifficulty) {
@@ -48,6 +58,7 @@ export default function Sudoku() {
     setSelected(null)
     setSeconds(0)
     setRunning(true)
+    setRecord(null)
   }
 
   const setCell = useCallback(
@@ -146,6 +157,7 @@ export default function Sudoku() {
         {solved && (
           <div className="su-solved-banner">
             Solved in {formatTime(seconds)} 🎉
+            {record?.best && <div className="su-record">New personal best{record.rank ? `, number ${record.rank} in the family` : ''}!</div>}
           </div>
         )}
 
@@ -154,6 +166,8 @@ export default function Sudoku() {
             New puzzle
           </button>
         </div>
+
+        <Leaderboard scores={family} className="su-leaderboard" />
       </div>
     </div>
   )

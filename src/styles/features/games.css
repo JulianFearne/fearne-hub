@@ -10,6 +10,7 @@
 }
 
 .fh-games__search{margin-bottom:var(--sp-7)}
+.fh-games__scores{margin-bottom:var(--sp-7)}
 
 .fh-games__empty{font:var(--type-body);color:var(--ink-3);padding:var(--sp-8) 0;text-align:center}
 

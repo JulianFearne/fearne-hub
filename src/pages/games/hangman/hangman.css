@@ -185,3 +185,13 @@ circle.hm-part {
     grid-template-columns: repeat(6, 1fr);
   }
 }
+
+.hm-record {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.hm-leaderboard {
+  margin-top: 1.25rem;
+}

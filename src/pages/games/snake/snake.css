@@ -1,0 +1,228 @@
+/* src/pages/games/snake/snake.css
+   Scoped under .snk. The route is a `fill` route (see .fh-app--fill in
+   hub.css), so .snk stretches to exactly the space between the header and
+   the tab bar: HUD, board, then the arrow buttons. */
+
+.snk {
+  --snk-accent: var(--primary);
+  --snk-on-accent: var(--ink-on-primary);
+  --snk-ink: var(--ink-1);
+  --snk-line: var(--border);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.snk-hud {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.snk-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.snk-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.snk-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--snk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.snk-stat-value.is-low {
+  color: var(--danger);
+}
+.snk-hearts {
+  font-size: 1.1rem;
+  line-height: 1.1;
+  color: var(--ink-faint, var(--border));
+  letter-spacing: 0.05em;
+}
+.snk-hearts .on {
+  color: var(--red-600, #e53935);
+}
+.snk-icon-btn {
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--snk-line);
+  background: var(--surface-card);
+  color: var(--snk-ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.snk-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.snk-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.snk-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.snk-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--surface-veil);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  overflow-y: auto;
+}
+/* Tall content (the leaderboard) scrolls from the top instead of being
+   cut off above the fold. */
+.snk-overlay > :first-child {
+  margin-top: auto;
+}
+.snk-overlay > :last-child {
+  margin-bottom: auto;
+}
+.snk-overlay-title {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--snk-ink);
+}
+.snk-overlay-score {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--snk-ink);
+}
+.snk-overlay-sub {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--ink-2);
+}
+.snk-overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.snk-btn {
+  border: 1px solid var(--snk-line);
+  background: var(--surface-card);
+  color: var(--snk-ink);
+  border-radius: 10px;
+  padding: 0.65rem 1.6rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.snk-btn.primary {
+  background: var(--snk-accent);
+  color: var(--snk-on-accent);
+  border-color: var(--snk-accent);
+}
+.snk-link {
+  border: none;
+  background: none;
+  color: var(--ink-3);
+  text-decoration: underline;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.snk-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.snk-chip {
+  border: 1px solid var(--snk-line);
+  background: var(--surface-card);
+  color: var(--snk-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.snk-chip.active {
+  background: var(--snk-accent);
+  color: var(--snk-on-accent);
+  border-color: var(--snk-accent);
+}
+
+.snk-skins {
+  display: flex;
+  gap: 0.6rem;
+}
+.snk-skin {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid;
+  cursor: pointer;
+  padding: 0;
+}
+.snk-skin.active {
+  outline: 3px solid var(--snk-ink);
+  outline-offset: 2px;
+}
+
+/* Arrows: left and right are tall, up and down stack in the middle. */
+.snk-controls {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 0.5rem;
+  height: 7.25rem;
+  flex-shrink: 0;
+}
+.snk-controls-mid {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.5rem;
+}
+.snk-pad {
+  border-radius: 14px;
+  border: 1px solid var(--snk-line);
+  background: var(--surface-sunken);
+  color: var(--snk-ink);
+  font-size: 1.5rem;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.snk-pad:active {
+  background: var(--snk-accent);
+  color: var(--snk-on-accent);
+  border-color: var(--snk-accent);
+}
+.snk--kids .snk-pad {
+  font-size: 1.9rem;
+}

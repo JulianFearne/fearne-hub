@@ -26,6 +26,11 @@ import Battleship from './pages/games/battleship/Battleship.jsx'
 import Ludo from './pages/games/ludo/Ludo.jsx'
 import Bingo from './pages/games/bingo/Bingo.jsx'
 import WobblyTowers from './pages/games/wobbly-towers/WobblyTowers.jsx'
+import Snake from './pages/games/snake/Snake.jsx'
+import CarDodge from './pages/games/car-dodge/CarDodge.jsx'
+import Pong from './pages/games/pong/Pong.jsx'
+import Frogger from './pages/games/frogger/Frogger.jsx'
+import HighScores from './pages/games/HighScores.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
 import MealPlanner from './pages/MealPlanner.jsx'
@@ -70,6 +75,11 @@ const ROUTE_HEADERS = {
   '/games/ludo': { title: 'Ludo', back: '/games' },
   '/games/bingo': { title: 'Bingo', back: '/games' },
   '/games/wobbly-towers': { title: 'Wobbly Towers', back: '/games', fill: true },
+  '/games/snake': { title: 'Snake', back: '/games', fill: true },
+  '/games/car-dodge': { title: 'Car Dodge', back: '/games', fill: true },
+  '/games/pong': { title: 'Pong', back: '/games', fill: true },
+  '/games/frogger': { title: 'Frogger', back: '/games', fill: true },
+  '/games/scores': { title: 'High scores', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
   '/workouts/tracker': { title: 'Workout', back: '/workouts' },
@@ -304,6 +314,46 @@ export default function App() {
           element={
             <ProtectedRoute>
               <WobblyTowers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/snake"
+          element={
+            <ProtectedRoute>
+              <Snake />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/car-dodge"
+          element={
+            <ProtectedRoute>
+              <CarDodge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/pong"
+          element={
+            <ProtectedRoute>
+              <Pong />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/frogger"
+          element={
+            <ProtectedRoute>
+              <Frogger />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/scores"
+          element={
+            <ProtectedRoute>
+              <HighScores />
             </ProtectedRoute>
           }
         />

@@ -565,3 +565,18 @@ like `/games/wobbly-towers?code=ABCD`. Full definition, RLS policies and
 realtime setup live in
 [`_reference/wobbly-towers-schema.sql`](../_reference/wobbly-towers-schema.sql)
 — run that file to create these tables.
+
+## Games: `game_scores`
+
+Family high scores (`src/pages/games/lib/scores.js`). One row per finished
+game: `user_id`, `display_name` (as it was when the score was made),
+`game`, `board` and an integer `score`. `game` and `board` are free text so
+a new game or mode needs no SQL; which way each board ranks (higher or
+lower wins) and how a score is shown live in
+`src/pages/games/lib/scoreBoards.js`. Boards show each person's best.
+Readable by approved users, insertable for your own `user_id`, deletable by
+the owner or an admin. Scores made offline are queued in localStorage
+(`fh-score-queue`) and inserted later. Full definition and RLS policies
+live in
+[`_reference/game-scores-schema.sql`](../_reference/game-scores-schema.sql)
+— run that file to create the table.

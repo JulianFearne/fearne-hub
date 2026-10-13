@@ -1,0 +1,116 @@
+/* src/pages/games/lib/leaderboard.css
+   The shared family high-score table (Leaderboard.jsx). Scoped under .lb. */
+
+.lb {
+  width: 100%;
+  max-width: 20rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+}
+.lb-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  text-align: center;
+}
+.lb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+  font-variant-numeric: tabular-nums;
+}
+.lb-list li {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: var(--ink-1);
+}
+.lb-list li:nth-child(odd) {
+  background: var(--surface-sunken);
+}
+.lb-list li.is-me {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+}
+.lb-rank {
+  text-align: center;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.lb-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-score {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.lb-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------- the High scores page (HighScores.jsx) ---------- */
+
+.lb-page {
+  max-width: 32rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.9rem;
+}
+.lb-page-sub {
+  margin: 0;
+  color: var(--ink-3);
+}
+.lb-page-games,
+.lb-page-boards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.lb-page-chip {
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.lb-page-chip.small {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+}
+.lb-page-chip.active {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: var(--primary);
+}
+.lb-page-table {
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-card);
+}
+.lb-page-table .lb {
+  max-width: none;
+}
+.lb-page-play {
+  justify-self: center;
+  color: var(--primary);
+  font-weight: 600;
+}

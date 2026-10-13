@@ -547,3 +547,10 @@
 .bsh-roster-status.is-sunk {
   color: var(--bsh-terracotta);
 }
+
+.bsh-record {
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  color: var(--ink-2);
+}

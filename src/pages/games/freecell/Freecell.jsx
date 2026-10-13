@@ -1,5 +1,6 @@
 // src/pages/games/freecell/Freecell.jsx
-// Offline single-player. No Supabase, no props. Tap-to-select then
+// Offline single-player. A win goes on the family high-score board as the
+// number of moves (fewest is best, lib/scores.js). Tap-to-select then
 // tap-to-place interaction (works equally well with touch and a mouse,
 // no drag-and-drop library needed).
 
@@ -18,6 +19,8 @@ import {
   moveTableauToFree,
   moveTableauToTableau,
 } from './engine'
+import { useHighScores } from '../lib/scores'
+import Leaderboard from '../lib/Leaderboard'
 import './freecell.css'
 
 function Card({ card, selected, dimmed }) {
@@ -34,6 +37,8 @@ export default function Freecell() {
   const [moves, setMoves] = useState(0)
   const [wins, setWins] = useState(0)
   const [error, setError] = useState('')
+  const [record, setRecord] = useState(null)
+  const family = useHighScores('freecell', 'moves')
 
   const won = useMemo(() => isWon(state), [state])
 
@@ -45,7 +50,11 @@ export default function Freecell() {
   }, [error])
 
   useEffect(() => {
-    if (won) setWins((w) => w + 1)
+    if (!won) return
+    setWins((w) => w + 1)
+    family.submit(moves).then(setRecord)
+    // Once per win.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [won])
 
   const newGame = useCallback(() => {
@@ -53,6 +62,7 @@ export default function Freecell() {
     setSelection(null)
     setMoves(0)
     setError('')
+    setRecord(null)
   }, [])
 
   function applyMove(next, label) {
@@ -212,7 +222,14 @@ export default function Freecell() {
           {supermoveLimit === 1 ? '' : 's'} can move together right now.
         </p>
 
-        {won && <div className="fc-won-banner">Solved it in {moves} moves! 🎉</div>}
+        {won && (
+          <div className="fc-won-banner">
+            Solved it in {moves} moves! 🎉
+            {record?.best && <div className="fc-record">New personal best{record.rank ? `, number ${record.rank} in the family` : ''}!</div>}
+          </div>
+        )}
+
+        <Leaderboard scores={family} className="fc-leaderboard" />
       </div>
     </div>
   )

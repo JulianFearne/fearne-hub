@@ -1,0 +1,239 @@
+/* src/pages/games/frogger/frogger.css
+   Scoped under .fg, never leaks into the hub shell. The route is a `fill`
+   route, so .fg stretches to exactly the space between the header and the
+   tab bar and the canvas takes what the HUD and d-pad leave. */
+
+.fg {
+  --fg-accent: var(--primary);
+  --fg-on-accent: var(--ink-on-primary);
+  --fg-ink: var(--ink-1);
+  --fg-line: var(--border);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ---------- HUD ---------- */
+
+.fg-hud {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.fg-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.fg-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.fg-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--fg-ink);
+  font-variant-numeric: tabular-nums;
+}
+.fg-lives {
+  font-size: 0.95rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  color: var(--surface-sunken);
+  white-space: nowrap;
+}
+.fg-lives .on {
+  color: #4fb83c;
+}
+.fg-icon-btn {
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--fg-line);
+  background: var(--surface-card);
+  color: var(--fg-ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.fg-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Per-frog clock (Classic). The page sets scaleX straight from the loop. */
+.fg-timer {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+  margin-top: -0.15rem;
+}
+.fg-timer-fill {
+  display: block;
+  height: 100%;
+  background: #4fb83c;
+  transform-origin: left center;
+  transition: background-color 0.3s;
+}
+.fg-timer-fill.is-low {
+  background: var(--danger);
+}
+
+/* ---------- play area ---------- */
+
+.fg-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--fg-line);
+  background: #24452a;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.fg-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.fg-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface-veil);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  padding: 1rem;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+/* Centre when there's room, scroll from the top when there isn't. */
+.fg-overlay > :first-child {
+  margin-top: auto;
+}
+.fg-overlay > :last-child {
+  margin-bottom: auto;
+}
+.fg-overlay-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fg-ink);
+}
+.fg-overlay-score {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--fg-ink);
+  font-variant-numeric: tabular-nums;
+}
+.fg-overlay-sub {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--ink-2);
+}
+.fg-overlay-note {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.fg-btn {
+  border: 1px solid var(--fg-line);
+  background: var(--surface-card);
+  color: var(--fg-ink);
+  border-radius: 12px;
+  padding: 0.7rem 2rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.fg-btn.primary {
+  background: var(--fg-accent);
+  color: var(--fg-on-accent);
+  border-color: var(--fg-accent);
+}
+
+.fg-modes {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.fg-chip {
+  border: 1px solid var(--fg-line);
+  background: var(--surface-card);
+  color: var(--fg-ink);
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.fg-chip.active {
+  background: var(--fg-accent);
+  color: var(--fg-on-accent);
+  border-color: var(--fg-accent);
+}
+
+/* ---------- d-pad: a big Up in the middle, Left and Right either side ---------- */
+
+.fg-pad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  grid-template-rows: 4.25rem 3rem;
+  grid-template-areas:
+    'left up right'
+    'left down right';
+  gap: 0.4rem;
+  flex: none;
+}
+.fg-pad {
+  border-radius: 14px;
+  border: 1px solid var(--fg-line);
+  background: var(--surface-sunken);
+  color: var(--fg-ink);
+  font-size: 1.4rem;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fg-pad--up {
+  grid-area: up;
+  font-size: 1.8rem;
+}
+.fg-pad--down {
+  grid-area: down;
+  font-size: 1.1rem;
+}
+.fg-pad--left {
+  grid-area: left;
+}
+.fg-pad--right {
+  grid-area: right;
+}
+.fg-pad:active {
+  background: var(--fg-accent);
+  color: var(--fg-on-accent);
+  border-color: var(--fg-accent);
+}

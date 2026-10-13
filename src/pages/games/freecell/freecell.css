@@ -192,3 +192,12 @@
     height: 3.6rem;
   }
 }
+
+.fc-record {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.fc-leaderboard {
+  margin-top: 1.25rem;
+}

@@ -1,7 +1,9 @@
 // src/pages/games/connect-four/ConnectFourAI.jsx
 // Single-player vs the computer. Fully offline: state lives in React, nothing
 // touches Supabase, so this works with no signal once the service worker has
-// cached the app shell.
+// cached the app shell. A win goes on the family high-score board for the
+// difficulty as the number of discs you used (fewest is best,
+// lib/scores.js).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -14,6 +16,8 @@ import {
 } from './engine';
 import { chooseMove } from './ai';
 import Board from './Board';
+import { useHighScores } from '../lib/scores';
+import Leaderboard from '../lib/Leaderboard';
 import './connect-four.css';
 
 const HUMAN = SEAT_1;
@@ -29,6 +33,9 @@ export default function ConnectFourAI() {
   const [aiThinking, setAiThinking] = useState(false);
   const [humanFirst, setHumanFirst] = useState(true);
   const [scores, setScores] = useState({ you: 0, ai: 0, draws: 0 });
+  const [record, setRecord] = useState(null);
+  const family = useHighScores('connect-four', difficulty);
+  const discs = board.flat().filter((cell) => cell === HUMAN).length;
 
   const aiTimer = useRef(null);
   const scoredRef = useRef(false); // ensure a finished game is tallied once
@@ -91,11 +98,14 @@ export default function ConnectFourAI() {
       ai: s.ai + (winner === AI ? 1 : 0),
       draws: s.draws + (isDraw ? 1 : 0),
     }));
+    if (winner === HUMAN) family.submit(discs).then(setRecord);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameOver, winner, isDraw]);
 
   const startGame = useCallback((startWithHuman) => {
     clearTimeout(aiTimer.current);
     scoredRef.current = false;
+    setRecord(null);
     setBoard(createBoard());
     setWinner(0);
     setWinningLine(null);
@@ -112,7 +122,10 @@ export default function ConnectFourAI() {
   };
 
   let status;
-  if (winner === HUMAN) status = 'You win! 🎉';
+  if (winner === HUMAN)
+    status = record?.best
+      ? `You win with ${discs} discs, a new personal best! 🎉`
+      : `You win with ${discs} discs! 🎉`;
   else if (winner === AI) status = 'Computer wins';
   else if (isDraw) status = "It's a draw";
   else if (turn === HUMAN) status = 'Your turn';
@@ -176,6 +189,8 @@ export default function ConnectFourAI() {
             New game
           </button>
         </div>
+
+        <Leaderboard scores={family} />
       </div>
     </div>
   );

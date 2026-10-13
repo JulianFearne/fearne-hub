@@ -1,0 +1,193 @@
+/* src/pages/games/car-dodge/car-dodge.css
+   Scoped under .cd, never leaks into the hub shell. The route is a `fill`
+   route (see .fh-app--fill in hub.css), so .cd stretches to exactly the space
+   between the header and the tab bar. The road itself is canvas art with its
+   own palette; only the chrome around it uses the theme tokens. */
+
+.cd {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cd-hud {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.cd-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.cd-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.cd-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.cd-lives {
+  font-size: 1.1rem;
+  line-height: 1.1;
+  letter-spacing: 0.05em;
+  color: var(--border);
+}
+.cd-lives .on {
+  color: var(--danger);
+}
+.cd-icon-btn {
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.cd-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.cd-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #6cbf5a; /* matches the grass, so a resize never flashes */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cd-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+.cd-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface-veil);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+/* Centred when it fits, scrollable from the top when it doesn't. */
+.cd-overlay > :first-child {
+  margin-top: auto;
+}
+.cd-overlay > :last-child {
+  margin-bottom: auto;
+}
+.cd-overlay-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink-1);
+}
+.cd-overlay-score {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.cd-overlay-sub {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--ink-2);
+}
+.cd-overlay-note {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+.cd-board {
+  margin-top: 0.4rem;
+}
+
+.cd-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  border-radius: 12px;
+  padding: 0.7rem 2rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.cd-btn.primary {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: var(--primary);
+}
+
+.cd-modes {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.cd-chip {
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.cd-chip.active {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: var(--primary);
+}
+
+.cd-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.cd-pad {
+  height: 4rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--ink-1);
+  font-size: 1.7rem;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.cd-pad:active {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: var(--primary);
+}

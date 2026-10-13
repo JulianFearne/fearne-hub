@@ -6,13 +6,17 @@
 //             turns keeps each player's fleet hidden from the other, same
 //             pass-the-phone pattern as Pictionary.
 //
-// Side 'a' is always you / Player 1 and fires first.
+// Side 'a' is always you / Player 1 and fires first. Beating the computer
+// puts the number of shots you took on the family high-score board for
+// that difficulty (fewest is best, lib/scores.js).
 
 import { useEffect, useState } from 'react'
 import { chooseShot } from './ai'
 import { createShotsGrid, describeShot, fireAt, placeFleet } from './engine'
 import BattleView from './BattleView'
 import DeployView from './DeployView'
+import { useHighScores } from '../lib/scores'
+import Leaderboard from '../lib/Leaderboard'
 
 const DIFFICULTIES = [
   { key: 'easy', label: 'Easy' },
@@ -49,6 +53,16 @@ export default function BattleshipLocal({ mode }) {
   const [difficulty, setDifficulty] = useState('medium')
   const names = namesFor(mode)
   const vsComputer = mode === 'computer'
+  const family = useHighScores('battleship', difficulty)
+  const [record, setRecord] = useState(null)
+  const shotsTaken = state.shots.a.flat().filter((cell) => cell != null).length
+
+  // A win against the computer goes on the board, once per match.
+  useEffect(() => {
+    if (!vsComputer || state.phase !== 'over' || state.winner !== 'a') return
+    family.submit(shotsTaken).then(setRecord)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase])
 
   // Viewing side: who is holding the phone right now.
   const me = vsComputer ? 'a' : state.phase.startsWith('deploy') ? state.deploySide : state.turn
@@ -116,6 +130,7 @@ export default function BattleshipLocal({ mode }) {
   }
 
   function playAgain() {
+    setRecord(null)
     setState(newMatch(mode))
   }
 
@@ -220,11 +235,18 @@ export default function BattleshipLocal({ mode }) {
           Continue
         </button>
       )}
+      {over && vsComputer && state.winner === 'a' && (
+        <p className="bsh-record">
+          Sunk in {shotsTaken} shots
+          {record?.best ? `, a new personal best${record.rank ? `, number ${record.rank} in the family` : ''}!` : '.'}
+        </p>
+      )}
       {over && (
         <button className="bsh-btn primary" onClick={playAgain}>
           Play again
         </button>
       )}
+      {over && vsComputer && <Leaderboard scores={family} />}
     </div>
   )
 }

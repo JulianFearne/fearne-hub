@@ -19,6 +19,7 @@ import Card, { CardTitle, CardMeta } from '../../components/ds/Card.jsx';
 import Icon from '../../components/ds/Icon.jsx';
 import Badge from '../../components/ds/Badge.jsx';
 import SearchField from '../../components/ds/SearchField.jsx';
+import { SCORE_GAMES } from './lib/scoreBoards';
 
 const GAMES = [
   {
@@ -139,6 +140,42 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'snake',
+    title: 'Snake',
+    blurb: 'Eat the fruit, grow longer, don’t bite your tail. Kids, Classic, Maze and Fruit rush modes.',
+    icon: 'worm',
+    to: '/games/snake',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
+    key: 'car-dodge',
+    title: 'Car Dodge',
+    blurb: 'Weave through the traffic and grab the coins. Easy mode has three lives for little drivers.',
+    icon: 'car-front',
+    to: '/games/car-dodge',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
+    key: 'pong',
+    title: 'Pong',
+    blurb: 'The original bat and ball. Play the computer, a friend on the same phone, or rally against the wall.',
+    icon: 'volleyball',
+    to: '/games/pong',
+    tags: ['1 player, offline', '2 players, offline'],
+    live: true,
+  },
+  {
+    key: 'frogger',
+    title: 'Frogger',
+    blurb: 'Hop across the road and the river to get every frog home. Easy mode has no timer.',
+    icon: 'turtle',
+    to: '/games/frogger',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
     key: 'carve',
     title: 'CARVE',
     blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',
@@ -192,6 +229,7 @@ function GameCard({ game }) {
           {game.tags.map((t) => (
             <Badge key={t}>{t}</Badge>
           ))}
+          {SCORE_GAMES[game.key] && <Badge tone="success">High scores</Badge>}
           {!game.live && <Badge tone="warning">Coming soon</Badge>}
         </div>
       </div>
@@ -237,7 +275,8 @@ export default function GamesHub() {
       (g) =>
         normalize(g.title).includes(q) ||
         normalize(g.blurb).includes(q) ||
-        g.tags.some((t) => normalize(t).includes(q)),
+        g.tags.some((t) => normalize(t).includes(q)) ||
+        (SCORE_GAMES[g.key] && 'high scores'.includes(q)),
     );
   }, [sortedGames, trimmed]);
 
@@ -313,6 +352,16 @@ export default function GamesHub() {
       <p className="fh-home__sub" style={{ marginBottom: 'var(--sp-6)' }}>
         Pick something to play. The offline ones work in the car with no signal.
       </p>
+
+      <Card as={Link} to="/games/scores" tile className="fh-games__scores">
+        <span className="fh-recipes__mark">
+          <Icon name="trophy" size={18} />
+        </span>
+        <div>
+          <CardTitle>Family high scores</CardTitle>
+          <CardMeta>Who’s top at Snake, Sudoku, Wobbly Towers and the rest.</CardMeta>
+        </div>
+      </Card>
 
       <div className="fh-games__search">
         <SearchField value={query} onChange={setQuery} placeholder="Search games" />

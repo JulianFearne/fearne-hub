@@ -8,8 +8,8 @@
 //
 // Endless: the score is the tallest the tower stood before three pieces fell
 // off. Medals at set heights. Two modes, Classic and Power-ups, each with its
-// own top 10 in localStorage, so scoreboards are per device, with the
-// signed-in person's name on each entry.
+// own family high-score board (lib/scores.js). The device still keeps its
+// own top 10 in localStorage for the medals and the "best" line.
 //
 // The route is marked `fill` in App.jsx, so the hub body is exactly one screen
 // tall and the game stretches into it: no scrolling to reach the controls.
@@ -21,6 +21,8 @@ import { displayName } from '../../accountData'
 import { MEDALS, MODES, POWERS, POWER_EVERY, medalFor } from './engine'
 import WobblyStage from './WobblyStage'
 import WobblyOnline, { storedRaceId } from './WobblyOnline'
+import { useHighScores } from '../lib/scores'
+import Leaderboard from '../lib/Leaderboard'
 import './wobbly-towers.css'
 
 const MODE_KEY = 'wt-mode'
@@ -73,25 +75,6 @@ function addScore(scores, entry) {
   return { scores: top, rank: top.indexOf(entry) }
 }
 
-function Scoreboard({ scores, highlight = -1 }) {
-  if (scores.length === 0) return <p className="wt-board-empty">No scores yet. Be the first!</p>
-  return (
-    <ol className="wt-board">
-      {scores.map((s, i) => {
-        const medal = medalFor(s.score)
-        return (
-          <li key={`${s.at}-${i}`} className={i === highlight ? 'is-new' : ''}>
-            <span className="wt-board-rank">{i + 1}</span>
-            <span className="wt-board-name">{s.name}</span>
-            <span className="wt-board-medal">{medal ? medal.emoji : ''}</span>
-            <span className="wt-board-score">{s.score}</span>
-          </li>
-        )
-      })}
-    </ol>
-  )
-}
-
 export default function WobblyTowers() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [inviteCode, setInviteCode] = useState(() => (searchParams.get('code') || '').toUpperCase())
@@ -118,6 +101,7 @@ function WobblySolo({ onOnline }) {
   const [scores, setScores] = useState(() => loadScores(mode))
   const [result, setResult] = useState(null) // { score, rank } after a game
   const stage = useRef(null)
+  const family = useHighScores('wobbly-towers', mode)
 
   const personalBest = scores.reduce((m, s) => Math.max(m, s.score), 0)
   const name = displayName(profile, user?.email)
@@ -129,6 +113,7 @@ function WobblySolo({ onOnline }) {
       saveScores(mode, added.scores)
       setScores(added.scores)
       setResult({ score, rank: added.rank })
+      family.submit(score).then((r) => setResult((prev) => (prev?.score === score ? { ...prev, family: r } : prev)))
     } else {
       setResult({ score, rank: -1 })
     }
@@ -190,8 +175,7 @@ function WobblySolo({ onOnline }) {
               🌐 Race online
             </button>
           </div>
-          <p className="wt-board-title">{MODES[mode].label} scoreboard</p>
-          <Scoreboard scores={scores} />
+          <Leaderboard scores={family} />
         </div>
       )
     }
@@ -204,13 +188,15 @@ function WobblySolo({ onOnline }) {
             {medalFor(result.score) ? ` ${medalFor(result.score).emoji}` : ''}
           </p>
           <p className="wt-overlay-sub">
-            {result.rank === 0 && scores.length > 1
-              ? 'New top score!'
-              : result.rank >= 0
-                ? `Number ${result.rank + 1} on the scoreboard`
-                : lifetimeMedal
-                  ? `Best so far: ${personalBest} ${lifetimeMedal.emoji}`
-                  : 'Keep stacking!'}
+            {result.family?.best && result.family.rank === 1
+              ? 'Top of the family! 👑'
+              : result.family?.best
+                ? `New personal best!${result.family.rank ? ` Number ${result.family.rank} in the family.` : ''}`
+                : result.family?.rank
+                  ? `Number ${result.family.rank} in the family`
+                  : lifetimeMedal
+                    ? `Best so far: ${personalBest} ${lifetimeMedal.emoji}`
+                    : 'Keep stacking!'}
           </p>
           <div className="wt-overlay-actions">
             <button className="wt-btn primary" onClick={play}>
@@ -221,8 +207,7 @@ function WobblySolo({ onOnline }) {
             </button>
           </div>
           {modePicker}
-          <p className="wt-board-title">{MODES[mode].label} scoreboard</p>
-          <Scoreboard scores={scores} highlight={result.rank} />
+          <Leaderboard scores={family} />
         </div>
       )
     }

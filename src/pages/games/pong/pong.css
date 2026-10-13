@@ -1,0 +1,190 @@
+/* src/pages/games/pong/pong.css
+   Scoped under .pg, never leaks into the hub shell. The route is a `fill`
+   route, so .pg stretches to exactly the space between the header and the
+   tab bar. The court itself is drawn on the canvas with its own arcade
+   palette; everything here uses the hub tokens so it follows the theme. */
+
+.pg {
+  --pg-bottom: #0fb5d6;
+  --pg-top: #e0458f;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pg-hud {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.pg-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.pg-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.pg-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.pg-stat--bottom .pg-stat-label {
+  color: var(--pg-bottom);
+}
+.pg-stat--top .pg-stat-label {
+  color: var(--pg-top);
+}
+.pg-lives {
+  font-size: 1.05rem;
+  line-height: 1.1;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+}
+.pg-lives span {
+  opacity: 0.35;
+}
+.pg-lives .on {
+  color: var(--danger);
+  opacity: 1;
+}
+.pg-icon-btn {
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.pg-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pg-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.pg-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.pg-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 0.65rem;
+  background: var(--surface-veil);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.pg-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink-1);
+}
+.pg-flipped {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  transform: rotate(180deg);
+}
+.pg-score {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.pg-sub {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--ink-2);
+}
+.pg-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.pg-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  border-radius: 12px;
+  padding: 0.7rem 2rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.pg-btn.primary {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: var(--primary);
+}
+
+.pg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.pg-chip {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.pg-chip.small {
+  min-height: 38px;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.85rem;
+}
+.pg-chip.active {
+  background: var(--primary);
+  color: var(--ink-on-primary);
+  border-color: var(--primary);
+}
+
+.pg-board {
+  width: 100%;
+  max-width: 20rem;
+}

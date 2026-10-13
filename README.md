@@ -59,15 +59,21 @@ the client in `src/supabaseClient.js`.
   charts, and an optional body-weight tracker (adults/admins only). See
   [`docs/workout-program-format.md`](docs/workout-program-format.md).
 - **Games** — Connect Four, Sudoku, Hangman, Freecell, Bingo, Pictionary,
-  Tic Tac Toe, Wobbly Towers (an endless physics tower stacker built on
-  matter-js, with Classic and Power-ups modes, medals and per-device
-  scoreboards, plus online races where Power-ups can be thrown at the
-  leader), and several with a computer opponent, pass-and-play and/or
-  online play via a join code or invite link: Battleship, Ludo, Snakes and
-  Ladders, Go Fish, Connect Four and "Animal Place Thing" (categories), all
-  live via Supabase Realtime. Each online game's tables are in
-  `_reference/*-schema.sql`; run the file once to enable that game's
-  online mode.
+  Tic Tac Toe, arcade games (Snake, Car Dodge, Pong and Frogger, each with
+  an easy mode for little ones), Wobbly Towers (an endless physics tower
+  stacker built on matter-js, with Classic and Power-ups modes and medals,
+  plus online races where Power-ups can be thrown at the leader), and
+  several with a computer opponent, pass-and-play and/or online play via a
+  join code or invite link: Battleship, Ludo, Snakes and Ladders, Go Fish,
+  Connect Four and "Animal Place Thing" (categories), all live via Supabase
+  Realtime. Each online game's tables are in `_reference/*-schema.sql`; run
+  the file once to enable that game's online mode. Games with a score
+  (the arcade games, Wobbly Towers, Sudoku, Freecell, Hangman, and
+  Battleship and Connect Four against the computer) share a family
+  high-score table (`_reference/game-scores-schema.sql`, boards listed in
+  `src/pages/games/lib/scoreBoards.js`), shown in each game and on
+  `/games/scores`. Scores made with no signal wait on the phone and are
+  sent later.
 - **Admin** — approve sign-ups and manage everyone's role
   (`admin` / `adult` / `kid`).
 

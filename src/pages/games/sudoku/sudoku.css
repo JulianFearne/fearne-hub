@@ -177,3 +177,12 @@
 .su-btn.primary:hover {
   background: var(--su-forest-dark);
 }
+
+.su-record {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.su-leaderboard {
+  margin-top: 1.25rem;
+}

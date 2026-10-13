@@ -61,6 +61,11 @@ import {
   Swords,
   NotebookPen,
   Castle,
+  Trophy,
+  Worm,
+  CarFront,
+  Volleyball,
+  Turtle,
 } from 'lucide-react'
 
 // Lucide (2px stroke, rounded caps), the design system's icon substitution.
@@ -128,6 +133,11 @@ const ICONS = {
   swords: Swords,
   'notebook-pen': NotebookPen,
   castle: Castle,
+  trophy: Trophy,
+  worm: Worm,
+  'car-front': CarFront,
+  volleyball: Volleyball,
+  turtle: Turtle,
 }
 
 export default function Icon({ name, size = 20, label, className, ...rest }) {

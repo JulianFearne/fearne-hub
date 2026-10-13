@@ -167,7 +167,11 @@ export default function LudoTable({ state, names, canAct, onRoll, onPick, onAnim
       </div>
 
       <div className="ludo-controls">
-        <Dice value={diceValue} color={color} rolling={rolling} onClick={roll} disabled={!canRoll} />
+        <div className="ludo-dice-wrap">
+          <Dice value={diceValue} color={color} rolling={rolling} onClick={roll} disabled={!canRoll} />
+          {/* Space is kept when hidden so the status line doesn't jump. */}
+          <span className={`ludo-dice-tip ${canRoll ? '' : 'is-hidden'}`}>Press to roll</span>
+        </div>
         <p className={`ludo-status ${state.winner != null ? 'is-over' : ''}`} aria-live="polite">
           <span className={`ludo-dot ludo-bg-${color}`} /> {statusText(state, names, canAct)}
         </p>

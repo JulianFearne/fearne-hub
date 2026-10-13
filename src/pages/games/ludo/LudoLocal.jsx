@@ -86,11 +86,19 @@ export default function LudoLocal({ mode }) {
         onPick={pick}
         onAnimating={setAnimating}
         actions={
-          <button className={`ludo-btn ${state.winner != null ? 'primary' : 'ghost'}`} onClick={() => restart()}>
-            {state.winner != null ? 'Play again' : 'New game'}
-          </button>
+          state.winner != null && (
+            <button className="ludo-btn primary" onClick={() => restart()}>
+              Play again
+            </button>
+          )
         }
       />
+
+      {state.winner == null && (
+        <button className="ludo-link" onClick={() => restart()}>
+          Start a new game
+        </button>
+      )}
     </div>
   )
 }

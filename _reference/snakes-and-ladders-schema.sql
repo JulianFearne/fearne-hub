@@ -55,6 +55,7 @@ create index if not exists snl_rolls_session_idx
   on public.snl_rolls (session_id, roll_number);
 
 -- ---------- RLS ----------
+-- Each policy is dropped first so the whole file is safe to re-run.
 
 alter table public.snl_sessions enable row level security;
 alter table public.snl_players  enable row level security;
@@ -83,31 +84,38 @@ as $$
      and (select count(*) from public.snl_players where session_id = sess) < 4;
 $$;
 
+drop policy if exists "snl sessions readable by approved" on public.snl_sessions;
 create policy "snl sessions readable by approved"
   on public.snl_sessions for select to authenticated
   using (is_approved());
 
+drop policy if exists "snl sessions insert own" on public.snl_sessions;
 create policy "snl sessions insert own"
   on public.snl_sessions for insert to authenticated
   with check (is_approved() and host_id = auth.uid());
 
+drop policy if exists "snl sessions update by player" on public.snl_sessions;
 create policy "snl sessions update by player"
   on public.snl_sessions for update to authenticated
   using (is_approved() and snl_my_seat(id) is not null)
   with check (is_approved());
 
+drop policy if exists "snl players readable by approved" on public.snl_players;
 create policy "snl players readable by approved"
   on public.snl_players for select to authenticated
   using (is_approved());
 
+drop policy if exists "snl players insert own" on public.snl_players;
 create policy "snl players insert own"
   on public.snl_players for insert to authenticated
   with check (is_approved() and user_id = auth.uid() and snl_can_join(session_id));
 
+drop policy if exists "snl rolls readable by approved" on public.snl_rolls;
 create policy "snl rolls readable by approved"
   on public.snl_rolls for select to authenticated
   using (is_approved());
 
+drop policy if exists "snl rolls insert own" on public.snl_rolls;
 create policy "snl rolls insert own"
   on public.snl_rolls for insert to authenticated
   with check (
@@ -117,7 +125,16 @@ create policy "snl rolls insert own"
   );
 
 -- ---------- realtime ----------
--- Safe to re-run; ignore "already member of publication" if it appears.
-alter publication supabase_realtime add table public.snl_sessions;
-alter publication supabase_realtime add table public.snl_players;
-alter publication supabase_realtime add table public.snl_rolls;
+-- Adds each table to realtime unless it's already there, so this is safe to re-run.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'snl_sessions') then
+    alter publication supabase_realtime add table public.snl_sessions;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'snl_players') then
+    alter publication supabase_realtime add table public.snl_players;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'snl_rolls') then
+    alter publication supabase_realtime add table public.snl_rolls;
+  end if;
+end $$;

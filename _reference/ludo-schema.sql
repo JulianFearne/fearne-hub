@@ -57,6 +57,7 @@ create index if not exists ludo_events_session_idx
   on public.ludo_events (session_id, event_number);
 
 -- ---------- RLS ----------
+-- Each policy is dropped first so the whole file is safe to re-run.
 
 alter table public.ludo_sessions enable row level security;
 alter table public.ludo_players  enable row level security;
@@ -85,31 +86,38 @@ as $$
      and (select count(*) from public.ludo_players where session_id = sess) < 4;
 $$;
 
+drop policy if exists "ludo sessions readable by approved" on public.ludo_sessions;
 create policy "ludo sessions readable by approved"
   on public.ludo_sessions for select to authenticated
   using (is_approved());
 
+drop policy if exists "ludo sessions insert own" on public.ludo_sessions;
 create policy "ludo sessions insert own"
   on public.ludo_sessions for insert to authenticated
   with check (is_approved() and host_id = auth.uid());
 
+drop policy if exists "ludo sessions update by player" on public.ludo_sessions;
 create policy "ludo sessions update by player"
   on public.ludo_sessions for update to authenticated
   using (is_approved() and ludo_my_seat(id) is not null)
   with check (is_approved());
 
+drop policy if exists "ludo players readable by approved" on public.ludo_players;
 create policy "ludo players readable by approved"
   on public.ludo_players for select to authenticated
   using (is_approved());
 
+drop policy if exists "ludo players insert own" on public.ludo_players;
 create policy "ludo players insert own"
   on public.ludo_players for insert to authenticated
   with check (is_approved() and user_id = auth.uid() and ludo_can_join(session_id));
 
+drop policy if exists "ludo events readable by approved" on public.ludo_events;
 create policy "ludo events readable by approved"
   on public.ludo_events for select to authenticated
   using (is_approved());
 
+drop policy if exists "ludo events insert own" on public.ludo_events;
 create policy "ludo events insert own"
   on public.ludo_events for insert to authenticated
   with check (
@@ -119,7 +127,16 @@ create policy "ludo events insert own"
   );
 
 -- ---------- realtime ----------
--- Safe to re-run; ignore "already member of publication" if it appears.
-alter publication supabase_realtime add table public.ludo_sessions;
-alter publication supabase_realtime add table public.ludo_players;
-alter publication supabase_realtime add table public.ludo_events;
+-- Adds each table to realtime unless it's already there, so this is safe to re-run.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'ludo_sessions') then
+    alter publication supabase_realtime add table public.ludo_sessions;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'ludo_players') then
+    alter publication supabase_realtime add table public.ludo_players;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'ludo_events') then
+    alter publication supabase_realtime add table public.ludo_events;
+  end if;
+end $$;

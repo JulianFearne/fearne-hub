@@ -62,6 +62,7 @@ create index if not exists bs_shots_session_idx
   on public.bs_shots (session_id, shot_number);
 
 -- ---------- RLS ----------
+-- Each policy is dropped first so the whole file is safe to re-run.
 
 alter table public.bs_sessions enable row level security;
 alter table public.bs_players  enable row level security;
@@ -91,40 +92,48 @@ as $$
 $$;
 
 -- sessions
+drop policy if exists "bs sessions readable by approved" on public.bs_sessions;
 create policy "bs sessions readable by approved"
   on public.bs_sessions for select to authenticated
   using (is_approved());
 
+drop policy if exists "bs sessions insert own" on public.bs_sessions;
 create policy "bs sessions insert own"
   on public.bs_sessions for insert to authenticated
   with check (is_approved() and host_id = auth.uid());
 
+drop policy if exists "bs sessions update by player" on public.bs_sessions;
 create policy "bs sessions update by player"
   on public.bs_sessions for update to authenticated
   using (is_approved() and bs_my_seat(id) is not null)
   with check (is_approved());
 
 -- players
+drop policy if exists "bs players readable by approved" on public.bs_players;
 create policy "bs players readable by approved"
   on public.bs_players for select to authenticated
   using (is_approved());
 
+drop policy if exists "bs players insert own" on public.bs_players;
 create policy "bs players insert own"
   on public.bs_players for insert to authenticated
   with check (is_approved() and user_id = auth.uid() and bs_can_join(session_id));
 
 -- Only your own row, and only while your fleet is still unset: ships can't
 -- be moved once they're committed.
+drop policy if exists "bs players set own fleet once" on public.bs_players;
 create policy "bs players set own fleet once"
   on public.bs_players for update to authenticated
   using (is_approved() and user_id = auth.uid() and fleet is null)
   with check (is_approved() and user_id = auth.uid());
 
 -- shots
+drop policy if exists "bs shots readable by approved" on public.bs_shots;
 create policy "bs shots readable by approved"
   on public.bs_shots for select to authenticated
   using (is_approved());
 
+drop policy if exists "bs shots insert own" on public.bs_shots;
 create policy "bs shots insert own"
   on public.bs_shots for insert to authenticated
   with check (
@@ -134,7 +143,16 @@ create policy "bs shots insert own"
   );
 
 -- ---------- realtime ----------
--- Safe to re-run; ignore "already member of publication" if it appears.
-alter publication supabase_realtime add table public.bs_sessions;
-alter publication supabase_realtime add table public.bs_players;
-alter publication supabase_realtime add table public.bs_shots;
+-- Adds each table to realtime unless it's already there, so this is safe to re-run.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'bs_sessions') then
+    alter publication supabase_realtime add table public.bs_sessions;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'bs_players') then
+    alter publication supabase_realtime add table public.bs_players;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'bs_shots') then
+    alter publication supabase_realtime add table public.bs_shots;
+  end if;
+end $$;

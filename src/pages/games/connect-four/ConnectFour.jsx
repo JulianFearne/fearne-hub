@@ -1,14 +1,16 @@
 // src/pages/games/connect-four/ConnectFour.jsx
-// One route, two modes. Keeps integration to a single line in your router.
+// One route, three modes: vs the computer, two players on one device, or
+// online. Keeps integration to a single line in your router.
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ConnectFourAI from './ConnectFourAI';
+import ConnectFourLocal from './ConnectFourLocal';
 import ConnectFourMultiplayer from './ConnectFourMultiplayer';
 import './connect-four.css';
 
 export default function ConnectFour() {
-  const [mode, setMode] = useState(null); // null | 'ai' | 'online'
+  const [mode, setMode] = useState(null); // null | 'ai' | 'local' | 'online'
 
   return (
     <div className="connect-four-page">
@@ -32,6 +34,11 @@ export default function ConnectFour() {
               <span className="c4-modecard-title">Play the computer</span>
               <span className="c4-modecard-sub">Solo · works offline</span>
             </button>
+            <button className="c4-modecard" onClick={() => setMode('local')}>
+              <span className="c4-modecard-emoji">📱</span>
+              <span className="c4-modecard-title">Two players, one device</span>
+              <span className="c4-modecard-sub">Take turns · works offline</span>
+            </button>
             <button className="c4-modecard" onClick={() => setMode('online')}>
               <span className="c4-modecard-emoji">👥</span>
               <span className="c4-modecard-title">Play a family member</span>
@@ -42,6 +49,7 @@ export default function ConnectFour() {
       )}
 
       {mode === 'ai' && <ConnectFourAI />}
+      {mode === 'local' && <ConnectFourLocal />}
       {mode === 'online' && <ConnectFourMultiplayer />}
     </div>
   );

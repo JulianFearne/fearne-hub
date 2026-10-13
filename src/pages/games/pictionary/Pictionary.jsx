@@ -3,8 +3,7 @@
 // with a Charades mode (acting instead of drawing) that reuses the exact
 // same categories, timer and scoreboard: only the framing text changes.
 // No Supabase, no props: one phone gets passed round the room. Category
-// picker over JSON words (words.json), same pattern as Hangman's word lists
-// and Would You Rather's prompts.
+// picker over JSON words (words.json), same pattern as Hangman's word lists.
 
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'

@@ -4,7 +4,7 @@
 //   computer  you against the computer (easy / medium / hard, see ai.js)
 //   pass      two players passing the phone. A handoff screen between
 //             turns keeps each player's fleet hidden from the other, same
-//             pass-the-phone pattern as Pictionary and Would You Rather.
+//             pass-the-phone pattern as Pictionary.
 //
 // Side 'a' is always you / Player 1 and fires first.
 

@@ -23,7 +23,7 @@ const GAMES = [
     blurb: 'Drop discs, get four in a row. Beat the computer or a family member.',
     icon: 'grid-3x3',
     to: '/games/connect-four',
-    tags: ['1 player, offline', '2 players, online'],
+    tags: ['1 player, offline', '2 players, offline', '2 players, online'],
     live: true,
   },
   {
@@ -68,16 +68,7 @@ const GAMES = [
     blurb: 'Collect sets by asking other players for cards.',
     icon: 'fish',
     to: '/games/go-fish',
-    tags: ['Multiplayer, online'],
-    live: true,
-  },
-  {
-    key: 'would-you-rather',
-    title: 'Would You Rather',
-    blurb: 'Pass the phone round and argue about which is worse.',
-    icon: 'users',
-    to: '/games/would-you-rather',
-    tags: ['Pass and play, offline'],
+    tags: ['1 player, offline', 'Multiplayer, online'],
     live: true,
   },
   {
@@ -96,15 +87,6 @@ const GAMES = [
     icon: 'pencil',
     to: '/games/pictionary',
     tags: ['Pass and play, offline'],
-    live: true,
-  },
-  {
-    key: 'dots-and-boxes',
-    title: 'Dots and Boxes',
-    blurb: 'Claim a line, complete a box. Most boxes at the end wins.',
-    icon: 'dot',
-    to: '/games/dots-and-boxes',
-    tags: ['2 players, offline'],
     live: true,
   },
   {
@@ -128,10 +110,10 @@ const GAMES = [
   {
     key: 'ludo',
     title: 'Ludo',
-    blurb: 'Roll a six to leave home, race round the board, send rivals back.',
+    blurb: 'Roll a six to leave home, race round the board, send rivals back. Play the computer, pass the phone, or online.',
     icon: 'dice-6',
     to: '/games/ludo',
-    tags: ['2-4 players, offline'],
+    tags: ['1 player, offline', '2-4 players, offline', '2-4 players, online'],
     live: true,
   },
   {

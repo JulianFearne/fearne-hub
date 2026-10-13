@@ -1,8 +1,7 @@
 // src/pages/games/pictionary/engine.js
 // Picks a random index into a list of the given length, avoiding `exclude`
 // (the current word) so "New word" doesn't repeat the same one twice in a
-// row. Pure so it's trivial to test/reason about. Same pattern as Would You
-// Rather's randomIndex.
+// row. Pure so it's trivial to test/reason about.
 export function randomIndex(length, exclude = -1) {
   if (length <= 1) return 0
   let i = exclude

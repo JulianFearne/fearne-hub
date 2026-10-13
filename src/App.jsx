@@ -19,10 +19,8 @@ import Hangman from './pages/games/hangman/Hangman.jsx'
 import Sudoku from './pages/games/sudoku/Sudoku.jsx'
 import Freecell from './pages/games/freecell/Freecell.jsx'
 import GoFish from './pages/games/go-fish/GoFish.jsx'
-import WouldYouRather from './pages/games/would-you-rather/WouldYouRather.jsx'
 import TicTacToe from './pages/games/tic-tac-toe/TicTacToe.jsx'
 import Pictionary from './pages/games/pictionary/Pictionary.jsx'
-import DotsAndBoxes from './pages/games/dots-and-boxes/DotsAndBoxes.jsx'
 import SnakesAndLadders from './pages/games/snakes-and-ladders/SnakesAndLadders.jsx'
 import Battleship from './pages/games/battleship/Battleship.jsx'
 import Ludo from './pages/games/ludo/Ludo.jsx'
@@ -65,10 +63,8 @@ const ROUTE_HEADERS = {
   '/games/sudoku': { title: 'Sudoku', back: '/games' },
   '/games/freecell': { title: 'Freecell', back: '/games' },
   '/games/go-fish': { title: 'Go Fish', back: '/games' },
-  '/games/would-you-rather': { title: 'Would You Rather', back: '/games' },
   '/games/tic-tac-toe': { title: 'Tic Tac Toe', back: '/games' },
   '/games/pictionary': { title: 'Pictionary', back: '/games' },
-  '/games/dots-and-boxes': { title: 'Dots and Boxes', back: '/games' },
   '/games/snakes-and-ladders': { title: 'Snakes and Ladders', back: '/games' },
   '/games/battleship': { title: 'Battleship', back: '/games' },
   '/games/ludo': { title: 'Ludo', back: '/games' },
@@ -256,14 +252,6 @@ export default function App() {
           }
         />
         <Route
-          path="/games/would-you-rather"
-          element={
-            <ProtectedRoute>
-              <WouldYouRather />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/games/tic-tac-toe"
           element={
             <ProtectedRoute>
@@ -276,14 +264,6 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Pictionary />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/games/dots-and-boxes"
-          element={
-            <ProtectedRoute>
-              <DotsAndBoxes />
             </ProtectedRoute>
           }
         />

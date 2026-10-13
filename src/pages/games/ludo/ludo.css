@@ -2,17 +2,21 @@
    Scoped under .ludo, never leaks into the hub shell. */
 
 .ludo {
-  --ludo-forest: var(--primary);
-  --ludo-forest-dark: var(--primary-press);
-  --ludo-cream: var(--ink-on-primary);
+  --ludo-primary: var(--primary);
+  --ludo-primary-dark: var(--primary-press);
+  --ludo-on-primary: var(--ink-on-primary);
   --ludo-card: var(--surface-card);
-  --ludo-gold: var(--secondary);
   --ludo-ink: var(--ink-1);
   --ludo-line: var(--border);
-  --p1: var(--primary);
-  --p2: var(--secondary);
-  --p3: var(--success);
-  --p4: var(--info);
+
+  /* board colours, as on a printed board (same in light and dark) */
+  --ludo-blue: #2b3a98;
+  --ludo-red: #e3242b;
+  --ludo-green: #0f9d4f;
+  --ludo-yellow: #f6d10f;
+  --ludo-board: #ffffff;
+  --ludo-grid: #2a2a2a;
+
   max-width: 560px;
   margin: 0 auto;
 }
@@ -25,9 +29,19 @@
 }
 .ludo-back {
   text-decoration: none;
-  color: var(--ludo-forest);
+  color: var(--ludo-primary);
   font-weight: 600;
   font-size: 0.9rem;
+}
+.ludo-back.as-button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 .ludo-title {
   font-family: var(--font-display);
@@ -38,213 +52,377 @@
   background: var(--ludo-card);
   border: 1px solid var(--ludo-line);
   border-radius: 14px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: var(--shadow-1);
   display: grid;
-  gap: 1rem;
+  gap: 0.85rem;
   justify-items: center;
 }
 
-.ludo-themes {
+/* ---------- mode picker ---------- */
+
+.ludo-modepick {
+  display: grid;
+  gap: 0.85rem;
+}
+.ludo-modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--ludo-line);
+  background: var(--ludo-card);
+  color: var(--ludo-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.ludo-modecard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+.ludo-modecard-emoji {
+  font-size: 1.7rem;
+}
+.ludo-modecard-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.ludo-modecard-sub {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- chips, buttons, text ---------- */
+
+.ludo-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: center;
 }
 .ludo-chip {
-  border: 1px solid var(--ludo-line);
-  background: var(--surface-card);
-  color: var(--ludo-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
+  border: 1px solid var(--ludo-line);
+  background: transparent;
+  color: var(--ludo-ink);
   cursor: pointer;
 }
 .ludo-chip.active {
-  background: var(--ludo-forest);
-  color: var(--ludo-cream);
-  border-color: var(--ludo-forest);
+  background: var(--ludo-primary);
+  border-color: var(--ludo-primary);
+  color: var(--ludo-on-primary);
 }
 
+.ludo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+.ludo-btn {
+  font: inherit;
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  font-weight: 600;
+  border: 1px solid var(--ludo-primary);
+  background: var(--surface-card);
+  color: var(--ludo-primary);
+  cursor: pointer;
+}
+.ludo-btn.primary {
+  background: var(--ludo-primary);
+  color: var(--ludo-on-primary);
+}
+.ludo-btn.primary:hover:not(:disabled) {
+  background: var(--ludo-primary-dark);
+}
+.ludo-btn.ghost {
+  border-color: var(--ludo-line);
+  color: var(--ink-2);
+}
+.ludo-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.ludo-hint {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.ludo-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- online lobby ---------- */
+
+.ludo-lobby {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  width: 100%;
+}
+.ludo-lobby-divider {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.ludo-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.ludo-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--ludo-line);
+  background: var(--surface-card);
+  color: var(--ludo-ink);
+}
+.ludo-code-label {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+.ludo-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--ludo-primary);
+}
+.ludo-lobby-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+/* ---------- table ---------- */
+
+.ludo-table {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  justify-items: center;
+}
 .ludo-players {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: center;
 }
 .ludo-player-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border: 1px solid var(--ludo-line);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.8rem;
+  border: 1px solid var(--ludo-line);
   color: var(--ludo-ink);
-  opacity: 0.5;
 }
 .ludo-player-chip.active {
-  opacity: 1;
-  border-color: currentColor;
-  font-weight: 700;
+  border-width: 2px;
+  padding: calc(0.25rem - 1px) calc(0.65rem - 1px);
 }
-.ludo-player-chip.p1 { color: var(--p1); }
-.ludo-player-chip.p2 { color: var(--p2); }
-.ludo-player-chip.p3 { color: var(--p3); }
-.ludo-player-chip.p4 { color: var(--p4); }
+.ludo-chip--blue.active { border-color: var(--ludo-blue); }
+.ludo-chip--red.active { border-color: var(--ludo-red); }
+.ludo-chip--green.active { border-color: var(--ludo-green); }
+.ludo-chip--yellow.active { border-color: #c9a800; }
+.ludo-home-count {
+  font-weight: 500;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+.ludo-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex: none;
+  vertical-align: -0.08em;
+}
+.ludo-bg-blue { background: var(--ludo-blue); }
+.ludo-bg-red { background: var(--ludo-red); }
+.ludo-bg-green { background: var(--ludo-green); }
+.ludo-bg-yellow { background: var(--ludo-yellow); }
 
-.ludo-board {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  grid-template-rows: repeat(14, 1fr);
-  gap: 1px;
+.ludo-board-wrap {
   width: 100%;
-  max-width: 360px;
-  aspect-ratio: 1;
-  background: var(--ludo-line);
-  border: 1px solid var(--ludo-line);
-  border-radius: 8px;
-  overflow: hidden;
+  max-width: 460px;
+}
+.ludo-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+.ludo-board-bg {
+  fill: var(--ludo-board);
+  stroke: var(--ludo-grid);
+  stroke-width: 0.06;
+}
+.ludo-fill-blue { fill: var(--ludo-blue); }
+.ludo-fill-red { fill: var(--ludo-red); }
+.ludo-fill-green { fill: var(--ludo-green); }
+.ludo-fill-yellow { fill: var(--ludo-yellow); }
+.ludo-yard-inner {
+  fill: var(--ludo-board);
+  stroke: var(--ludo-grid);
+  stroke-width: 0.04;
 }
 .ludo-cell {
-  position: relative;
-  background: var(--surface-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  fill: var(--ludo-board);
+  stroke: var(--ludo-grid);
+  stroke-width: 0.035;
 }
-.ludo-cell.safe {
-  background: color-mix(in srgb, currentColor 20%, var(--surface-card));
+.ludo-cell[class*='ludo-fill-'] {
+  stroke: var(--ludo-grid);
 }
-.ludo-cell.safe.p1 { color: var(--p1); }
-.ludo-cell.safe.p2 { color: var(--p2); }
-.ludo-cell.safe.p3 { color: var(--p3); }
-.ludo-cell.safe.p4 { color: var(--p4); }
-
-.ludo-cell-tokens {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1px;
-  align-items: center;
-  justify-content: center;
+.ludo-cell.ludo-fill-blue { fill: var(--ludo-blue); }
+.ludo-cell.ludo-fill-red { fill: var(--ludo-red); }
+.ludo-cell.ludo-fill-green { fill: var(--ludo-green); }
+.ludo-cell.ludo-fill-yellow { fill: var(--ludo-yellow); }
+.ludo-centre {
+  stroke: var(--ludo-grid);
+  stroke-width: 0.04;
+  stroke-linejoin: round;
 }
 
-.ludo-center {
-  grid-row: 3 / 13;
-  grid-column: 3 / 13;
+/* tokens */
+.ludo-token {
+  transition: transform 0.12s ease-out;
+}
+.ludo-token-body {
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 0.07;
+  filter: drop-shadow(0 0.05px 0.06px rgba(0, 0, 0, 0.5));
+}
+.ludo-token-top {
+  fill: rgba(255, 255, 255, 0.55);
+  stroke: rgba(0, 0, 0, 0.2);
+  stroke-width: 0.03;
+}
+.ludo-token.is-last .ludo-token-body {
+  stroke: #000;
+  stroke-width: 0.1;
+}
+.ludo-token.is-pickable {
+  cursor: pointer;
+}
+.ludo-token-halo {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 0.1;
+  filter: drop-shadow(0 0 0.12px #000);
+  animation: ludo-pulse 0.9s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ludo-token-hit {
+  fill: transparent;
+}
+@keyframes ludo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1.18);
+  }
+}
+
+/* dice + status */
+.ludo-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--ludo-card);
-  border-radius: 6px;
-  text-align: center;
-  padding: 0.5rem;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 460px;
 }
-.ludo-center-winner {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--ludo-forest-dark);
+.ludo-dice {
+  flex: none;
+  width: 3.6rem;
+  height: 3.6rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 14px;
 }
-.ludo-center-tallies {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  justify-content: center;
+.ludo-dice:disabled {
+  cursor: default;
+  opacity: 0.8;
 }
-.ludo-tally {
-  font-weight: 700;
-  font-size: 0.85rem;
+.ludo-dice svg {
+  width: 100%;
+  height: 100%;
 }
-.ludo-tally.p1 { color: var(--p1); }
-.ludo-tally.p2 { color: var(--p2); }
-.ludo-tally.p3 { color: var(--p3); }
-.ludo-tally.p4 { color: var(--p4); }
-
-.ludo-token-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--ludo-cream);
-  display: inline-block;
+.ludo-dice-face {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 3;
 }
-.ludo-token-dot.p1 { background: var(--p1); }
-.ludo-token-dot.p2 { background: var(--p2); }
-.ludo-token-dot.p3 { background: var(--p3); }
-.ludo-token-dot.p4 { background: var(--p4); }
+.ludo-dice--blue .ludo-dice-face { fill: var(--ludo-blue); }
+.ludo-dice--red .ludo-dice-face { fill: var(--ludo-red); }
+.ludo-dice--green .ludo-dice-face { fill: var(--ludo-green); }
+.ludo-dice--yellow .ludo-dice-face { fill: var(--ludo-yellow); }
+.ludo-dice-pip { fill: #fff; }
+.ludo-dice--yellow .ludo-dice-pip { fill: #3a3000; }
+.ludo-dice.is-ready {
+  animation: ludo-nudge 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ludo-primary) 35%, transparent);
+}
+.ludo-dice.is-rolling svg {
+  animation: ludo-spin 0.42s linear;
+}
+@keyframes ludo-nudge {
+  0%,
+  100% { transform: rotate(0); }
+  10% { transform: rotate(-8deg); }
+  20% { transform: rotate(8deg); }
+  30% { transform: rotate(0); }
+}
+@keyframes ludo-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ludo-dice.is-ready,
+  .ludo-dice.is-rolling svg,
+  .ludo-token-halo {
+    animation: none;
+  }
+  .ludo-token {
+    transition: none;
+  }
+}
 
 .ludo-status {
+  margin: 0;
+  flex: 1;
   font-weight: 600;
+  font-size: 0.92rem;
   color: var(--ludo-ink);
-  text-align: center;
-  min-height: 1.4em;
-  font-size: 0.9rem;
 }
 .ludo-status.is-over {
-  color: var(--ludo-forest-dark);
-  font-size: 1.05rem;
-}
-
-.ludo-tokens-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  width: 100%;
-}
-.ludo-token-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  border: 2px solid var(--ludo-line);
-  background: var(--surface-card);
-  border-radius: 10px;
-  padding: 0.5rem 0.25rem;
-  font-weight: 600;
-  font-size: 0.75rem;
-  cursor: pointer;
-  color: currentColor;
-}
-.ludo-token-btn.p1 { color: var(--p1); }
-.ludo-token-btn.p2 { color: var(--p2); }
-.ludo-token-btn.p3 { color: var(--p3); }
-.ludo-token-btn.p4 { color: var(--p4); }
-.ludo-token-btn:not(:disabled):hover {
-  border-color: currentColor;
-}
-.ludo-token-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.ludo-token-btn-sub {
-  font-weight: 400;
-  font-size: 0.65rem;
-  color: var(--ludo-ink);
-  opacity: 0.7;
-}
-
-.ludo-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-.ludo-btn {
-  border-radius: 999px;
-  padding: 0.6rem 1.4rem;
-  font-weight: 600;
-  border: 1px solid var(--ludo-forest);
-  background: var(--surface-card);
-  color: var(--ludo-forest);
-  cursor: pointer;
-}
-.ludo-btn.primary {
-  background: var(--ludo-forest);
-  color: var(--ludo-cream);
-}
-.ludo-btn.primary:hover:not(:disabled) {
-  background: var(--ludo-forest-dark);
-}
-.ludo-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--success);
+  text-align: center;
 }

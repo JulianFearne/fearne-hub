@@ -529,3 +529,15 @@ can join it with one tap. Invite links look like
 setup live in
 [`_reference/battleship-schema.sql`](../_reference/battleship-schema.sql) —
 run that file to create these tables.
+
+## Games: `ludo_sessions`, `ludo_players`, `ludo_events`
+
+Backing store for online Ludo (`src/pages/games/ludo/`). Same
+`is_approved()`-gated pattern as Go Fish: the host shares a code or invite
+link (`/games/ludo?code=ABCD`), 2-4 players join, the host starts (which
+stamps `num_players`). Each turn is a `roll` row and, if a token can move, a
+`move` row; token positions, turns and the winner are derived by
+`deriveOnline()` in `engine.js`, never stored. Full definition, RLS policies
+and realtime setup live in
+[`_reference/ludo-schema.sql`](../_reference/ludo-schema.sql) — run that
+file to create these tables.

@@ -280,3 +280,89 @@
   gap: 0.6rem;
   justify-content: center;
 }
+
+/* ---------- mode picker ---------- */
+
+.gf2-back.as-button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gf2-forest);
+  cursor: pointer;
+}
+.gf2-modepick {
+  display: grid;
+  gap: 0.85rem;
+}
+.gf2-modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--gf2-line);
+  background: var(--gf2-card);
+  color: var(--gf2-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.gf2-modecard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+.gf2-modecard-emoji {
+  font-size: 1.7rem;
+}
+.gf2-modecard-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.gf2-modecard-sub {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- vs computer options ---------- */
+
+.gf2-options {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+}
+.gf2-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.gf2-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--gf2-line);
+  background: transparent;
+  color: var(--gf2-ink);
+  cursor: pointer;
+}
+.gf2-chip.active {
+  background: var(--gf2-forest);
+  border-color: var(--gf2-forest);
+  color: var(--gf2-cream);
+}
+
+.gf2-log {
+  display: grid;
+  gap: 0.2rem;
+}
+.gf2-log-older {
+  opacity: 0.55;
+  font-size: 0.8rem;
+}

@@ -69,6 +69,7 @@ function KindLists({ kind }) {
   const [newListName, setNewListName] = useState('')
   const [combineMode, setCombineMode] = useState(false)
   const [selectedForCombine, setSelectedForCombine] = useState([])
+  const [renamingId, setRenamingId] = useState(null)
 
   useEffect(() => {
     load()
@@ -274,6 +275,20 @@ function KindLists({ kind }) {
                         </>
                       )}
                     </CardMeta>
+                    {!combineMode && canManage(access) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon="pencil"
+                        style={{ marginTop: 'var(--sp-3)', marginRight: 'var(--sp-3)' }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setRenamingId(l.id)
+                        }}
+                      >
+                        Rename
+                      </Button>
+                    )}
                     {!combineMode && (
                       <Button
                         variant="ghost"
@@ -296,7 +311,102 @@ function KindLists({ kind }) {
           </div>
         </>
       )}
+
+      {renamingId && lists.some((l) => l.id === renamingId) && (
+        <RenameSheet
+          list={lists.find((l) => l.id === renamingId)}
+          noun={k.unit || 'list'}
+          onClose={() => setRenamingId(null)}
+          onListChange={handleListChange}
+        />
+      )}
     </div>
+  )
+}
+
+// Title row of an open list: its name with a rename button, and sharing.
+// Only the owner or a Manage share can rename or share.
+function ListHead({ list, kind, access, members, onListChange }) {
+  const k = LIST_KINDS[kind]
+  const [showShare, setShowShare] = useState(false)
+  const [showRename, setShowRename] = useState(false)
+  const manage = canManage(access)
+
+  return (
+    <>
+      <div className="fh-lists__head">
+        <span className="fh-lists__title">
+          <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)' }}>{list.name}</p>
+          {manage && <IconButton icon="pencil" label={`Rename ${list.name}`} onClick={() => setShowRename(true)} />}
+        </span>
+        {manage ? (
+          <Button variant="quiet" icon="users" onClick={() => setShowShare(true)}>
+            Share
+          </Button>
+        ) : (
+          <Badge>{PERMISSION_LABEL[access]}</Badge>
+        )}
+      </div>
+
+      {showRename && (
+        <RenameSheet list={list} noun={k.unit || 'list'} onClose={() => setShowRename(false)} onListChange={onListChange} />
+      )}
+      {showShare && (
+        <ShareSheet list={list} kind={kind} members={members} onClose={() => setShowShare(false)} onListChange={onListChange} />
+      )}
+    </>
+  )
+}
+
+function RenameSheet({ list, noun, onClose, onListChange }) {
+  const [name, setName] = useState(list.name)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const trimmed = name.trim()
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!trimmed) return
+    if (trimmed === list.name) return onClose()
+    setSaving(true)
+    setError(null)
+    try {
+      await renameList(list.id, trimmed)
+      onListChange({ ...list, name: trimmed })
+      onClose()
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Sheet
+      title={`Rename ${noun}`}
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="quiet" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form="fh-rename-form" loading={saving} disabled={!trimmed}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      {error && (
+        <div className="fh-notice fh-notice--danger">
+          <Icon name="alert-circle" size={16} />
+          {error}
+        </div>
+      )}
+      <form id="fh-rename-form" onSubmit={handleSubmit} className="fh-lists__form">
+        <Field label="Name" htmlFor="fh-rename-name">
+          <Input id="fh-rename-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        </Field>
+      </form>
+    </Sheet>
   )
 }
 
@@ -311,7 +421,6 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
   const [newAmount, setNewAmount] = useState('')
   const [newAssignee, setNewAssignee] = useState('')
   const [newDue, setNewDue] = useState('')
-  const [showShare, setShowShare] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
 
   // Only people who can see the list can be given something on it.
@@ -417,16 +526,7 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
         All {k.title.toLowerCase()}
       </Button>
 
-      <div className="fh-lists__head">
-        <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)' }}>{list.name}</p>
-        {canManage(access) ? (
-          <Button variant="quiet" icon="users" onClick={() => setShowShare(true)}>
-            Share
-          </Button>
-        ) : (
-          <Badge>{PERMISSION_LABEL[access]}</Badge>
-        )}
-      </div>
+      <ListHead list={list} kind={kind} access={access} members={members} onListChange={onListChange} />
 
       {error && (
         <div className="fh-notice fh-notice--danger">
@@ -516,9 +616,6 @@ function ListDetail({ list, kind, access, members, onBack, onListChange }) {
         <ItemSheet item={editingItem} k={k} people={people} onClose={() => setEditingItem(null)} onSave={handleSaveItem} />
       )}
 
-      {showShare && (
-        <ShareSheet list={list} kind={kind} members={members} onClose={() => setShowShare(false)} onListChange={onListChange} />
-      )}
     </div>
   )
 }
@@ -534,7 +631,6 @@ function NoteDetail({ list, kind, access, members, onBack, onListChange }) {
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('idle') // idle | dirty | saving | saved
   const [error, setError] = useState(null)
-  const [showShare, setShowShare] = useState(false)
   // Kept in refs so the timer and the unmount flush see the latest values.
   const noteRef = useRef(null)
   const textRef = useRef('')
@@ -602,16 +698,7 @@ function NoteDetail({ list, kind, access, members, onBack, onListChange }) {
         All {k.title.toLowerCase()}
       </Button>
 
-      <div className="fh-lists__head">
-        <p className="fh-home__greet" style={{ font: 'var(--type-title-lg)' }}>{list.name}</p>
-        {canManage(access) ? (
-          <Button variant="quiet" icon="users" onClick={() => setShowShare(true)}>
-            Share
-          </Button>
-        ) : (
-          <Badge>{PERMISSION_LABEL[access]}</Badge>
-        )}
-      </div>
+      <ListHead list={list} kind={kind} access={access} members={members} onListChange={onListChange} />
 
       {error && (
         <div className="fh-notice fh-notice--danger">
@@ -656,9 +743,6 @@ function NoteDetail({ list, kind, access, members, onBack, onListChange }) {
         )
       )}
 
-      {showShare && (
-        <ShareSheet list={list} kind={kind} members={members} onClose={() => setShowShare(false)} onListChange={onListChange} />
-      )}
     </div>
   )
 }
@@ -777,33 +861,16 @@ function ItemSheet({ item, k, people, onClose, onSave }) {
   )
 }
 
-// Rename the list and choose who else can see it, and at what level.
+// Choose who else can see the list, and at what level.
 // Changes save as they're made; there's no separate save for sharing.
 function ShareSheet({ list, kind, members, onClose, onListChange }) {
   const { user, profile } = useAuth()
-  const [name, setName] = useState(list.name)
-  const [savingName, setSavingName] = useState(false)
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
 
   const shares = list.list_shares || []
   const owner = members.find((m) => m.id === list.created_by)
   const others = members.filter((m) => m.id !== list.created_by)
-
-  async function handleRename(e) {
-    e.preventDefault()
-    if (!name.trim() || name.trim() === list.name) return
-    setSavingName(true)
-    setError(null)
-    try {
-      await renameList(list.id, name.trim())
-      onListChange({ ...list, name: name.trim() })
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSavingName(false)
-    }
-  }
 
   async function handlePermission(member, permission) {
     setBusyId(member.id)
@@ -844,13 +911,6 @@ function ShareSheet({ list, kind, members, onClose, onListChange }) {
           {error}
         </div>
       )}
-
-      <form onSubmit={handleRename} className="fh-lists__toolbar">
-        <Input value={name} onChange={(e) => setName(e.target.value)} aria-label="List name" />
-        <Button type="submit" variant="quiet" loading={savingName} disabled={!name.trim() || name.trim() === list.name}>
-          Rename
-        </Button>
-      </form>
 
       <p className="fh-lists__grouplabel fh-lists__sharelabel">Who has access</p>
       <div className="fh-rows">

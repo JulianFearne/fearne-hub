@@ -552,3 +552,16 @@ row; positions, turns and the winner are derived by `deriveOnline()` in
 `engine.js`. Full definition, RLS policies and realtime setup live in
 [`_reference/snakes-and-ladders-schema.sql`](../_reference/snakes-and-ladders-schema.sql)
 — run that file to create these tables.
+
+## Games: `wt_sessions`, `wt_players`
+
+Backing store for online Wobbly Towers races
+(`src/pages/games/wobbly-towers/`). Each player's tower is simulated on their
+own device, so these tables hold only the lobby, the race settings (`mode`,
+`goal` height and the `seed` that gives everyone the same pieces), who is
+`out`, and the winner. Live heights and attack power-ups go over a Realtime
+broadcast channel (`wt-<session id>`), which needs no table. Invite links look
+like `/games/wobbly-towers?code=ABCD`. Full definition, RLS policies and
+realtime setup live in
+[`_reference/wobbly-towers-schema.sql`](../_reference/wobbly-towers-schema.sql)
+— run that file to create these tables.

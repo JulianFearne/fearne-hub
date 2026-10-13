@@ -15,8 +15,15 @@
 //
 // Two modes: 'classic', and 'powerups', where every POWER_EVERY pieces placed
 // earns a power-up (see POWERS) that the player holds and uses when they like.
+//
+// Online races (WobblyOnline.jsx) add three things, all opt-in through
+// createGame's options: a seeded piece bag so every player gets the same
+// pieces, a goal height that ends the game as a win, and attack power-ups
+// (ATTACKS) that are thrown at a rival and land on their game through
+// receiveAttack().
 
 import Matter from 'matter-js'
+import { mulberry32 } from '../lib/deck'
 
 const { Engine, Bodies, Body, Composite, Events, Query, Sleeping } = Matter
 
@@ -81,6 +88,23 @@ export const POWERS = {
 const IVY_PIECES = 3
 const SLOW_PIECES = 5
 
+// Online Power-ups races only: earned like the others, but used on a rival.
+export const ATTACKS = {
+  gust: { label: 'Gust', emoji: '🌬️', hint: 'Blows their falling piece sideways.', hit: 'A gust blew your piece!' },
+  hurry: { label: 'Hurry', emoji: '⚡', hint: 'Their next 4 pieces fall twice as fast.', hit: 'Hurry! Next 4 pieces fall fast.' },
+  awkward: { label: 'Awkward', emoji: '🥨', hint: 'Their next piece is a big awkward one.', hit: 'An awkward piece is coming!' },
+  fog: { label: 'Fog', emoji: '🌫️', hint: 'Fogs their screen for 4 pieces.', hit: 'Fog! You can’t see what’s next.' },
+  quake: { label: 'Quake', emoji: '🫨', hint: 'Shakes the top of their tower loose.', hit: 'Quake! Your tower’s top is shaking.' },
+}
+const HURRY_PIECES = 4
+const FOG_PIECES = 4
+const QUAKE_DEPTH = BLOCK * 3 // how far down from the top a quake reaches
+
+// Everything a power-up button might hold, friendly or attack.
+export function powerInfo(key) {
+  return POWERS[key] ?? ATTACKS[key] ?? null
+}
+
 // Cells as [col, row] with row increasing downwards. 'dot' only comes from
 // the Little block power-up, never from the bag.
 const SHAPES = {
@@ -92,6 +116,7 @@ const SHAPES = {
   S: [[1, 0], [2, 0], [0, 1], [1, 1]],
   Z: [[0, 0], [1, 0], [1, 1], [2, 1]],
   dot: [[0, 0]],
+  U: [[0, 0], [2, 0], [0, 1], [1, 1], [2, 1]],
 }
 export const PIECE_KINDS = ['I', 'O', 'T', 'L', 'J', 'S', 'Z']
 
@@ -104,6 +129,7 @@ export const PIECE_COLOURS = {
   S: '#4b8a5e',
   Z: '#b02a21',
   dot: '#8a7f87',
+  U: '#6a4a8f',
 }
 export const IVY_COLOUR = '#3f8f3a'
 
@@ -112,17 +138,17 @@ export function shapeCells(kind) {
 }
 
 // A "bag" of all seven shapes in random order, so droughts can't happen.
-function refillBag() {
+function refillBag(rng = Math.random) {
   const bag = PIECE_KINDS.slice()
   for (let i = bag.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = Math.floor(rng() * (i + 1))
     ;[bag[i], bag[j]] = [bag[j], bag[i]]
   }
   return bag
 }
 
 function nextKind(game) {
-  if (game.bag.length === 0) game.bag = refillBag()
+  if (game.bag.length === 0) game.bag = refillBag(game.rng)
   return game.bag.pop()
 }
 
@@ -157,7 +183,8 @@ function makePlatform(blocks) {
 
 // viewHeight is how many world units tall the screen is; it depends on the
 // phone's shape, so the component passes it in (and updates game.viewHeight).
-export function createGame(viewHeight, mode = 'classic') {
+// options (online races): { seed, goal, attacks }.
+export function createGame(viewHeight, mode = 'classic', { seed = null, goal = null, attacks = false } = {}) {
   const engine = Engine.create({
     enableSleeping: true,
     positionIterations: 12,
@@ -168,13 +195,19 @@ export function createGame(viewHeight, mode = 'classic') {
   const platform = makePlatform(PLATFORM_BLOCKS)
   Composite.add(engine.world, platform)
 
+  const rng = seed == null ? Math.random : mulberry32(seed)
   const game = {
     engine,
     mode,
+    rng,
+    goal, // blocks; reaching it ends the game as 'won'
+    attacks, // whether attack power-ups can be earned
+    fast: 0, // pieces left that fall at double speed (Hurry)
+    fog: 0, // pieces left with the screen fogged (Fog)
     platform,
     platformBlocks: PLATFORM_BLOCKS,
     viewHeight,
-    bag: refillBag(),
+    bag: refillBag(rng),
     active: null, // the piece under control
     pose: null, // { x, y, angle } where the active piece logically is
     grounded: 0, // seconds since the touched-down piece last moved
@@ -182,7 +215,7 @@ export function createGame(viewHeight, mode = 'classic') {
     next: null,
     pieces: [], // released pieces
     lives: LIVES,
-    status: 'ready', // 'ready' | 'playing' | 'over'
+    status: 'ready', // 'ready' | 'playing' | 'over' | 'won'
     elapsed: 0, // seconds
     towerTop: GROUND_Y, // top of the locked pieces, which is what scores
     stackTop: GROUND_Y, // top of every piece still on the tower
@@ -203,7 +236,7 @@ export function createGame(viewHeight, mode = 'classic') {
   // Four loose squares, never added to the world, posed to test whether the
   // active piece would fit somewhere. A hair smaller than a block so pieces
   // can sit flush against each other.
-  game.ghost = [0, 1, 2, 3].map(() => Bodies.rectangle(0, 0, BLOCK - 1, BLOCK - 1))
+  game.ghost = [0, 1, 2, 3, 4].map(() => Bodies.rectangle(0, 0, BLOCK - 1, BLOCK - 1))
   return game
 }
 
@@ -218,7 +251,8 @@ function restingCamera(game) {
 }
 
 function fallSpeed(game) {
-  const speed = Math.min(FALL_MAX, FALL_START + towerHeightBlocks(game) * FALL_PER_BLOCK)
+  let speed = Math.min(FALL_MAX, FALL_START + towerHeightBlocks(game) * FALL_PER_BLOCK)
+  if (game.fast > 0) speed *= 2
   return game.slow > 0 ? speed / 2 : speed
 }
 
@@ -280,6 +314,8 @@ function release(game) {
     lockPiece(piece, true)
   }
   if (game.slow > 0) game.slow -= 1
+  if (game.fast > 0) game.fast -= 1
+  if (game.fog > 0) game.fog -= 1
   if (game.mode === 'powerups') chargePower(game)
   if (game.status === 'playing') spawn(game)
 }
@@ -298,15 +334,21 @@ function chargePower(game) {
     (key) =>
       (key !== 'life' || game.lives < LIVES) && (key !== 'wide' || game.platformBlocks < PLATFORM_MAX_BLOCKS),
   )
-  game.power = pool[Math.floor(Math.random() * pool.length)]
+  // In a race, half the power-ups earned are attacks.
+  const attack = game.attacks && Math.random() < 0.5
+  const keys = attack ? Object.keys(ATTACKS) : pool
+  game.power = keys[Math.floor(Math.random() * keys.length)]
   game.event = { type: 'earned', power: game.power }
 }
 
+// Using an attack only clears it here and reports { type: 'used', attack: true };
+// the component sends it to a rival, whose game runs receiveAttack().
 export function usePower(game) {
   const key = game.power
   if (!key || game.status !== 'playing') return
   game.power = null
-  game.event = { type: 'used', power: key }
+  game.event = { type: 'used', power: key, attack: key in ATTACKS }
+  if (key in ATTACKS) return
   if (key === 'ivy') {
     for (const p of game.pieces) if (!p.isStatic) lockPiece(p, true)
     game.ivy = IVY_PIECES
@@ -321,6 +363,42 @@ export function usePower(game) {
     game.next = 'dot'
   } else if (key === 'life') {
     game.lives = Math.min(LIVES, game.lives + 1)
+  }
+}
+
+// A rival's attack lands on this game.
+export function receiveAttack(game, key) {
+  if (game.status !== 'playing' || !(key in ATTACKS)) return
+  if (key === 'gust' && game.active) {
+    // Push the falling piece up to three blocks one way, as far as it fits,
+    // and give anything still loose a shove.
+    const dir = Math.random() < 0.5 ? -1 : 1
+    const pose = game.pose
+    for (let n = 6; n >= 1; n--) {
+      const x = Math.max(BLOCK, Math.min(WORLD_WIDTH - BLOCK, pose.x + dir * n * (BLOCK / 2)))
+      if (fits(game, x, pose.y, pose.angle)) {
+        pose.x = x
+        break
+      }
+    }
+    for (const p of game.pieces) if (!p.isStatic) Body.setVelocity(p, { x: p.velocity.x + dir * 2.5, y: p.velocity.y })
+  } else if (key === 'hurry') {
+    game.fast = HURRY_PIECES
+  } else if (key === 'awkward') {
+    game.next = 'U'
+  } else if (key === 'fog') {
+    game.fog = FOG_PIECES
+  } else if (key === 'quake') {
+    // Unlock the top of the tower (ivy holds firm) and jolt it; the normal
+    // settle-and-lock brings it to rest again.
+    for (const p of game.pieces) {
+      if (!p.isStatic || p.plugin.ivy || p.bounds.min.y > game.towerTop + QUAKE_DEPTH) continue
+      Body.setStatic(p, false)
+      Sleeping.set(p, false)
+      p.plugin.still = 0
+      Body.setVelocity(p, { x: (Math.random() - 0.5) * 3, y: -0.5 })
+      Body.setAngularVelocity(p, (Math.random() - 0.5) * 0.04)
+    }
   }
 }
 
@@ -388,6 +466,7 @@ function controlActive(game, input) {
 }
 
 function loseLife(game) {
+  if (game.status !== 'playing') return // a race already won stays won
   game.lives -= 1
   game.flash = 0.6
   if (game.lives <= 0) {
@@ -457,6 +536,13 @@ export function step(game, input) {
   game.stackTop = stackTop
 
   const height = towerHeightBlocks(game)
+  if (game.goal && height >= game.goal && game.status === 'playing') {
+    game.status = 'won'
+    if (game.active) {
+      Composite.remove(game.engine.world, game.active)
+      game.active = null
+    }
+  }
   if (height > game.best) {
     game.best = height
     const medal = medalFor(height)

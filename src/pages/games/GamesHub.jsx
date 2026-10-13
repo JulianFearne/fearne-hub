@@ -128,10 +128,10 @@ const GAMES = [
   {
     key: 'wobbly-towers',
     title: 'Wobbly Towers',
-    blurb: 'Stack falling blocks into a tower that really wobbles. Reach the finish line before it topples.',
+    blurb: 'Stack falling blocks into a tower that really wobbles. Race family online and throw power-ups at the leader.',
     icon: 'castle',
     to: '/games/wobbly-towers',
-    tags: ['1 player, offline'],
+    tags: ['1 player, offline', '2-4 players, online'],
     live: true,
   },
   {

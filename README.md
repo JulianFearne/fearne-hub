@@ -61,7 +61,8 @@ the client in `src/supabaseClient.js`.
 - **Games** — Connect Four, Sudoku, Hangman, Freecell, Bingo, Pictionary,
   Tic Tac Toe, Wobbly Towers (an endless physics tower stacker built on
   matter-js, with Classic and Power-ups modes, medals and per-device
-  scoreboards), and several with a computer opponent, pass-and-play and/or
+  scoreboards, plus online races where Power-ups can be thrown at the
+  leader), and several with a computer opponent, pass-and-play and/or
   online play via a join code or invite link: Battleship, Ludo, Snakes and
   Ladders, Go Fish, Connect Four and "Animal Place Thing" (categories), all
   live via Supabase Realtime. Each online game's tables are in

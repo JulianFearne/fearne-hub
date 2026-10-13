@@ -335,3 +335,212 @@
   color: var(--wt-ink);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- shared bits ---------- */
+
+.wt-overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.wt-btn.ghost {
+  background: transparent;
+  color: var(--ink-2);
+}
+.wt-btn:disabled,
+.wt-chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.wt-stat-goal {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.wt-preview.is-fogged {
+  background: repeating-linear-gradient(45deg, var(--surface-sunken) 0 6px, var(--border) 6px 12px);
+}
+
+/* Attacks: red-tinted slot when holding one, red toast when hit by one. */
+.wt-power.is-attack.is-ready {
+  background: var(--danger);
+  border-color: var(--danger);
+  animation-name: wt-glow-attack;
+}
+@keyframes wt-glow-attack {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 35%, transparent);
+  }
+}
+.wt-toast.is-hit {
+  background: var(--danger);
+  color: var(--white);
+}
+
+/* ---------- online: menus and lobby ---------- */
+
+.wt-online-menu {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+.wt-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  text-align: center;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--wt-line);
+  border-radius: 12px;
+  background: var(--surface-card);
+}
+.wt-panel .wt-overlay-title {
+  margin: 0;
+}
+.wt-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.wt-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+.wt-divider {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wt-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.wt-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--wt-line);
+  background: var(--surface-card);
+  color: var(--wt-ink);
+}
+.wt-code-label {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.wt-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--wt-accent);
+}
+.wt-lobby-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.wt-setting {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: center;
+}
+.wt-setting-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+
+/* ---------- online: rivals strip and countdown ---------- */
+
+.wt-rivals {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding-right: 1.6rem;
+}
+.wt-rivals-leave {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  color: var(--ink-3);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.wt-rival {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--wt-line);
+  font-size: 0.72rem;
+}
+.wt-rival.is-me {
+  border-color: var(--wt-accent);
+}
+.wt-rival.is-out {
+  opacity: 0.5;
+}
+.wt-rival-name {
+  font-weight: 700;
+  color: var(--wt-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wt-rival-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.wt-rival-bar span {
+  display: block;
+  height: 100%;
+  background: var(--secondary);
+  transition: width 0.3s ease;
+}
+.wt-rival.is-me .wt-rival-bar span {
+  background: var(--wt-accent);
+}
+.wt-rival-meta {
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wt-countdown-num {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--wt-accent);
+  animation: wt-count 0.9s ease-out;
+}
+@keyframes wt-count {
+  from {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

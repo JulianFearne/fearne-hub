@@ -50,7 +50,8 @@ function drawOutline(ctx, body) {
   }
 }
 
-export function drawGame(canvas, game, personalBest = 0) {
+// rivals (online races): [{ name, height }] drawn as marks up the right edge.
+export function drawGame(canvas, game, personalBest = 0, rivals = []) {
   const ctx = canvas.getContext('2d')
   const colours = readColours(canvas)
   const scale = canvas.width / WORLD_WIDTH
@@ -88,8 +89,10 @@ export function drawGame(canvas, game, personalBest = 0) {
     ctx.globalAlpha = 1
   }
 
-  // Medal heights, and the player's best so far.
-  const marks = MEDALS.map((m) => ({ y: GROUND_Y - m.blocks * BLOCK, text: `${m.emoji} ${m.blocks}`, gold: true }))
+  // Medal heights (or a race's finish line), and the player's best so far.
+  const marks = game.goal
+    ? [{ y: GROUND_Y - game.goal * BLOCK, text: `🏁 Finish ${game.goal}`, gold: true }]
+    : MEDALS.map((m) => ({ y: GROUND_Y - m.blocks * BLOCK, text: `${m.emoji} ${m.blocks}`, gold: true }))
   if (personalBest > 0) marks.push({ y: GROUND_Y - personalBest * BLOCK, text: `Best ${personalBest}`, gold: false })
   ctx.font = `bold ${BLOCK * 0.45}px system-ui, sans-serif`
   ctx.textAlign = 'right'
@@ -108,6 +111,20 @@ export function drawGame(canvas, game, personalBest = 0) {
     ctx.fillStyle = ctx.strokeStyle
     ctx.fillText(mark.text, WORLD_WIDTH - BLOCK * 0.25, mark.y - BLOCK * 0.4)
     ctx.restore()
+  }
+  ctx.textAlign = 'left'
+
+  // Rivals' heights: a short tick and their initial on the right edge.
+  ctx.font = `bold ${BLOCK * 0.42}px system-ui, sans-serif`
+  ctx.textAlign = 'right'
+  for (const rival of rivals) {
+    const y = GROUND_Y - rival.height * BLOCK
+    if (rival.height <= 0 || y < cam || y > viewBottom) continue
+    ctx.fillStyle = colours.danger
+    ctx.globalAlpha = 0.85
+    ctx.fillRect(WORLD_WIDTH - BLOCK * 0.9, y - 1.5, BLOCK * 0.9, 3)
+    ctx.fillText(rival.name.slice(0, 1).toUpperCase(), WORLD_WIDTH - BLOCK * 1.05, y)
+    ctx.globalAlpha = 1
   }
   ctx.textAlign = 'left'
 
@@ -135,6 +152,23 @@ export function drawGame(canvas, game, personalBest = 0) {
   for (const p of game.pieces) if (p.plugin.ivy) drawOutline(ctx, p)
   ctx.restore()
   if (game.active) drawBody(ctx, game.active, PIECE_COLOURS[game.active.plugin.kind])
+
+  // Fog (a rival's attack): the top of the screen clouds over, so a falling
+  // piece only shows as it gets close.
+  if (game.fog > 0) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    const h = canvas.height * 0.55
+    ctx.fillStyle = colours.sky
+    ctx.fillRect(0, 0, canvas.width, h * 0.7)
+    // Fade out over the last stretch in bands (the sky colour is a token, so
+    // there's no rgba version of it to build a gradient from).
+    const bands = 12
+    for (let i = 0; i < bands; i++) {
+      ctx.globalAlpha = 1 - (i + 1) / (bands + 1)
+      ctx.fillRect(0, h * 0.7 + (h * 0.3 * i) / bands, canvas.width, (h * 0.3) / bands + 1)
+    }
+    ctx.globalAlpha = 1
+  }
 }
 
 // Small preview of the next piece, centred in its own canvas.

@@ -36,6 +36,7 @@ export const SCORE_GAMES = {
     boards: {
       easy: { label: 'Easy', order: 'high', format: points },
       normal: { label: 'Normal', order: 'high', format: points },
+      hard: { label: 'Hard', order: 'high', format: points },
     },
   },
   frogger: {

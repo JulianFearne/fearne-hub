@@ -4,8 +4,9 @@
 // runs the frame loop, the controls, the HUD and the overlays (start screen,
 // pause, game over with the family leaderboard).
 //
-// Two modes, each with its own family board: Easy (slow, three lives, a crash
-// just costs a heart) for the little ones, and Normal (faster, one life).
+// Three modes, each with its own family board: Easy (slow, three lives, a
+// crash just costs a heart) for the little ones, Normal (faster, one life) and
+// Hard (fast from the start, busier, more lorries, one life).
 //
 // The route is marked `fill` in App.jsx, so the page is exactly one screen
 // tall: HUD on top, the road in the middle, the big lane buttons underneath.
@@ -50,6 +51,7 @@ function buzz(pattern) {
 const MODE_NOTES = {
   easy: 'Three lives and gentle traffic. Great for little drivers.',
   normal: 'Faster and busier. One crash and it is over.',
+  hard: 'Fast from the start, packed with lorries, and it keeps getting faster. One crash and it is over.',
 }
 
 export default function CarDodge() {

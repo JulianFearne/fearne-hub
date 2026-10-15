@@ -151,7 +151,7 @@ const GAMES = [
   {
     key: 'car-dodge',
     title: 'Car Dodge',
-    blurb: 'Weave through the traffic and grab the coins. Easy mode has three lives for little drivers.',
+    blurb: 'Weave through the traffic and grab the coins. Easy mode has three lives for little drivers; Hard is for the brave.',
     icon: 'car-front',
     to: '/games/car-dodge',
     tags: ['1 player, offline'],

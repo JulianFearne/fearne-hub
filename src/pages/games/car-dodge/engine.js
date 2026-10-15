@@ -68,6 +68,21 @@ export const MODES = {
     coinChance: 0.4,
     reaction: 0.4,
   },
+  hard: {
+    label: 'Hard',
+    lives: 1,
+    startSpeed: 330,
+    accel: 6.5,
+    maxSpeed: 780,
+    traffic: 0.68,
+    gapStart: 210,
+    gapEnd: 105,
+    gapRamp: 90,
+    pairChance: [0.5, 0.85],
+    lorryChance: 0.3,
+    coinChance: 0.3,
+    reaction: 0.3,
+  },
 }
 
 export const CAR_COLOURS = ['#e8505b', '#3d8bfd', '#f6c445', '#3bb273', '#9b6bd3', '#f08a3c', '#ececec']

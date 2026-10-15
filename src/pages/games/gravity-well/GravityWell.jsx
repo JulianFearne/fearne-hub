@@ -390,6 +390,21 @@ export default function GravityWell() {
   }, [phase])
   useEffect(() => () => keep(), [])
 
+  // Phones treat a long press on the buttons as "select this text" (and a
+  // quick second tap as zoom). Stopping the touch itself prevents both; the
+  // buttons work from pointer events, which still arrive.
+  const controlsRef = useRef(null)
+  useEffect(() => {
+    const el = controlsRef.current
+    const stop = (e) => e.preventDefault()
+    el.addEventListener('touchstart', stop, { passive: false })
+    el.addEventListener('contextmenu', stop)
+    return () => {
+      el.removeEventListener('touchstart', stop)
+      el.removeEventListener('contextmenu', stop)
+    }
+  }, [])
+
   // Tap a planet on the radar to get an arrow pointing to it; tap it again
   // to clear it.
   function onStageTap(e) {
@@ -614,7 +629,7 @@ export default function GravityWell() {
         {overlay}
       </div>
 
-      <div className="gw-controls" style={{ '--gw-pads': 4 + (easy ? 1 : 0) + (hud.weapon ? 1 : 0) }}>
+      <div ref={controlsRef} className="gw-controls" style={{ '--gw-pads': 4 + (easy ? 1 : 0) + (hud.weapon ? 1 : 0) }}>
         <Pad label="Turn left" control="left" input={inputRef}>
           ⟲
         </Pad>

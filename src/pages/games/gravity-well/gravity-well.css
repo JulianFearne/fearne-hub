@@ -12,6 +12,16 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* Holding the buttons down for long stretches mustn't select their words
+     or bring up the phone's copy menu. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.gw * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .gw-hud {

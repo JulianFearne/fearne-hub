@@ -11,8 +11,10 @@
 // sparks. The art has its own palette, so it looks the same in light and
 // dark theme.
 //
-// The page keeps one `fx` object per well (createFx) across frames; it
+// The stage keeps one `fx` object per well (createFx) across frames; it
 // remembers where each gem was last drawn and the sparks in flight.
+// Opponents' wells (the computer, or online rivals) are drawn small down
+// the side panel, as many as there are.
 
 import { COLS, ROWS, ghost, pieceCells, stackHeight } from './engine'
 
@@ -238,6 +240,8 @@ function drawGem(ctx, gem, x, y, s, now, opts = {}) {
 // Where to draw a gem this frame (in rows): glides down towards its square.
 function animRow(fx, gem, target, dt) {
   let y = fx.pos.get(gem.id)
+  // Gems seen only in an opponent's snapshot (online) just sit in place.
+  if (gem.snap) return target
   if (y == null) y = gem.junk ? -1.5 - Math.random() * 1.5 : target
   if (y < target) y = Math.min(target, y + dt * (0.012 + (target - y) * 0.004))
   else y = target
@@ -513,12 +517,12 @@ function panelLabel(ctx, text, x, y, size) {
   ctx.restore()
 }
 
-export function drawGame(ctx, w, h, { game, rival, rivalName, fx, rivalFx, pops, now, shake = 0 }) {
+export function drawGame(ctx, w, h, { game, rivals = [], fx, pops, now, shake = 0 }) {
   const dt = fx.last ? Math.min(100, now - fx.last) : 16
   fx.last = now
   ctx.clearRect(0, 0, w, h)
   backdrop(ctx, w, h, now)
-  const L = layout(w, h, !!rival)
+  const L = layout(w, h, rivals.length > 0)
 
   ctx.save()
   if (shake > 0) ctx.translate(Math.sin(now / 22) * shake, 0)
@@ -545,13 +549,28 @@ export function drawGame(ctx, w, h, { game, rival, rivalName, fx, rivalFx, pops,
     drawGem(ctx, pair[0], x, y + sz, sz, now, { alpha: i ? 0.7 : 1 })
   })
 
-  if (rival && rivalFx) {
-    const mini = Math.max(5, Math.floor(Math.min((L.sideW - 10) / COLS, (L.wellH - boxH - 44) / ROWS)))
-    const mx = L.sideX + (L.sideW - mini * COLS) / 2
-    const my = L.y0 + L.wellH - mini * ROWS
-    const ly = my - Math.max(16, mini * 1.5) - (rival.pendingIn > 0 ? mini * 1.4 : 0)
-    panelLabel(ctx, rivalName, cx, ly, Math.max(9, mini * 0.95))
-    drawWell(ctx, rival, rivalFx, mx, my, mini, now, dt, { showGhost: false, mini: true })
+  // Opponents, stacked from the bottom of the panel up.
+  if (rivals.length) {
+    const room = L.wellH - boxH - 16
+    const each = room / rivals.length
+    const labelH = 18
+    const mini = Math.max(4, Math.floor(Math.min((L.sideW - 10) / COLS, (each - labelH - 14) / ROWS)))
+    rivals.forEach((r, i) => {
+      const mx = L.sideX + (L.sideW - mini * COLS) / 2
+      const my = L.y0 + L.wellH - (rivals.length - i) * each + (each - mini * ROWS)
+      const ly = my - labelH + 2 - (r.game.pendingIn > 0 ? Math.max(5, mini * 0.45) + 6 : 0)
+      panelLabel(ctx, r.name, cx, ly, Math.max(9, Math.min(13, mini * 0.95)))
+      drawWell(ctx, r.game, r.fx, mx, my, mini, now, dt, { showGhost: false, mini: true })
+      if (r.out) {
+        ctx.save()
+        ctx.fillStyle = '#6a5cd0'
+        ctx.font = `800 ${Math.max(10, mini * 1.2)}px system-ui, sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('OUT', mx + (mini * COLS) / 2, my + (mini * ROWS) / 2)
+        ctx.restore()
+      }
+    })
   }
 
   drawParticles(ctx, fx, now, dt, L.cell)

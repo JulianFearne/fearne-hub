@@ -187,10 +187,10 @@ const GAMES = [
   {
     key: 'gem-clash',
     title: 'Gem Clash',
-    blurb: 'Falling gems in the style of Swordfight: smash colours with breakers and bury the computer in junk. Easy mode for little ones.',
+    blurb: 'Falling gems in the style of Swordfight: smash colours with breakers and bury your rivals in junk. Play the computer or 2-4 online. Easy mode for little ones.',
     icon: 'gem',
     to: '/games/gem-clash',
-    tags: ['1 player, offline'],
+    tags: ['1 player, offline', '2-4 players, online'],
     live: true,
   },
   {

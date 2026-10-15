@@ -231,3 +231,84 @@
 .gc-pad--turn:active {
   box-shadow: 0 1px 0 #4f40c4, 0 0 14px rgba(140, 120, 255, 0.6);
 }
+
+/* ---------- online: menus, lobby, countdown, results ---------- */
+
+.gc-online-menu {
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+.gc-divider {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.gc-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.gc-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--gc-line);
+  background: var(--surface-card);
+  color: var(--gc-ink);
+}
+.gc-code-label {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.gc-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: #6a58e8;
+}
+.gc-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+.gc-countdown {
+  margin: auto;
+  font-family: var(--font-display);
+  font-size: 5rem;
+  font-weight: 800;
+  color: #6a58e8;
+  text-shadow: 0 4px 20px rgba(106, 88, 232, 0.4);
+  animation: gc-rise 0.4s ease-out;
+}
+.gc-standings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+.gc-standings li {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr auto;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  text-align: left;
+  color: var(--gc-ink);
+}
+.gc-standings li:nth-child(odd) {
+  background: var(--surface-sunken);
+}
+.gc-standings li.is-me {
+  background: #6a58e8;
+  color: #fff;
+}

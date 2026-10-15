@@ -421,3 +421,59 @@ export function simulate(grid, gems, c, o) {
   }
   return { grid: g, damage, chains, cells: landed }
 }
+
+// ---------- online snapshots ----------
+// Online, each player's well runs on their own phone and a few times a
+// second they send a small snapshot of it for the others to draw. One
+// character per square: '.' empty, 0-3 a gem, a-d a breaker, w-z junk.
+
+const BREAKER_CODES = 'abcd'
+const JUNK_CODES = 'wxyz'
+
+function gemCode(g) {
+  if (!g) return '.'
+  if (g.breaker) return BREAKER_CODES[g.colour]
+  if (g.junk) return JUNK_CODES[g.colour]
+  return String(g.colour)
+}
+
+function gemFromCode(ch, id) {
+  if (!ch || ch === '.') return null
+  if (BREAKER_CODES.includes(ch)) return { colour: BREAKER_CODES.indexOf(ch), breaker: true, id, snap: true }
+  if (JUNK_CODES.includes(ch)) return { colour: JUNK_CODES.indexOf(ch), breaker: false, junk: true, id, snap: true }
+  return { colour: Number(ch), breaker: false, id, snap: true }
+}
+
+export function snapshot(game) {
+  const p = game.piece
+  return {
+    g: game.grid.map(gemCode).join(''),
+    p: p ? [p.r, p.c, p.o, gemCode(p.gems[0]), gemCode(p.gems[1])] : null,
+    c: [...game.clearing],
+    n: game.pendingIn,
+    s: game.score,
+    h: stackHeight(game.grid),
+    x: game.phase === 'over' ? 1 : 0,
+  }
+}
+
+// A drawable stand-in for someone else's well, built from their snapshot.
+export function fromSnapshot(snap, key) {
+  const grid = Array(ROWS * COLS).fill(null)
+  for (let i = 0; i < grid.length; i++) grid[i] = gemFromCode(snap?.g?.[i], `${key}:${i}`)
+  const { gems, gemOf } = findGems(grid)
+  const p = snap?.p
+  return {
+    grid,
+    gems,
+    gemOf,
+    clearing: new Set(snap?.c ?? []),
+    piece: p ? { r: p[0], c: p[1], o: p[2], gems: [gemFromCode(p[3], `${key}:p0`), gemFromCode(p[4], `${key}:p1`)] } : null,
+    phase: snap?.x ? 'over' : 'fall',
+    pendingIn: snap?.n ?? 0,
+    softDrop: false,
+    fallMs: 1000,
+    timer: 0,
+    next: [],
+  }
+}

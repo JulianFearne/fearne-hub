@@ -60,8 +60,8 @@ the client in `src/supabaseClient.js`.
   [`docs/workout-program-format.md`](docs/workout-program-format.md).
 - **Games** — Connect Four, Sudoku, Hangman, Freecell, Bingo, Pictionary,
   Tic Tac Toe, arcade games (Snake, Car Dodge, Pong, Frogger and Gem Clash,
-  a Swordfight-style falling-gem battler, each with an easy mode for little
-  ones), Wobbly Towers (an endless physics tower
+  a Swordfight-style falling-gem battler with 2-4 player online matches,
+  each with an easy mode for little ones), Wobbly Towers (an endless physics tower
   stacker built on matter-js, with Classic and Power-ups modes and medals,
   plus online races where Power-ups can be thrown at the leader), and
   several with a computer opponent, pass-and-play and/or online play via a

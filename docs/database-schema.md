@@ -591,6 +591,20 @@ Finished games can point at a `rematch_id`. Invite links look like
 live in [`_reference/chess-schema.sql`](../_reference/chess-schema.sql) — run
 that file to create these tables.
 
+## Games: `gc_sessions`, `gc_players`
+
+Backing store for online Gem Clash matches (`src/pages/games/gem-clash/`),
+the same shape as the Wobbly Towers races. Each player's well runs on their
+own phone, so these tables hold only the lobby, the settings (`mode`:
+`versus` for Normal or `easy`, and the `seed` that gives everyone the same
+pairs), who is `out` (with their `score`), and the winner. Live snapshots of
+each well and the junk thrown between players go over a Realtime broadcast
+channel (`gc-<session id>`), which needs no table. Invite links look like
+`/games/gem-clash?code=ABCD`. Full definition, RLS policies and realtime
+setup live in
+[`_reference/gem-clash-schema.sql`](../_reference/gem-clash-schema.sql) —
+run that file to create these tables.
+
 ## Games: `game_scores`
 
 Family high scores (`src/pages/games/lib/scores.js`). One row per finished

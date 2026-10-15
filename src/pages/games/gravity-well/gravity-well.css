@@ -1,0 +1,228 @@
+/* src/pages/games/gravity-well/gravity-well.css
+   Scoped under .gw. The route is a `fill` route (see .fh-app--fill in
+   hub.css), so .gw stretches to exactly the space between the header and the
+   tab bar. Space itself is canvas art; only the chrome uses theme tokens. */
+
+.gw {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gw-hud {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.gw-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.gw-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.gw-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.gw-tally {
+  display: flex;
+  gap: 0.7rem;
+  /* The empire colours are bright; a dark outline keeps them readable on a
+     light theme. */
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
+}
+.gw-icon-btn {
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.gw-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gw-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1c2440;
+  background: #04060d; /* matches space, so a resize never flashes */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.gw-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+.gw-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(4, 6, 13, 0.55);
+}
+.gw-card {
+  margin: auto 0;
+  width: 100%;
+  max-width: 24rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+  border-radius: 16px;
+  background: rgba(12, 18, 40, 0.92);
+  border: 1px solid rgba(120, 160, 255, 0.35);
+  box-shadow: 0 0 30px rgba(80, 140, 255, 0.18);
+  color: #e6ecff;
+  text-align: center;
+}
+.gw-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+.gw-sub {
+  margin: 0;
+  color: #c9d4f5;
+}
+.gw-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #9fb0dd;
+}
+.gw-rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  text-align: left;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: #c9d4f5;
+}
+.gw-rules strong {
+  color: #9dffbb;
+}
+
+.gw-btn {
+  border: 1px solid rgba(120, 160, 255, 0.5);
+  background: transparent;
+  color: #e6ecff;
+  border-radius: 12px;
+  padding: 0.7rem 2.2rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.gw-btn.primary {
+  background: #3d8bff;
+  border-color: #3d8bff;
+  color: #fff;
+}
+.gw-link {
+  border: none;
+  background: none;
+  color: #9fb0dd;
+  text-decoration: underline;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.gw-chips {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.gw-chip {
+  border: 1px solid rgba(120, 160, 255, 0.45);
+  background: transparent;
+  color: #e6ecff;
+  border-radius: 999px;
+  padding: 0.45rem 1.2rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.gw-chip.active {
+  background: #3d8bff;
+  border-color: #3d8bff;
+  color: #fff;
+}
+
+.gw-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.15fr 1.4fr;
+  gap: 0.45rem;
+}
+.gw-controls--brake {
+  grid-template-columns: 1fr 1fr 1fr 1fr 1.25fr;
+}
+.gw-pad {
+  height: 4.2rem;
+  border-radius: 14px;
+  border: 1px solid #2a3560;
+  background: #111831;
+  color: #dfe7ff;
+  font-size: 1.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.gw-pad--fire,
+.gw-pad--thrust,
+.gw-pad--brake {
+  font-size: 0.95rem;
+}
+.gw-pad--fire {
+  border-color: #7a2f2a;
+  background: #2a1214;
+  color: #ffb3a8;
+}
+.gw-pad--thrust {
+  border-color: #8a5a1a;
+  background: #2b1d0b;
+  color: #ffd08a;
+}
+.gw-pad--brake {
+  border-color: #245a8a;
+  background: #0d2236;
+  color: #a8dcff;
+}
+.gw-pad:active {
+  filter: brightness(1.6);
+}

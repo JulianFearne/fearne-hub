@@ -194,6 +194,15 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'gravity-well',
+    title: 'Gravity Well',
+    blurb: 'Fly a wireframe fighter through the pull of the stars, land on planets to claim them and drive the Red empire out of the sector. Easy mode has a Brake button.',
+    icon: 'orbit',
+    to: '/games/gravity-well',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
     key: 'chess',
     title: 'Chess',
     blurb: 'The real thing, with every rule. Play the computer (with undo), a friend on the same phone, or online.',

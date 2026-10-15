@@ -12,6 +12,12 @@
 // row passes, and only blocks lanes so that at least one free lane in the new
 // row can be reached in the time the gap gives. That is what keeps it fair:
 // there is never a wall you can't get round, however fast it gets.
+//
+// The catch: when rows come too close together to change lane between them,
+// the open lane can only stay put, so one lane could stay clear for ever and
+// you could sit in it. So after a few tight rows in a row, or once only one
+// lane is open, the next gap is always wide enough to switch lanes, and the
+// open lane gets a chance to move.
 
 export const WORLD_W = 320
 export const WORLD_H = 540
@@ -156,6 +162,15 @@ function lanesInGap(game, gap) {
   return Math.min(LANES - 1, Math.floor(time / LANE_TIME))
 }
 
+// The smallest gap that leaves time to cross `lanes` lanes (the reverse of
+// lanesInGap).
+function gapForLanes(game, lanes) {
+  const v = trafficSpeed(game) * 1.15
+  return (lanes * LANE_TIME + game.cfg.reaction) * v + PLAYER_H + 10 + 4
+}
+
+const MAX_TIGHT_ROWS = 2
+
 function makeVehicle(game, lane, kind, top) {
   const size = VEHICLES[kind]
   const colours = kind === 'lorry' ? LORRY_COLOURS : kind === 'van' ? VAN_COLOURS : CAR_COLOURS
@@ -237,13 +252,17 @@ function spawnRow(game, gap, bottom = SPAWN_BOTTOM) {
   }
 
   game.reachable = reach
+  game.tightRows = allowed === 0 ? (game.tightRows ?? 0) + 1 : 0
   game.lastRow = { top: vehicles.length ? top : bottom, gap }
 }
 
 function currentGap(game) {
   const { cfg, rng } = game
   const base = lerp(cfg.gapStart, cfg.gapEnd, game.time / cfg.gapRamp)
-  return base * (0.85 + rng() * 0.4)
+  const gap = base * (0.85 + rng() * 0.4)
+  const open = game.reachable.filter(Boolean).length
+  if (open <= 1 || (game.tightRows ?? 0) >= MAX_TIGHT_ROWS) return Math.max(gap, gapForLanes(game, 1))
+  return gap
 }
 
 function overlaps(a, b, insetA = 0) {

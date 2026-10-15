@@ -64,7 +64,7 @@
   position: relative;
   border-radius: 14px;
   overflow: hidden;
-  background: #0b0d26;
+  background: #f1eeff;
   flex: 1;
   min-height: 0;
   touch-action: none;
@@ -84,8 +84,8 @@
   flex-direction: column;
   align-items: center;
   padding: 1rem;
-  background: rgba(8, 6, 30, 0.55);
-  backdrop-filter: blur(2px);
+  background: rgba(240, 236, 255, 0.45);
+  backdrop-filter: blur(3px);
   overflow-y: auto;
 }
 /* The menu floats on a card over the starfield. */
@@ -101,7 +101,7 @@
   border-radius: 18px;
   background: var(--surface-card);
   border: 1px solid var(--gc-line);
-  box-shadow: 0 10px 40px rgba(60, 40, 160, 0.45);
+  box-shadow: 0 10px 34px rgba(90, 70, 200, 0.25);
   text-align: center;
   animation: gc-rise 0.25s ease-out;
 }
@@ -196,21 +196,21 @@
   color: var(--ink-3);
 }
 
-/* Buttons: left, right, turn (biggest), faster, drop. */
+/* Buttons: left, right, down, then turn (biggest, under the right thumb). */
 .gc-controls {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1.35fr;
   gap: 0.4rem;
   height: 4.25rem;
   flex-shrink: 0;
 }
 .gc-pad {
   border-radius: 14px;
-  border: 1px solid rgba(160, 150, 255, 0.35);
-  background: linear-gradient(180deg, #2c2474, #18143f);
-  color: #ece9ff;
+  border: 1px solid #d9d2ff;
+  background: linear-gradient(180deg, #ffffff, #efebff);
+  color: #4a3fa8;
   font-size: 1.45rem;
-  box-shadow: 0 3px 0 #0c0a26, inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 3px 0 #d3cbf7, 0 4px 10px rgba(90, 70, 200, 0.12);
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -219,10 +219,15 @@
 }
 .gc-pad--turn {
   font-size: 1.8rem;
-  background: linear-gradient(180deg, #4b3bb0, #2a2170);
+  color: #fff;
+  border-color: #7b6cf0;
+  background: linear-gradient(180deg, #8f80ff, #6a58e8);
+  box-shadow: 0 3px 0 #4f40c4, 0 4px 12px rgba(90, 70, 200, 0.3);
 }
 .gc-pad:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 #0c0a26, 0 0 14px rgba(140, 120, 255, 0.6);
-  background: linear-gradient(180deg, #5a48d0, #3a2e96);
+  box-shadow: 0 1px 0 #d3cbf7, 0 0 14px rgba(140, 120, 255, 0.45);
+}
+.gc-pad--turn:active {
+  box-shadow: 0 1px 0 #4f40c4, 0 0 14px rgba(140, 120, 255, 0.6);
 }

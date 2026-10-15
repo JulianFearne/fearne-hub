@@ -502,18 +502,15 @@ export default function GemClash() {
         <Pad label="Right" repeat onPress={() => act((g) => move(g, 1))}>
           ▶
         </Pad>
-        <Pad label="Turn" onPress={() => act((g) => rotate(g, 1))} className="gc-pad--turn">
-          ⟳
-        </Pad>
         <Pad
-          label="Faster"
+          label="Down"
           onPress={() => act((g) => setSoftDrop(g, true))}
           onRelease={() => setSoftDrop(gameRef.current, false)}
         >
           ▼
         </Pad>
-        <Pad label="Drop" onPress={() => act((g) => hardDrop(g))}>
-          ⤓
+        <Pad label="Turn" onPress={() => act((g) => rotate(g, 1))} className="gc-pad--turn">
+          ⟳
         </Pad>
       </div>
     </div>

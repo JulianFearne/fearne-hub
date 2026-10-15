@@ -1,11 +1,12 @@
 // src/pages/games/gem-clash/draw.js
-// Draws Gem Clash on a 2D canvas: a starry backdrop, your well on the left,
-// and a side panel with the next two pairs and, against the computer, a
-// small live view of its well.
+// Draws Gem Clash on a 2D canvas: a soft pearly backdrop, your well (a
+// pane of frosted glass) on the left, and a side panel with the next two
+// pairs and, against the computer, a small live view of its well.
 //
-// Gems are cut jewels (a bright table in the middle, four shaded facets
-// round it), breakers glowing orbs with a turning sparkle, and power gems
-// one big jewel with a shine that sweeps across. Everything that falls
+// Gems are see-through cut jewels: a vivid, partly transparent body so the
+// light behind shows through, lighter facets round a bright table, and a
+// sharp glint. Breakers are glass orbs with a turning sparkle, and power
+// gems one big jewel with a shine that sweeps across. Everything that falls
 // glides into place rather than jumping, and smashed gems burst into
 // sparks. The art has its own palette, so it looks the same in light and
 // dark theme.
@@ -16,10 +17,10 @@
 import { COLS, ROWS, ghost, pieceCells, stackHeight } from './engine'
 
 const PALETTE = [
-  { light: '#ffc2c8', mid: '#ff5a6e', base: '#e01e3c', dark: '#7a0019', glow: '255,70,95' }, // ruby
-  { light: '#c4f8d6', mid: '#46dd84', base: '#119c4f', dark: '#08502a', glow: '60,230,130' }, // emerald
-  { light: '#c6e6ff', mid: '#55aaff', base: '#1764e0', dark: '#0a2d74', glow: '80,160,255' }, // sapphire
-  { light: '#fff7c2', mid: '#ffe04a', base: '#f2b200', dark: '#875a00', glow: '255,215,60' }, // topaz
+  { rgb: '255,28,84', light: '#ffd0dc', deep: '#b0002f', glow: '255,40,100' }, // ruby
+  { rgb: '0,205,120', light: '#c8ffe6', deep: '#00804a', glow: '0,220,130' }, // emerald
+  { rgb: '30,128,255', light: '#d2e6ff', deep: '#0a4fc0', glow: '40,140,255' }, // sapphire
+  { rgb: '255,176,0', light: '#fff0c2', deep: '#c27a00', glow: '255,190,20' }, // topaz
 ]
 const CLEAR_MS = 420
 
@@ -58,7 +59,9 @@ function poly(ctx, pts, fill) {
 
 // ---------- the pieces ----------
 
-// A cut jewel filling x, y, w, h.
+const rgba = (rgb, a) => `rgba(${rgb},${a})`
+
+// A see-through cut jewel filling x, y, w, h.
 function jewel(ctx, x, y, w, h, colour, { junk = false, alpha = 1, glow = 0 } = {}) {
   const p = PALETTE[colour]
   const m = Math.min(w, h)
@@ -67,42 +70,73 @@ function jewel(ctx, x, y, w, h, colour, { junk = false, alpha = 1, glow = 0 } = 
   const oy = y + pad
   const ow = w - pad * 2
   const oh = h - pad * 2
-  const t = m * 0.24 // facet depth
+  const t = m * 0.22 // facet depth
   const ix = ox + t
   const iy = oy + t
   const iw = ow - t * 2
   const ih = oh - t * 2
+  const r = m * 0.16
   ctx.save()
   ctx.globalAlpha = alpha
-  if (glow > 0) {
-    ctx.shadowColor = `rgba(${p.glow},${0.9 * glow})`
-    ctx.shadowBlur = m * 0.6 * glow
-  }
-  ctx.fillStyle = p.dark
-  roundRect(ctx, ox, oy, ow, oh, m * 0.14)
+  // Coloured light spilling round the gem
+  ctx.shadowColor = rgba(p.glow, 0.35 + 0.55 * glow)
+  ctx.shadowBlur = m * (0.25 + 0.5 * glow)
+  // Body: vivid but partly clear, deeper at the edges like real glass
+  const body = ctx.createRadialGradient(ox + ow * 0.4, oy + oh * 0.35, m * 0.05, ox + ow / 2, oy + oh / 2, m * 0.75)
+  body.addColorStop(0, rgba(p.rgb, 0.45))
+  body.addColorStop(0.6, rgba(p.rgb, 0.72))
+  body.addColorStop(1, rgba(p.rgb, 0.92))
+  ctx.fillStyle = body
+  roundRect(ctx, ox, oy, ow, oh, r)
   ctx.fill()
   ctx.shadowBlur = 0
-  poly(ctx, [[ox + 1, oy + 1], [ox + ow - 1, oy + 1], [ix + iw, iy], [ix, iy]], p.light) // top
-  poly(ctx, [[ox + 1, oy + 1], [ix, iy], [ix, iy + ih], [ox + 1, oy + oh - 1]], p.mid) // left
-  poly(ctx, [[ox + ow - 1, oy + 1], [ox + ow - 1, oy + oh - 1], [ix + iw, iy + ih], [ix + iw, iy]], p.base) // right
-  poly(ctx, [[ox + 1, oy + oh - 1], [ix, iy + ih], [ix + iw, iy + ih], [ox + ow - 1, oy + oh - 1]], p.dark) // bottom
+  ctx.save()
+  roundRect(ctx, ox, oy, ow, oh, r)
+  ctx.clip()
+  // Facets catch the light differently
+  poly(ctx, [[ox, oy], [ox + ow, oy], [ix + iw, iy], [ix, iy]], 'rgba(255,255,255,0.55)') // top
+  poly(ctx, [[ox, oy], [ix, iy], [ix, iy + ih], [ox, oy + oh]], 'rgba(255,255,255,0.25)') // left
+  poly(ctx, [[ox + ow, oy], [ox + ow, oy + oh], [ix + iw, iy + ih], [ix + iw, iy]], rgba(p.rgb, 0.35)) // right
+  poly(ctx, [[ox, oy + oh], [ix, iy + ih], [ix + iw, iy + ih], [ox + ow, oy + oh]], 'rgba(0,0,0,0.12)') // bottom
+  // Table: clearer in the middle, lit from the top left
   const table = ctx.createLinearGradient(ix, iy, ix + iw, iy + ih)
-  table.addColorStop(0, p.light)
-  table.addColorStop(0.5, p.mid)
-  table.addColorStop(1, p.base)
+  table.addColorStop(0, 'rgba(255,255,255,0.7)')
+  table.addColorStop(0.45, rgba(p.rgb, 0.25))
+  table.addColorStop(1, rgba(p.rgb, 0.55))
   ctx.fillStyle = table
   ctx.fillRect(ix, iy, iw, ih)
-  // A glint on the table
-  ctx.fillStyle = 'rgba(255,255,255,0.75)'
+  // Facet edges
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)'
+  ctx.lineWidth = Math.max(0.75, m * 0.025)
   ctx.beginPath()
-  ctx.ellipse(ix + iw * 0.3, iy + ih * 0.28, iw * 0.18, ih * 0.09, -0.6, 0, Math.PI * 2)
+  ctx.moveTo(ox, oy)
+  ctx.lineTo(ix, iy)
+  ctx.moveTo(ox + ow, oy)
+  ctx.lineTo(ix + iw, iy)
+  ctx.moveTo(ox, oy + oh)
+  ctx.lineTo(ix, iy + ih)
+  ctx.moveTo(ox + ow, oy + oh)
+  ctx.lineTo(ix + iw, iy + ih)
+  ctx.rect(ix, iy, iw, ih)
+  ctx.stroke()
+  // Sharp glint and a little star of light
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  ctx.beginPath()
+  ctx.ellipse(ix + iw * 0.3, iy + ih * 0.26, iw * 0.2, ih * 0.08, -0.6, 0, Math.PI * 2)
   ctx.fill()
+  sparkle(ctx, ox + ow * 0.78, oy + oh * 0.22, m * 0.09, 0)
+  ctx.restore()
+  // Crisp rim
+  ctx.strokeStyle = rgba(p.rgb, 0.95)
+  ctx.lineWidth = Math.max(1, m * 0.035)
+  roundRect(ctx, ox, oy, ow, oh, r)
+  ctx.stroke()
   if (junk) {
-    // Junk is clouded over and bolted at the corners.
-    ctx.fillStyle = 'rgba(20,20,40,0.45)'
-    roundRect(ctx, ox, oy, ow, oh, m * 0.14)
+    // Junk is frosted over and bolted at the corners.
+    ctx.fillStyle = 'rgba(120,120,140,0.55)'
+    roundRect(ctx, ox, oy, ow, oh, r)
     ctx.fill()
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.fillStyle = 'rgba(70,70,90,0.85)'
     for (const [bx, by] of [
       [ox + t * 0.5, oy + t * 0.5],
       [ox + ow - t * 0.5, oy + t * 0.5],
@@ -110,7 +144,7 @@ function jewel(ctx, x, y, w, h, colour, { junk = false, alpha = 1, glow = 0 } = 
       [ox + ow - t * 0.5, oy + oh - t * 0.5],
     ]) {
       ctx.beginPath()
-      ctx.arc(bx, by, Math.max(1, m * 0.045), 0, Math.PI * 2)
+      ctx.arc(bx, by, Math.max(1, m * 0.05), 0, Math.PI * 2)
       ctx.fill()
     }
   }
@@ -132,34 +166,41 @@ function breaker(ctx, x, y, s, colour, now, alpha = 1, glow = 0) {
   const p = PALETTE[colour]
   const cx = x + s / 2
   const cy = y + s / 2
-  const r = s * 0.4
+  const r = s * 0.41
   ctx.save()
   ctx.globalAlpha = alpha
   // Pulsing halo
   const pulse = 0.55 + 0.45 * Math.sin(now / 260 + colour)
-  const halo = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * 1.45)
-  halo.addColorStop(0, `rgba(${p.glow},${Math.min(1, 0.45 * pulse + glow * 0.5)})`)
-  halo.addColorStop(1, `rgba(${p.glow},0)`)
+  const halo = ctx.createRadialGradient(cx, cy, r * 0.7, cx, cy, r * 1.5)
+  halo.addColorStop(0, rgba(p.glow, Math.min(1, 0.4 * pulse + glow * 0.5)))
+  halo.addColorStop(1, rgba(p.glow, 0))
   ctx.fillStyle = halo
   ctx.beginPath()
-  ctx.arc(cx, cy, r * 1.45, 0, Math.PI * 2)
+  ctx.arc(cx, cy, r * 1.5, 0, Math.PI * 2)
   ctx.fill()
-  // Orb
-  const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.05, cx, cy, r)
-  g.addColorStop(0, '#ffffff')
-  g.addColorStop(0.22, p.light)
-  g.addColorStop(0.6, p.mid)
-  g.addColorStop(1, p.dark)
+  // Glass orb: clear centre, saturated rim
+  const g = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.3, r * 0.05, cx, cy, r)
+  g.addColorStop(0, 'rgba(255,255,255,0.9)')
+  g.addColorStop(0.35, rgba(p.rgb, 0.45))
+  g.addColorStop(0.85, rgba(p.rgb, 0.85))
+  g.addColorStop(1, rgba(p.rgb, 1))
   ctx.fillStyle = g
   ctx.beginPath()
   ctx.arc(cx, cy, r, 0, Math.PI * 2)
   ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)'
-  ctx.lineWidth = Math.max(1, s * 0.04)
+  ctx.strokeStyle = rgba(p.rgb, 1)
+  ctx.lineWidth = Math.max(1, s * 0.035)
   ctx.stroke()
+  // Reflection of a window on the glass
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'
+  ctx.beginPath()
+  ctx.ellipse(cx - r * 0.35, cy - r * 0.45, r * 0.32, r * 0.14, -0.6, 0, Math.PI * 2)
+  ctx.fill()
   // Turning sparkle
   ctx.fillStyle = 'rgba(255,255,255,0.95)'
-  sparkle(ctx, cx, cy, r * 0.62, now / 700)
+  ctx.shadowColor = rgba(p.glow, 0.9)
+  ctx.shadowBlur = s * 0.2
+  sparkle(ctx, cx, cy + r * 0.05, r * 0.55, now / 700)
   ctx.restore()
 }
 
@@ -180,7 +221,7 @@ function powerGem(ctx, x, y, w, h, colour, now, glow) {
   ctx.restore()
   // Gold edge so power gems read as special.
   ctx.save()
-  ctx.strokeStyle = 'rgba(255,225,140,0.85)'
+  ctx.strokeStyle = 'rgba(255,200,60,0.95)'
   ctx.lineWidth = Math.max(1.5, Math.min(w, h) * 0.035)
   roundRect(ctx, x + 1.5, y + 1.5, w - 3, h - 3, Math.min(w, h) * 0.13)
   ctx.stroke()
@@ -206,31 +247,36 @@ function animRow(fx, gem, target, dt) {
 
 // ---------- the backdrop ----------
 
-let STARS = null
-function stars() {
-  if (STARS) return STARS
-  let seed = 7
+let BOKEH = null
+function bokeh() {
+  if (BOKEH) return BOKEH
+  let seed = 11
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
-  STARS = Array.from({ length: 70 }, () => ({ x: rnd(), y: rnd(), r: 0.4 + rnd() * 1.1, p: rnd() * 6 }))
-  return STARS
+  const tints = ['255,140,180', '120,200,255', '140,230,190', '255,210,120', '190,160,255']
+  BOKEH = Array.from({ length: 14 }, (_, i) => ({ x: rnd(), y: rnd(), r: 20 + rnd() * 60, p: rnd() * 6, tint: tints[i % tints.length] }))
+  return BOKEH
 }
 
+// A soft, light backdrop with drifting blurry circles of colour.
 function backdrop(ctx, w, h, now) {
-  const g = ctx.createLinearGradient(0, 0, 0, h)
-  g.addColorStop(0, '#22185a')
-  g.addColorStop(0.55, '#121038')
-  g.addColorStop(1, '#070a1e')
+  const g = ctx.createLinearGradient(0, 0, w, h)
+  g.addColorStop(0, '#fbf8ff')
+  g.addColorStop(0.5, '#f1ecff')
+  g.addColorStop(1, '#e8f3ff')
   ctx.fillStyle = g
   roundRect(ctx, 0, 0, w, h, 14)
   ctx.fill()
-  for (const s of stars()) {
-    ctx.globalAlpha = 0.35 + 0.35 * Math.sin(now / 900 + s.p)
-    ctx.fillStyle = '#fff'
+  for (const b of bokeh()) {
+    const x = b.x * w + Math.sin(now / 4000 + b.p) * 10
+    const y = b.y * h + Math.cos(now / 5000 + b.p) * 10
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, b.r)
+    grad.addColorStop(0, rgba(b.tint, 0.28))
+    grad.addColorStop(1, rgba(b.tint, 0))
+    ctx.fillStyle = grad
     ctx.beginPath()
-    ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2)
+    ctx.arc(x, y, b.r, 0, Math.PI * 2)
     ctx.fill()
   }
-  ctx.globalAlpha = 1
 }
 
 // ---------- a well ----------
@@ -243,30 +289,31 @@ function drawWell(ctx, game, fx, x0, y0, cell, now, dt, { showGhost = true, mini
 
   // Frame with a soft glow (red and pulsing when the stack is near the top).
   const pulse = 0.5 + 0.5 * Math.sin(now / 180)
-  ctx.shadowColor = danger ? `rgba(255,60,60,${0.5 + 0.4 * pulse})` : 'rgba(130,120,255,0.55)'
+  ctx.shadowColor = danger ? `rgba(255,60,60,${0.45 + 0.4 * pulse})` : 'rgba(120,100,230,0.25)'
   ctx.shadowBlur = mini ? 6 : 18
-  ctx.fillStyle = '#0a0f2a'
+  ctx.fillStyle = 'rgba(255,255,255,0.7)'
   roundRect(ctx, x0 - 4, y0 - 4, w + 8, h + 8, Math.max(5, cell * 0.28))
   ctx.fill()
   ctx.shadowBlur = 0
+  // Frosted glass, a touch darker at the bottom so gems stand out
   const inner = ctx.createLinearGradient(0, y0, 0, y0 + h)
-  inner.addColorStop(0, '#141b46')
-  inner.addColorStop(1, '#0b1030')
+  inner.addColorStop(0, 'rgba(250,248,255,0.85)')
+  inner.addColorStop(1, 'rgba(226,220,252,0.9)')
   ctx.fillStyle = inner
   roundRect(ctx, x0, y0, w, h, Math.max(3, cell * 0.2))
   ctx.fill()
   for (let c = 0; c < COLS; c += 2) {
-    ctx.fillStyle = 'rgba(255,255,255,0.025)'
+    ctx.fillStyle = 'rgba(120,100,230,0.05)'
     ctx.fillRect(x0 + c * cell, y0, cell, h)
   }
-  ctx.strokeStyle = danger ? `rgba(255,90,90,${0.6 + 0.4 * pulse})` : 'rgba(160,150,255,0.45)'
+  ctx.strokeStyle = danger ? `rgba(240,60,60,${0.6 + 0.4 * pulse})` : 'rgba(140,125,240,0.55)'
   ctx.lineWidth = mini ? 1 : 2
   roundRect(ctx, x0 - 2, y0 - 2, w + 4, h + 4, Math.max(4, cell * 0.25))
   ctx.stroke()
 
   // Where new pairs come in.
   if (!mini) {
-    ctx.fillStyle = 'rgba(255,255,255,0.18)'
+    ctx.fillStyle = 'rgba(120,100,230,0.25)'
     const cx = x0 + 2.5 * cell
     ctx.beginPath()
     ctx.moveTo(cx - cell * 0.18, y0 + cell * 0.12)
@@ -381,7 +428,7 @@ function drawWell(ctx, game, fx, x0, y0, cell, now, dt, { showGhost = true, mini
   }
 
   if (game.phase === 'over') {
-    ctx.fillStyle = 'rgba(5,5,20,0.55)'
+    ctx.fillStyle = 'rgba(240,236,255,0.6)'
     roundRect(ctx, x0, y0, w, h, Math.max(3, cell * 0.2))
     ctx.fill()
   }
@@ -425,7 +472,7 @@ function drawParticles(ctx, fx, now, dt, cell) {
     p.vy += cell * 0.012 * k
     const t = (now - p.born) / p.life
     ctx.globalAlpha = 1 - t
-    ctx.fillStyle = t < 0.3 ? '#fff' : p.colour.mid
+    ctx.fillStyle = rgba(p.colour.rgb, 0.9)
     sparkle(ctx, p.x, p.y, p.size * (1.2 - t * 0.5), t * 4)
   }
   ctx.globalAlpha = 1
@@ -444,13 +491,13 @@ function drawPops(ctx, pops, L, now) {
     ctx.font = `900 ${size}px system-ui, sans-serif`
     const x = L.x0 + L.wellW / 2
     const y = L.y0 + L.wellH * 0.38 - t * L.cell * 1.4
-    ctx.shadowColor = p.big ? 'rgba(255,200,40,0.9)' : 'rgba(150,140,255,0.9)'
-    ctx.shadowBlur = 14
-    ctx.lineWidth = 5
-    ctx.strokeStyle = 'rgba(20,10,50,0.85)'
+    ctx.shadowColor = p.big ? 'rgba(255,170,0,0.8)' : 'rgba(120,100,230,0.6)'
+    ctx.shadowBlur = 12
+    ctx.lineWidth = 6
+    ctx.strokeStyle = '#ffffff'
     ctx.strokeText(p.text, x, y)
     ctx.shadowBlur = 0
-    ctx.fillStyle = p.colour
+    ctx.fillStyle = p.big ? '#e08a00' : '#5a48d0'
     ctx.fillText(p.text, x, y)
   }
   ctx.restore()
@@ -458,7 +505,7 @@ function drawPops(ctx, pops, L, now) {
 
 function panelLabel(ctx, text, x, y, size) {
   ctx.save()
-  ctx.fillStyle = '#b7b2ff'
+  ctx.fillStyle = '#6a5cd0'
   ctx.font = `800 ${size}px system-ui, sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
@@ -483,8 +530,8 @@ export function drawGame(ctx, w, h, { game, rival, rivalName, fx, rivalFx, pops,
   const cx = L.sideX + L.sideW / 2
   const boxH = s * 4.6 + 30
   ctx.save()
-  ctx.fillStyle = 'rgba(255,255,255,0.06)'
-  ctx.strokeStyle = 'rgba(180,170,255,0.3)'
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'
+  ctx.strokeStyle = 'rgba(140,125,240,0.4)'
   roundRect(ctx, cx - s * 0.75 - 4, L.y0 - 4, s * 1.5 + 8, boxH, 10)
   ctx.fill()
   ctx.stroke()

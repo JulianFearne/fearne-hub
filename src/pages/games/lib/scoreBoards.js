@@ -46,6 +46,14 @@ export const SCORE_GAMES = {
       classic: { label: 'Classic', order: 'high', format: points },
     },
   },
+  'gem-clash': {
+    title: 'Gem Clash',
+    to: '/games/gem-clash',
+    boards: {
+      easy: { label: 'Easy', order: 'high', format: points },
+      solo: { label: 'Solo', order: 'high', format: points },
+    },
+  },
   pong: {
     title: 'Pong',
     to: '/games/pong',

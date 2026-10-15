@@ -1,0 +1,208 @@
+/* src/pages/games/gem-clash/gem-clash.css
+   Scoped under .gc. The route is a `fill` route (see .fh-app--fill in
+   hub.css), so .gc stretches to exactly the space between the header and
+   the tab bar: HUD, the well, then the buttons. */
+
+.gc {
+  --gc-accent: var(--primary);
+  --gc-on-accent: var(--ink-on-primary);
+  --gc-ink: var(--ink-1);
+  --gc-line: var(--border);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gc-hud {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.gc-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.gc-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.gc-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--gc-ink);
+  font-variant-numeric: tabular-nums;
+}
+.gc-stat-value.is-low {
+  color: var(--danger);
+}
+.gc-icon-btn {
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--gc-line);
+  background: var(--surface-card);
+  color: var(--gc-ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.gc-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gc-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.gc-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.gc-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--surface-veil);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  overflow-y: auto;
+}
+/* Tall content (the leaderboard) scrolls from the top instead of being
+   cut off above the fold. */
+.gc-overlay > :first-child {
+  margin-top: auto;
+}
+.gc-overlay > :last-child {
+  margin-bottom: auto;
+}
+.gc-overlay-title {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--gc-ink);
+}
+.gc-overlay-score {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gc-ink);
+}
+.gc-overlay-sub {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--ink-2);
+}
+.gc-overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.gc-btn {
+  border: 1px solid var(--gc-line);
+  background: var(--surface-card);
+  color: var(--gc-ink);
+  border-radius: 10px;
+  padding: 0.65rem 1.6rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.gc-btn.primary {
+  background: var(--gc-accent);
+  color: var(--gc-on-accent);
+  border-color: var(--gc-accent);
+}
+.gc-link {
+  border: none;
+  background: none;
+  color: var(--ink-3);
+  text-decoration: underline;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.gc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.gc-chip {
+  border: 1px solid var(--gc-line);
+  background: var(--surface-card);
+  color: var(--gc-ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.gc-chip.small {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.82rem;
+}
+.gc-chip.active {
+  background: var(--gc-accent);
+  color: var(--gc-on-accent);
+  border-color: var(--gc-accent);
+}
+
+.gc-overlay-note {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+/* Buttons: left, right, turn (biggest), faster, drop. */
+.gc-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
+  gap: 0.4rem;
+  height: 4.25rem;
+  flex-shrink: 0;
+}
+.gc-pad {
+  border-radius: 14px;
+  border: 1px solid var(--gc-line);
+  background: var(--surface-sunken);
+  color: var(--gc-ink);
+  font-size: 1.45rem;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.gc-pad--turn {
+  font-size: 1.8rem;
+}
+.gc-pad:active {
+  background: var(--gc-accent);
+  color: var(--gc-on-accent);
+  border-color: var(--gc-accent);
+}

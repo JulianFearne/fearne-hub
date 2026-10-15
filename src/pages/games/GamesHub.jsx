@@ -185,6 +185,15 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'gem-clash',
+    title: 'Gem Clash',
+    blurb: 'Falling gems in the style of Swordfight: smash colours with breakers and bury the computer in junk. Easy mode for little ones.',
+    icon: 'gem',
+    to: '/games/gem-clash',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
     key: 'carve',
     title: 'CARVE',
     blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',

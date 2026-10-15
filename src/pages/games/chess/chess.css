@@ -1,0 +1,460 @@
+/* src/pages/games/chess/chess.css
+   Scoped under .cs, never leaks into the hub shell. The chrome (header,
+   mode cards, chips, lobby) matches Checkers; the board has its own fixed
+   colours so it looks the same in light and dark theme. */
+
+.cs {
+  --cs-primary: var(--primary);
+  --cs-primary-dark: var(--primary-press);
+  --cs-on-primary: var(--ink-on-primary);
+  --cs-card: var(--surface-card);
+  --cs-ink: var(--ink-1);
+  --cs-line: var(--border);
+
+  --cs-light: #eed9b6;
+  --cs-dark: #b08661;
+  --cs-frame: #6b4a2e;
+
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.cs-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.cs-back {
+  text-decoration: none;
+  color: var(--cs-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.cs-back.as-button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.cs-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.cs-panel {
+  background: var(--cs-card);
+  border: 1px solid var(--cs-line);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+}
+
+/* ---------- mode picker ---------- */
+
+.cs-modepick {
+  display: grid;
+  gap: 0.85rem;
+}
+.cs-modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--cs-line);
+  background: var(--cs-card);
+  color: var(--cs-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.cs-modecard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+.cs-modecard-emoji {
+  font-size: 1.7rem;
+}
+.cs-modecard-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.cs-modecard-sub {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- chips, buttons, text ---------- */
+
+.cs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.cs-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--cs-line);
+  background: transparent;
+  color: var(--cs-ink);
+  cursor: pointer;
+}
+.cs-chip.active {
+  background: var(--cs-primary);
+  border-color: var(--cs-primary);
+  color: var(--cs-on-primary);
+}
+
+.cs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+.cs-btn {
+  font: inherit;
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  font-weight: 600;
+  border: 1px solid var(--cs-primary);
+  background: var(--surface-card);
+  color: var(--cs-primary);
+  cursor: pointer;
+}
+.cs-btn.primary {
+  background: var(--cs-primary);
+  color: var(--cs-on-primary);
+}
+.cs-btn.primary:hover:not(:disabled) {
+  background: var(--cs-primary-dark);
+}
+.cs-btn.ghost {
+  border-color: var(--cs-line);
+  color: var(--ink-2);
+}
+.cs-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.cs-hint {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.cs-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- online lobby ---------- */
+
+.cs-lobby {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  width: 100%;
+}
+.cs-lobby-divider {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.cs-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.cs-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--cs-line);
+  background: var(--surface-card);
+  color: var(--cs-ink);
+}
+.cs-code-label {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+.cs-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--cs-primary);
+}
+.cs-lobby-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+/* ---------- rules ---------- */
+
+.cs-rules {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--cs-line);
+  border-radius: 12px;
+  background: var(--cs-card);
+  color: var(--cs-ink);
+  font-size: 0.9rem;
+}
+.cs-rules summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.cs-rules ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+/* ---------- table ---------- */
+
+.cs-table {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  justify-items: center;
+}
+
+.cs-board-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 0 0 4px var(--cs-frame), var(--shadow-1);
+}
+.cs-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cs-sq--light {
+  fill: var(--cs-light);
+}
+.cs-sq--dark {
+  fill: var(--cs-dark);
+}
+.cs-sq.is-last.cs-sq--light {
+  fill: #f6eb72;
+}
+.cs-sq.is-last.cs-sq--dark {
+  fill: #dcc34b;
+}
+.cs-sq.is-selected {
+  fill: #8fd18a;
+}
+.cs-coord {
+  font-size: 0.2px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.cs-coord.on-light {
+  fill: var(--cs-dark);
+}
+.cs-coord.on-dark {
+  fill: var(--cs-light);
+}
+.cs-check {
+
+  fill: rgba(230, 30, 30, 0.55);
+  pointer-events: none;
+}
+.cs-piece {
+  transition: transform 0.22s ease-in-out;
+  cursor: pointer;
+  filter: drop-shadow(0 0.03px 0.02px rgba(0, 0, 0, 0.35));
+}
+.cs-target {
+  fill: rgba(20, 85, 30, 0.45);
+  cursor: pointer;
+}
+.cs-target-ring {
+  fill: none;
+  stroke: rgba(20, 85, 30, 0.55);
+  stroke-width: 0.08;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+/* Promotion: which piece should the pawn become? */
+.cs-promo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: rgba(20, 16, 10, 0.72);
+  color: #fff;
+  font-weight: 600;
+}
+.cs-promo p {
+  margin: 0;
+}
+.cs-promo-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.cs-promo-btn {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  border-radius: 10px;
+  border: 0;
+  background: var(--cs-light);
+  color: #3a2a18;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.cs-promo .cs-link {
+  color: #eee;
+}
+
+/* Players with what they've taken */
+.cs-player {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  max-width: 30rem;
+  min-height: 1.9rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cs-ink);
+}
+.cs-player.active {
+  border-color: var(--cs-primary);
+  background: color-mix(in srgb, var(--cs-primary) 8%, transparent);
+}
+.cs-player-name {
+  white-space: nowrap;
+}
+.cs-taken {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-left: auto;
+}
+.cs-taken svg {
+  margin-left: -4px;
+}
+.cs-lead {
+  margin-left: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+.cs-dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  flex: none;
+  border: 1.5px solid #333;
+}
+.cs-dot--w {
+  background: #fff;
+}
+.cs-dot--b {
+  background: #222;
+}
+.cs-chip--w.active {
+  background: #fff;
+  color: #222;
+  border-color: var(--cs-primary);
+  box-shadow: 0 0 0 1.5px var(--cs-primary);
+}
+.cs-chip--b.active {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
+.cs-moves {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  width: 100%;
+  max-width: 30rem;
+  max-height: 4.6rem;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.cs-move-no {
+  color: var(--ink-3);
+}
+
+.cs-status {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--cs-ink);
+  text-align: center;
+}
+.cs-status.is-check {
+  color: var(--danger);
+}
+.cs-status.is-over {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--success);
+}
+
+/* Quiet "start a new game" link, centred under everything. */
+.cs-link {
+  justify-self: center;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-piece {
+    transition: none;
+  }
+}

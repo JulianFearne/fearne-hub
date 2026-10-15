@@ -32,6 +32,7 @@ import Pong from './pages/games/pong/Pong.jsx'
 import Frogger from './pages/games/frogger/Frogger.jsx'
 import Checkers from './pages/games/checkers/Checkers.jsx'
 import GemClash from './pages/games/gem-clash/GemClash.jsx'
+import Chess from './pages/games/chess/Chess.jsx'
 import HighScores from './pages/games/HighScores.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
 import ImportRecipes from './pages/ImportRecipes.jsx'
@@ -83,6 +84,7 @@ const ROUTE_HEADERS = {
   '/games/frogger': { title: 'Frogger', back: '/games', fill: true },
   '/games/checkers': { title: 'Checkers', back: '/games' },
   '/games/gem-clash': { title: 'Gem Clash', back: '/games', fill: true },
+  '/games/chess': { title: 'Chess', back: '/games' },
   '/games/scores': { title: 'High scores', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
   '/workouts': { title: 'Workouts', tab: true },
@@ -366,6 +368,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <GemClash />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/chess"
+          element={
+            <ProtectedRoute>
+              <Chess />
             </ProtectedRoute>
           }
         />

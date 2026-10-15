@@ -579,6 +579,18 @@ Full definition, RLS policies and realtime setup live in
 [`_reference/checkers-schema.sql`](../_reference/checkers-schema.sql) — run
 that file to create these tables.
 
+## Games: `ch_sessions`, `ch_players`, `ch_moves`
+
+Backing store for online Chess (`src/pages/games/chess/`), the same shape as
+Checkers. The host is White (seat 0) and goes first; the game turns `active`
+when a second player joins as Black. Each move is one `ch_moves` row in UCI
+form (`'e2e4'`, `'e7e8q'` for a promotion); the position, turn and result are
+derived by replaying them through chess.js (`replay()` in `engine.js`).
+Finished games can point at a `rematch_id`. Invite links look like
+`/games/chess?code=ABCD`. Full definition, RLS policies and realtime setup
+live in [`_reference/chess-schema.sql`](../_reference/chess-schema.sql) — run
+that file to create these tables.
+
 ## Games: `game_scores`
 
 Family high scores (`src/pages/games/lib/scores.js`). One row per finished

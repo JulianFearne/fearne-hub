@@ -65,12 +65,12 @@ the client in `src/supabaseClient.js`.
   stacker built on matter-js, with Classic and Power-ups modes and medals,
   plus online races where Power-ups can be thrown at the leader), and
   several with a computer opponent, pass-and-play and/or online play via a
-  join code or invite link: Battleship, Checkers, Ludo, Snakes and Ladders,
+  join code or invite link: Battleship, Checkers, Chess, Ludo, Snakes and Ladders,
   Go Fish, Connect Four and "Animal Place Thing" (categories), all live via Supabase
   Realtime. Each online game's tables are in `_reference/*-schema.sql`; run
   the file once to enable that game's online mode. Games with a score
   (the arcade games, Wobbly Towers, Sudoku, Freecell, Hangman, and
-  Battleship, Checkers and Connect Four against the computer) share a family
+  Battleship, Checkers, Chess and Connect Four against the computer) share a family
   high-score table (`_reference/game-scores-schema.sql`, boards listed in
   `src/pages/games/lib/scoreBoards.js`), shown in each game and on
   `/games/scores`. Scores made with no signal wait on the phone and are

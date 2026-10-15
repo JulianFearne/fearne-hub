@@ -25,7 +25,8 @@ export const COLS = 6
 export const ROWS = 13
 export const SPAWN_COL = 2
 export const COLOURS = ['red', 'green', 'blue', 'yellow']
-const CLEAR_MS = 380
+const CLEAR_MS = 420
+const SETTLE_MS = 200 // lets the gems fall into place before a chain is checked
 const JUNK_PER_DROP = 18
 
 export const MODES = {
@@ -91,7 +92,7 @@ export function createGame(mode = 'solo', { seed = Math.floor(Math.random() * 2 
     gemOf: Array(ROWS * COLS).fill(-1),
     piece: null,
     next: [],
-    phase: 'fall', // 'fall' | 'clear' | 'over'
+    phase: 'fall', // 'fall' | 'clear' | 'settle' | 'over'
     timer: 0,
     fallMs: m.fallMs,
     softDrop: false,
@@ -352,7 +353,13 @@ export function update(game, dt) {
     for (const i of game.clearing) game.grid[i] = null
     game.clearing = new Set()
     gravity(game.grid)
-    startResolve(game)
+    refreshGems(game)
+    game.phase = 'settle'
+    game.timer = 0
+    return
+  }
+  if (game.phase === 'settle') {
+    if (game.timer >= SETTLE_MS) startResolve(game)
     return
   }
   const every = game.softDrop ? Math.min(45, game.fallMs) : game.fallMs

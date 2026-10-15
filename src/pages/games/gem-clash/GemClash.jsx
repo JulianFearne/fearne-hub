@@ -19,7 +19,7 @@ import { useHighScores } from '../lib/scores'
 import Leaderboard from '../lib/Leaderboard'
 import { MODES, createGame, hardDrop, move, receive, rotate, setSoftDrop, takeEvents, update } from './engine'
 import { AI_LEVELS, plan } from './ai'
-import { drawGame, layout } from './draw'
+import { burst, createFx, drawGame, layout } from './draw'
 import './gem-clash.css'
 
 const MODE_KEY = 'gc-mode'
@@ -103,6 +103,8 @@ export default function GemClash() {
   const rivalRef = useRef(null)
   const aiRef = useRef({ piece: -1, target: null, next: 0 })
   const popsRef = useRef([])
+  const fxRef = useRef(createFx())
+  const rivalFxRef = useRef(createFx())
   const shakeRef = useRef(0)
   const phaseRef = useRef(phase)
   const levelRef = useRef(level)
@@ -161,6 +163,10 @@ export default function GemClash() {
 
     function handle(events, now, mine) {
       for (const ev of events) {
+        if (ev.type === 'clear') {
+          const { w, h } = sizeRef.current
+          if (mine) burst(fxRef.current, gameRef.current, w, h, !!rivalRef.current, now)
+        }
         if (ev.type === 'clear' && mine) {
           const text = ev.chain > 1 ? `Chain ×${ev.chain}!` : ev.count >= 8 ? 'Smash!' : `+${ev.damage * 10}`
           popsRef.current.push({ at: now, text, colour: ev.chain > 1 ? '#ffd54f' : '#ffffff', big: ev.chain > 1 })
@@ -221,7 +227,7 @@ export default function GemClash() {
         else if (rival?.phase === 'over') finish(true)
       }
       shakeRef.current = Math.max(0, shakeRef.current - dt * 0.03)
-      popsRef.current = popsRef.current.filter((p) => now - p.at < 1000)
+      popsRef.current = popsRef.current.filter((p) => now - p.at < 1100)
 
       const { w, h, dpr } = sizeRef.current
       const ctx = canvasRef.current?.getContext('2d')
@@ -231,6 +237,8 @@ export default function GemClash() {
           game,
           rival,
           rivalName: 'Computer',
+          fx: fxRef.current,
+          rivalFx: rivalFxRef.current,
           pops: popsRef.current,
           now,
           shake: shakeRef.current,
@@ -331,6 +339,8 @@ export default function GemClash() {
     rivalRef.current = nextMode === 'versus' ? createGame('versus', { seed: seed + 1, junkPattern: 1 }) : null
     aiRef.current = { piece: -1, target: null, next: 0 }
     popsRef.current = []
+    fxRef.current = createFx()
+    rivalFxRef.current = createFx()
     setHud(hudFrom(gameRef.current))
     setResult(null)
     setPhase('playing')
@@ -382,6 +392,7 @@ export default function GemClash() {
   if (phase === 'ready') {
     overlay = (
       <div className="gc-overlay">
+        <div className="gc-card">
         <p className="gc-overlay-title">💎 Gem Clash</p>
         <p className="gc-overlay-sub">
           Round <strong>breakers</strong> smash every touching gem of their colour. Line up big blocks of one colour to
@@ -399,11 +410,13 @@ export default function GemClash() {
             You {tally.you} · Computer {tally.cpu}
           </p>
         )}
+        </div>
       </div>
     )
   } else if (phase === 'paused') {
     overlay = (
       <div className="gc-overlay">
+        <div className="gc-card">
         <p className="gc-overlay-title">Paused</p>
         <div className="gc-overlay-actions">
           <button className="gc-btn primary" onClick={() => setPhase('playing')}>
@@ -416,6 +429,7 @@ export default function GemClash() {
         <button className="gc-link" onClick={() => setPhase('ready')}>
           Change mode
         </button>
+        </div>
       </div>
     )
   } else if (phase === 'over' && result) {
@@ -430,6 +444,7 @@ export default function GemClash() {
     else if (result.best) line = `New personal best! Number ${result.rank} in the family.`
     overlay = (
       <div className="gc-overlay">
+        <div className="gc-card">
         <p className="gc-overlay-title">{title}</p>
         {!result.versus && <p className="gc-overlay-score">{result.score.toLocaleString()} points</p>}
         <p className="gc-overlay-sub">{line}</p>
@@ -441,6 +456,7 @@ export default function GemClash() {
         {modePicker}
         {levelPicker}
         {!result.versus && <Leaderboard scores={scores} />}
+        </div>
       </div>
     )
   }

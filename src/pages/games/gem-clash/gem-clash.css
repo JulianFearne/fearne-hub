@@ -62,6 +62,9 @@
 
 .gc-stage {
   position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0b0d26;
   flex: 1;
   min-height: 0;
   touch-action: none;
@@ -80,26 +83,41 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
   padding: 1rem;
-  border-radius: 12px;
-  background: var(--surface-veil);
-  backdrop-filter: blur(3px);
-  text-align: center;
+  background: rgba(8, 6, 30, 0.55);
+  backdrop-filter: blur(2px);
   overflow-y: auto;
 }
-/* Tall content (the leaderboard) scrolls from the top instead of being
-   cut off above the fold. */
-.gc-overlay > :first-child {
-  margin-top: auto;
+/* The menu floats on a card over the starfield. */
+.gc-card {
+  margin: auto 0;
+  width: 100%;
+  max-width: 22rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.25rem 1rem;
+  border-radius: 18px;
+  background: var(--surface-card);
+  border: 1px solid var(--gc-line);
+  box-shadow: 0 10px 40px rgba(60, 40, 160, 0.45);
+  text-align: center;
+  animation: gc-rise 0.25s ease-out;
 }
-.gc-overlay > :last-child {
-  margin-bottom: auto;
+@keyframes gc-rise {
+  from {
+    transform: translateY(12px) scale(0.97);
+    opacity: 0;
+  }
 }
 .gc-overlay-title {
   font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-size: 1.8rem;
+  background: linear-gradient(90deg, #e01e3c, #f2b200, #119c4f, #1764e0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-weight: 700;
   margin: 0;
   color: var(--gc-ink);
@@ -188,10 +206,11 @@
 }
 .gc-pad {
   border-radius: 14px;
-  border: 1px solid var(--gc-line);
-  background: var(--surface-sunken);
-  color: var(--gc-ink);
+  border: 1px solid rgba(160, 150, 255, 0.35);
+  background: linear-gradient(180deg, #2c2474, #18143f);
+  color: #ece9ff;
   font-size: 1.45rem;
+  box-shadow: 0 3px 0 #0c0a26, inset 0 1px 0 rgba(255, 255, 255, 0.15);
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -200,9 +219,10 @@
 }
 .gc-pad--turn {
   font-size: 1.8rem;
+  background: linear-gradient(180deg, #4b3bb0, #2a2170);
 }
 .gc-pad:active {
-  background: var(--gc-accent);
-  color: var(--gc-on-accent);
-  border-color: var(--gc-accent);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0c0a26, 0 0 14px rgba(140, 120, 255, 0.6);
+  background: linear-gradient(180deg, #5a48d0, #3a2e96);
 }

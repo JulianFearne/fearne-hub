@@ -1,0 +1,419 @@
+/* src/pages/games/checkers/checkers.css
+   Scoped under .ck, never leaks into the hub shell. The chrome (header,
+   mode cards, chips, lobby) matches Ludo; the board has its own fixed wood
+   and piece colours so it looks the same in light and dark theme. */
+
+.ck {
+  --ck-primary: var(--primary);
+  --ck-primary-dark: var(--primary-press);
+  --ck-on-primary: var(--ink-on-primary);
+  --ck-card: var(--surface-card);
+  --ck-ink: var(--ink-1);
+  --ck-line: var(--border);
+
+  --ck-light: #f0dcb4;
+  --ck-dark: #9a6a3d;
+  --ck-frame: #5b3a1e;
+  --ck-red: #d1322b;
+  --ck-red-rim: #8e1d18;
+  --ck-white: #f7f3ea;
+  --ck-white-rim: #a9a194;
+
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.ck-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.ck-back {
+  text-decoration: none;
+  color: var(--ck-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.ck-back.as-button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.ck-title {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.ck-panel {
+  background: var(--ck-card);
+  border: 1px solid var(--ck-line);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: var(--shadow-1);
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+}
+
+/* ---------- mode picker ---------- */
+
+.ck-modepick {
+  display: grid;
+  gap: 0.85rem;
+}
+.ck-modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--ck-line);
+  background: var(--ck-card);
+  color: var(--ck-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+.ck-modecard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-1);
+}
+.ck-modecard-emoji {
+  font-size: 1.7rem;
+}
+.ck-modecard-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.ck-modecard-sub {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------- chips, buttons, text ---------- */
+
+.ck-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.ck-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--ck-line);
+  background: transparent;
+  color: var(--ck-ink);
+  cursor: pointer;
+}
+.ck-chip.active {
+  background: var(--ck-primary);
+  border-color: var(--ck-primary);
+  color: var(--ck-on-primary);
+}
+
+.ck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+.ck-btn {
+  font: inherit;
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  font-weight: 600;
+  border: 1px solid var(--ck-primary);
+  background: var(--surface-card);
+  color: var(--ck-primary);
+  cursor: pointer;
+}
+.ck-btn.primary {
+  background: var(--ck-primary);
+  color: var(--ck-on-primary);
+}
+.ck-btn.primary:hover:not(:disabled) {
+  background: var(--ck-primary-dark);
+}
+.ck-btn.ghost {
+  border-color: var(--ck-line);
+  color: var(--ink-2);
+}
+.ck-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.ck-hint {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.ck-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- online lobby ---------- */
+
+.ck-lobby {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  width: 100%;
+}
+.ck-lobby-divider {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+.ck-join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.ck-code-input {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--ck-line);
+  background: var(--surface-card);
+  color: var(--ck-ink);
+}
+.ck-code-label {
+  font-size: 0.8rem;
+  opacity: 0.65;
+}
+.ck-code-value {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  color: var(--ck-primary);
+}
+.ck-lobby-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+/* ---------- rules ---------- */
+
+.ck-rules {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 12px;
+  background: var(--ck-card);
+  color: var(--ck-ink);
+  font-size: 0.9rem;
+}
+.ck-rules summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.ck-rules ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+/* ---------- table ---------- */
+
+.ck-table {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  justify-items: center;
+}
+.ck-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+.ck-player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--ck-line);
+  color: var(--ck-ink);
+}
+.ck-player-chip.active {
+  border: 2px solid var(--ck-primary);
+  padding: calc(0.25rem - 1px) calc(0.65rem - 1px);
+}
+.ck-count {
+  font-weight: 500;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+.ck-dot {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  flex: none;
+}
+.ck-dot--red {
+  background: var(--ck-red);
+  box-shadow: inset 0 0 0 2px var(--ck-red-rim);
+}
+.ck-dot--white {
+  background: var(--ck-white);
+  box-shadow: inset 0 0 0 2px var(--ck-white-rim);
+}
+.ck-chip--red.active {
+  background: var(--ck-red);
+  border-color: var(--ck-red);
+  color: #fff;
+}
+.ck-chip--white.active {
+  background: var(--ck-white);
+  border-color: var(--ck-white-rim);
+  color: #222;
+}
+
+.ck-board-wrap {
+  width: 100%;
+  max-width: 30rem;
+}
+.ck-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ck-frame {
+  fill: var(--ck-frame);
+}
+.ck-sq--light {
+  fill: var(--ck-light);
+}
+.ck-sq--dark {
+  fill: var(--ck-dark);
+  cursor: pointer;
+}
+.ck-sq.is-last {
+  fill: #b98d3e;
+}
+.ck-sq.is-selected,
+.ck-sq.is-trail {
+  fill: #c9a227;
+}
+.ck-target {
+  fill: rgba(255, 255, 255, 0.75);
+  stroke: #2e7d32;
+  stroke-width: 0.06;
+  cursor: pointer;
+  animation: ck-pulse 1s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes ck-pulse {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+.ck-piece {
+  transition: transform 0.24s ease-in-out;
+  cursor: pointer;
+}
+.ck-piece-shadow {
+  fill: rgba(0, 0, 0, 0.35);
+}
+.ck-piece--red .ck-piece-rim {
+  fill: var(--ck-red-rim);
+}
+.ck-piece--red .ck-piece-top {
+  fill: var(--ck-red);
+}
+.ck-piece--red .ck-piece-ring {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.22);
+  stroke-width: 0.03;
+}
+.ck-piece--white .ck-piece-rim {
+  fill: var(--ck-white-rim);
+}
+.ck-piece--white .ck-piece-top {
+  fill: var(--ck-white);
+}
+.ck-piece--white .ck-piece-ring {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.15);
+  stroke-width: 0.03;
+}
+.ck-crown {
+  fill: #f2c230;
+  stroke: #8a6100;
+  stroke-width: 0.025;
+}
+/* Pieces that can move glow, so it's clear what to tap. */
+.ck-piece.can-move .ck-piece-rim {
+  stroke: #ffe066;
+  stroke-width: 0.07;
+}
+.ck-piece.is-selected .ck-piece-rim {
+  stroke: #4caf50;
+  stroke-width: 0.1;
+}
+
+.ck-status {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ck-ink);
+  text-align: center;
+}
+.ck-status.is-over {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--success);
+}
+
+/* Quiet "start a new game" link, centred under everything. */
+.ck-link {
+  justify-self: center;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-piece,
+  .ck-target {
+    transition: none;
+    animation: none;
+  }
+}

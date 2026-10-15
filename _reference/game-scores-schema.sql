@@ -3,8 +3,8 @@
 -- re-run.
 --
 -- Family high scores for every game that has one (Snake, Car Dodge,
--- Frogger, Pong, Wobbly Towers, Sudoku, Freecell, Hangman, Battleship and
--- Connect Four against the computer). One row per finished game; the app
+-- Frogger, Pong, Wobbly Towers, Sudoku, Freecell, Hangman, Battleship,
+-- Checkers and Connect Four against the computer). One row per finished game; the app
 -- shows each person's best per board. `game` and `board` are free text so
 -- a new game or mode needs no SQL; how each board is ranked (high or low
 -- wins) lives in src/pages/games/lib/scoreBoards.js.

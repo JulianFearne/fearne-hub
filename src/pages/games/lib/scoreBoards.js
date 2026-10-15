@@ -93,6 +93,15 @@ export const SCORE_GAMES = {
       hard: { label: 'Hard', order: 'low', format: (n) => plural(n, 'shot') },
     },
   },
+  checkers: {
+    title: 'Checkers',
+    to: '/games/checkers',
+    boards: {
+      easy: { label: 'Easy', order: 'low', format: (n) => plural(n, 'move') },
+      medium: { label: 'Medium', order: 'low', format: (n) => plural(n, 'move') },
+      hard: { label: 'Hard', order: 'low', format: (n) => plural(n, 'move') },
+    },
+  },
   'connect-four': {
     title: 'Connect Four',
     to: '/games/connect-four',

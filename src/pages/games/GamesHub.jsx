@@ -176,6 +176,15 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'checkers',
+    title: 'Checkers',
+    blurb: 'Draughts: jump your way across the board and get crowned. Play the computer, a friend on the same phone, or online.',
+    icon: 'crown',
+    to: '/games/checkers',
+    tags: ['1 player, offline', '2 players, offline', '2 players, online'],
+    live: true,
+  },
+  {
     key: 'carve',
     title: 'CARVE',
     blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',

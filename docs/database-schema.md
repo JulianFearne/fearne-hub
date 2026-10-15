@@ -566,6 +566,19 @@ realtime setup live in
 [`_reference/wobbly-towers-schema.sql`](../_reference/wobbly-towers-schema.sql)
 — run that file to create these tables.
 
+## Games: `ck_sessions`, `ck_players`, `ck_moves`
+
+Backing store for online Checkers (`src/pages/games/checkers/`), the same
+sessions + players + append-only log pattern as Ludo. Two seats: the host is
+Red (seat 0) and goes first; the game turns `active` when a second player
+joins as White. Each move is one `ck_moves` row holding its path of squares
+(`'21-14-5'` for a double jump); the board, turn and winner are derived by
+`deriveOnline()` in `engine.js`, which skips anything illegal. Finished games
+can point at a `rematch_id`. Invite links look like `/games/checkers?code=ABCD`.
+Full definition, RLS policies and realtime setup live in
+[`_reference/checkers-schema.sql`](../_reference/checkers-schema.sql) — run
+that file to create these tables.
+
 ## Games: `game_scores`
 
 Family high scores (`src/pages/games/lib/scores.js`). One row per finished

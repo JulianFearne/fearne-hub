@@ -63,7 +63,8 @@ the client in `src/supabaseClient.js`.
   a Swordfight-style falling-gem battler with 2-4 player online matches,
   each with an easy mode for little ones), Gravity Well (after the 1995
   Windows game: fly a wireframe fighter through the stars' gravity, land on
-  planets to claim them and drive out the computer's empire), Wobbly Towers (an endless physics tower
+  planets to claim them and drive out up to three computer empires, with
+  lab upgrades and a saved game to carry on later), Wobbly Towers (an endless physics tower
   stacker built on matter-js, with Classic and Power-ups modes and medals,
   plus online races where Power-ups can be thrown at the leader), and
   several with a computer opponent, pass-and-play and/or online play via a
@@ -71,7 +72,7 @@ the client in `src/supabaseClient.js`.
   Go Fish, Connect Four and "Animal Place Thing" (categories), all live via Supabase
   Realtime. Each online game's tables are in `_reference/*-schema.sql`; run
   the file once to enable that game's online mode. Games with a score
-  (the arcade games, Wobbly Towers, Sudoku, Freecell, Hangman, and
+  (the arcade games, Gravity Well, Wobbly Towers, Sudoku, Freecell, Hangman, and
   Battleship, Checkers, Chess and Connect Four against the computer) share a family
   high-score table (`_reference/game-scores-schema.sql`, boards listed in
   `src/pages/games/lib/scoreBoards.js`), shown in each game and on

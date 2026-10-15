@@ -54,6 +54,18 @@ export const SCORE_GAMES = {
       solo: { label: 'Solo', order: 'high', format: points },
     },
   },
+  'gravity-well': {
+    title: 'Gravity Well',
+    to: '/games/gravity-well',
+    boards: {
+      'easy-1': { label: 'Easy, 1 rival', order: 'low', format: formatTime },
+      'easy-2': { label: 'Easy, 2 rivals', order: 'low', format: formatTime },
+      'easy-3': { label: 'Easy, 3 rivals', order: 'low', format: formatTime },
+      'normal-1': { label: 'Normal, 1 rival', order: 'low', format: formatTime },
+      'normal-2': { label: 'Normal, 2 rivals', order: 'low', format: formatTime },
+      'normal-3': { label: 'Normal, 3 rivals', order: 'low', format: formatTime },
+    },
+  },
   pong: {
     title: 'Pong',
     to: '/games/pong',

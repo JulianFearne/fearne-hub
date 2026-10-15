@@ -4,7 +4,7 @@
 // radar of the whole sector (tap it to pick a planet to be pointed at) and
 // arrows at the screen edge for things out of sight.
 
-import { EMPIRES, PORT_ORBIT, PORT_R, SECTOR, MAX_SPEED, fighterOf, portPos, siteAngle, speedOf } from './engine'
+import { AMMO, EMPIRES, PORT_ORBIT, PORT_R, SECTOR, MAX_SPEED, fighterOf, portPos, siteAngle, speedOf } from './engine'
 
 // A few hundred background stars in three layers that scroll at different
 // speeds, so flying feels like moving.
@@ -374,6 +374,24 @@ export function drawGame(ctx, w, h, game, view, now) {
 
   for (const b of game.bullets) {
     const sp = Math.hypot(b.vx, b.vy) || 1
+    if (b.kind) {
+      // Rockets and missiles: a body in the empire's colour with a white tip.
+      const ux = b.vx / sp
+      const uy = b.vy / sp
+      ctx.lineCap = 'round'
+      ctx.strokeStyle = game.empires[b.owner].color
+      ctx.lineWidth = 3.2
+      ctx.beginPath()
+      ctx.moveTo(b.x - ux * 9, b.y - uy * 9)
+      ctx.lineTo(b.x, b.y)
+      ctx.stroke()
+      ctx.fillStyle = '#fff'
+      ctx.beginPath()
+      ctx.arc(b.x + ux, b.y + uy, 2, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.lineCap = 'butt'
+      continue
+    }
     ctx.strokeStyle = b.owner != null ? game.empires[b.owner].color : '#fff'
     ctx.lineWidth = 2
     ctx.beginPath()
@@ -422,6 +440,24 @@ export function drawGame(ctx, w, h, game, view, now) {
     const sp = speedOf(me)
     const slow = sp <= game.cfg.landSpeed
     bar(ctx, 8, 40, bw, 12, sp / MAX_SPEED, '#5ff3ff', slow ? 'rgba(30,80,200,0.9)' : 'rgba(40,40,55,0.85)', slow ? 'Speed: slow enough to land' : 'Speed')
+    // Rockets or missiles left, one stripe each, like the original.
+    if (me.tech >= 1) {
+      ctx.fillStyle = me.tech >= 2 ? '#ffffff' : '#c47bff'
+      for (let i = 0; i < AMMO; i++) {
+        ctx.globalAlpha = i < me.ammo ? 1 : 0.2
+        ctx.fillRect(8 + i * 7, 57, 4, 11)
+      }
+      ctx.globalAlpha = 1
+    }
+  }
+  if (view.upgrade) {
+    ctx.globalAlpha = 0.65 + Math.sin(now / 180) * 0.35
+    ctx.font = '700 11px system-ui, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = '#e3b8ff'
+    ctx.fillText(`New: ${view.upgrade}! Land at a base.`, 8, me?.tech >= 1 ? 80 : 64)
+    ctx.globalAlpha = 1
   }
 
   drawRadar(ctx, game, w, view, scale, h)

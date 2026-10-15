@@ -44,6 +44,9 @@
      light theme. */
   text-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
 }
+.gw-tally .is-out {
+  opacity: 0.45;
+}
 .gw-icon-btn {
   width: 44px;
   height: 44px;
@@ -175,6 +178,10 @@
   font-size: 0.95rem;
   cursor: pointer;
 }
+.gw-chip.small {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.88rem;
+}
 .gw-chip.active {
   background: #3d8bff;
   border-color: #3d8bff;
@@ -183,11 +190,8 @@
 
 .gw-controls {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.15fr 1.4fr;
-  gap: 0.45rem;
-}
-.gw-controls--brake {
-  grid-template-columns: 1fr 1fr 1fr 1fr 1.25fr;
+  grid-template-columns: repeat(var(--gw-pads, 4), minmax(0, 1fr));
+  gap: 0.4rem;
 }
 .gw-pad {
   height: 4.2rem;
@@ -205,8 +209,24 @@
 }
 .gw-pad--fire,
 .gw-pad--thrust,
-.gw-pad--brake {
-  font-size: 0.95rem;
+.gw-pad--brake,
+.gw-pad--rocket {
+  font-size: 0.9rem;
+  padding: 0 0.15rem;
+}
+.gw-pad--rocket {
+  position: relative;
+  border-color: #5c3a8a;
+  background: #1d1230;
+  color: #e3b8ff;
+}
+.gw-ammo {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.4rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
 }
 .gw-pad--fire {
   border-color: #7a2f2a;
@@ -225,4 +245,14 @@
 }
 .gw-pad:active {
   filter: brightness(1.6);
+}
+
+/* The family table sits on a normal themed panel inside the space card. */
+.gw-board {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border-radius: 12px;
+  background: var(--surface-card);
+  color: var(--ink-1);
+  text-align: left;
 }

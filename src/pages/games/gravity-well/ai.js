@@ -5,7 +5,8 @@
 // engine in short bursts that average out to the right amount (fly()).
 //
 // Each computer fighter picks a job every so often (think in MODES.ai):
-//   repair  badly hurt: land on one of its own bases or ports to mend
+//   repair  badly hurt: land on one of its own bases or ports to mend (or
+//           at a base to pick up new upgrades and more rockets)
 //   fight   an enemy ship is close: chase it and shoot
 //   claim   fly to the nearest planet nobody holds (or an enemy's empty one)
 //           and land on it
@@ -64,6 +65,10 @@ function choose(game, empire, s) {
   const foe = nearest(foes.filter((o) => o.kind === 'fighter')) ?? nearest(foes)
   if (foe) return { job: 'fight', ship: foe.id }
 
+  // New upgrades from the labs, or out of rockets: call in at a base.
+  const lab = nearest(game.planets.filter((p) => p.owner === empire.id && p.base))
+  if (lab && (empire.ready > s.tech || (s.tech >= 1 && s.ammo === 0))) return { job: 'repair', planet: lab.id }
+
   if (game.time - empire.claimAt >= ai.claimDelay) {
     const target = nearest(game.planets.filter((p) => claimable(p, empire.id)))
     if (target) return { job: 'claim', planet: target.id }
@@ -91,6 +96,7 @@ export function thinkAI(game, empire, dt) {
     b.jitter = (Math.random() - 0.5) * 2 * ai.aimError
   }
   s.fire = false
+  s.launch = false
 
   const landAt = (p) => {
     if (s.landed?.planet === p.id) {
@@ -133,7 +139,10 @@ export function thinkAI(game, empire, dt) {
       face(s, want)
       s.thrust = false
     }
-    if (Math.abs(angleDiff(want, s.a)) < 0.14 && d < 440) s.fire = true
+    const lined = Math.abs(angleDiff(want, s.a))
+    if (lined < 0.14 && d < 440) s.fire = true
+    // Now and then a rocket too, when close and lined up.
+    if (s.ammo > 0 && lined < 0.1 && d < 400 && Math.random() < 0.03) s.launch = true
   }
 
   if (b.job === 'repair' || b.job === 'claim' || b.job === 'home') {

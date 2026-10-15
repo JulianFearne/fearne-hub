@@ -2,8 +2,14 @@
 // Gravity Well, after the 1995 Windows game by Software Engineering, Inc.
 // Fly your fighter round a sector of stars and planets, land gently on
 // planets to claim them, and your freighters build them up by themselves.
-// The computer's Red empire is doing the same. Wipe out its buildings and
-// freighters to win; lose all of yours and it's over.
+// One to three computer empires (Red, Purple, Yellow) are doing the same.
+// Wipe out their buildings and freighters to win; lose all of yours and it's
+// over. Your labs invent rockets, homing missiles and stronger shields,
+// fitted when you land at one of your bases.
+//
+// The game in progress is kept on the phone, so you can stop and carry on
+// later. A win goes on the family high-score table as the time it took
+// (fastest is best), one board per difficulty and number of opponents.
 //
 // Rules in engine.js, the computer and the Brake button in ai.js, drawing in
 // draw.js. This page runs the frame loop, the buttons and keys, the camera,
@@ -18,13 +24,46 @@
 // tall: the view in the middle, the buttons underneath.
 
 import { useEffect, useRef, useState } from 'react'
-import { INSTALL, MODES, SECTOR, STEP, counts, createGame, fighterOf, launchPlanet, step, takeEvents } from './engine'
+import { INSTALL, MODES, SECTOR, STEP, UPGRADES, counts, createGame, fighterOf, launchPlanet, loadGame, saveGame, step, takeEvents, weaponOf } from './engine'
 import { brake, thinkAI } from './ai'
 import { drawGame, radarRect } from './draw'
 import { formatTime } from '../lib/scoreBoards'
+import { useHighScores } from '../lib/scores'
+import Leaderboard from '../lib/Leaderboard'
 import './gravity-well.css'
 
 const MODE_KEY = 'gw-mode'
+const RIVALS_KEY = 'gw-rivals'
+const SAVE_KEY = 'gw-save'
+const SAVE_EVERY_S = 5
+
+function loadRivals() {
+  try {
+    const n = Number(localStorage.getItem(RIVALS_KEY))
+    return n >= 1 && n <= 3 ? n : 3
+  } catch {
+    return 3
+  }
+}
+
+function store(key, value) {
+  try {
+    if (value == null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
+  } catch {
+    // Not kept; only matters if the page is closed.
+  }
+}
+
+function loadSaved() {
+  try {
+    return loadGame(localStorage.getItem(SAVE_KEY))
+  } catch {
+    return null
+  }
+}
+
+const boardOf = (mode, rivals) => `${mode}-${rivals}`
 
 function loadMode() {
   try {
@@ -83,6 +122,16 @@ function describe(game, ev) {
         : { text: 'Too fast to land! Slow down first.', color: '#ffb35c' }
     case 'out':
       return mine ? null : { text: `${e(ev.owner).name} has been driven out of the sector!`, color: '#ffe08a' }
+    case 'invented':
+      return mine
+        ? { text: `Your labs invented ${UPGRADES[ev.level - 1].label}! Land at a base to fit them.`, color: '#e3b8ff' }
+        : null
+    case 'fitted':
+      if (!mine) return null
+      return {
+        text: ['', 'Rockets fitted! Tap Rocket to fire one.', 'Homing missiles fitted!', 'Shields made stronger!'][ev.level],
+        color: '#e3b8ff',
+      }
     default:
       return null
   }
@@ -118,9 +167,14 @@ function Pad({ label, children, control, input, className = '' }) {
 }
 
 export default function GravityWell() {
-  const [mode, setMode] = useState(loadMode)
+  const [saved] = useState(loadSaved)
+  const [mode, setMode] = useState(() => saved?.mode ?? loadMode())
+  const [rivals, setRivals] = useState(() => (saved ? saved.empires.length - 1 : loadRivals()))
   const [phase, setPhase] = useState('ready') // 'ready' | 'playing' | 'paused' | 'over'
-  const [hud, setHud] = useState({ time: 0, counts: [1, 1] })
+  const [hud, setHud] = useState({ time: 0, counts: [], out: [], weapon: null, ammo: 0 })
+  const scores = useHighScores('gravity-well', boardOf(mode, rivals))
+  const submitRef = useRef(scores.submit)
+  submitRef.current = scores.submit
   const [result, setResult] = useState(null)
   const [round, setRound] = useState(0)
 
@@ -128,12 +182,16 @@ export default function GravityWell() {
   const canvasRef = useRef(null)
   const sizeRef = useRef({ w: 0, h: 0, dpr: 1 })
   const gameRef = useRef(null)
-  const inputRef = useRef({ left: false, right: false, thrust: false, fire: false, brake: false })
-  const viewRef = useRef({ cam: { x: 0, y: 0 }, waypoint: null, toasts: [], hint: null })
+  const inputRef = useRef({ left: false, right: false, thrust: false, fire: false, brake: false, launch: false })
+  const viewRef = useRef({ cam: { x: 0, y: 0 }, waypoint: null, toasts: [], hint: null, upgrade: null })
   const phaseRef = useRef(phase)
   phaseRef.current = phase
 
-  if (!gameRef.current) gameRef.current = createGame(mode)
+  if (!gameRef.current) gameRef.current = saved ?? createGame(mode, { empires: rivals + 1 })
+  // A game already under way, to offer to carry on with.
+  const inProgress = () => gameRef.current.status === 'playing' && gameRef.current.time > 1
+
+  const keep = () => store(SAVE_KEY, inProgress() ? saveGame(gameRef.current) : null)
 
   // ---------- sizing ----------
 
@@ -160,6 +218,7 @@ export default function GravityWell() {
     let last = performance.now()
     let acc = 0
     let lastHud = ''
+    let savedAt = gameRef.current.time
     const view = viewRef.current
     const g0 = gameRef.current
     const start = fighterOf(g0, 0) ?? g0.planets[g0.empires[0].home]
@@ -185,6 +244,7 @@ export default function GravityWell() {
               me.thrust = input.thrust
             }
             me.fire = input.fire
+            me.launch = input.launch
           }
           for (const e of game.empires) if (!e.human && !e.out) thinkAI(game, e, STEP)
           step(game, STEP)
@@ -197,6 +257,10 @@ export default function GravityWell() {
           }
         }
         view.toasts = view.toasts.filter((m) => now - m.at < 3400)
+        if (game.status === 'playing' && game.time - savedAt > SAVE_EVERY_S) {
+          savedAt = game.time
+          store(SAVE_KEY, saveGame(game))
+        }
       } else {
         acc = 0
       }
@@ -221,6 +285,8 @@ export default function GravityWell() {
           view.hint = repairing ? 'Repairing… Thrust to take off.' : 'Hold Thrust to take off.'
         }
       }
+      // Labs have something new that this fighter hasn't got yet.
+      view.upgrade = me && game.empires[0].ready > me.tech ? UPGRADES[game.empires[0].ready - 1].label : null
 
       const { w, h, dpr } = sizeRef.current
       const ctx = canvasRef.current?.getContext('2d')
@@ -230,10 +296,13 @@ export default function GravityWell() {
       }
 
       const c = counts(game)
-      const key = `${Math.floor(game.time)}|${c.join(',')}`
+      const out = game.empires.map((e) => e.out)
+      const weapon = me ? weaponOf(me) : null
+      const ammo = me?.ammo ?? 0
+      const key = `${Math.floor(game.time)}|${c.join(',')}|${out.join(',')}|${weapon}|${ammo}`
       if (key !== lastHud) {
         lastHud = key
-        setHud({ time: Math.floor(game.time), counts: c })
+        setHud({ time: Math.floor(game.time), counts: c, out, weapon, ammo })
       }
     }
     raf = requestAnimationFrame(frame)
@@ -242,13 +311,19 @@ export default function GravityWell() {
   }, [round])
 
   function finish(game) {
-    setTimeout(() => {
-      setResult({
-        won: game.status === 'won',
-        time: Math.floor(game.time),
-        planets: counts(game)[0],
-      })
+    store(SAVE_KEY, null)
+    const won = game.status === 'won'
+    const time = Math.max(1, Math.floor(game.time))
+    // Whoever holds the most planets at the end gets the blame.
+    const c = counts(game)
+    const rivalsLeft = game.empires.filter((e) => !e.human && !e.out)
+    const victor = rivalsLeft.sort((a, b) => c[b.id] - c[a.id])[0]
+    setTimeout(async () => {
+      setResult({ won, time, planets: c[0], victor: victor?.name, pending: won })
       setPhase('over')
+      if (!won) return
+      const r = await submitRef.current(time)
+      setResult((prev) => (prev && prev.time === time ? { ...prev, ...r, pending: false } : prev))
     }, 1400)
   }
 
@@ -272,6 +347,9 @@ export default function GravityWell() {
       b: 'brake',
       B: 'brake',
       Shift: 'brake',
+      r: 'launch',
+      R: 'launch',
+      Enter: 'launch',
     }
     function onDown(e) {
       if (keys[e.key]) {
@@ -286,7 +364,9 @@ export default function GravityWell() {
       if (keys[e.key]) inputRef.current[keys[e.key]] = false
     }
     function onHide() {
-      if (document.hidden) setPhase((p) => (p === 'playing' ? 'paused' : p))
+      if (!document.hidden) return
+      setPhase((p) => (p === 'playing' ? 'paused' : p))
+      keep()
     }
     window.addEventListener('keydown', onDown)
     window.addEventListener('keyup', onUp)
@@ -298,13 +378,17 @@ export default function GravityWell() {
     }
   }, [])
 
-  // Letting go of everything when the game stops, so nothing sticks on.
+  // Letting go of everything when the game stops, so nothing sticks on, and
+  // keeping the game whenever it stops or the page is left.
   useEffect(() => {
     if (phase !== 'playing') {
       const input = inputRef.current
       for (const k of Object.keys(input)) input[k] = false
+      if (phase !== 'over') keep()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
+  useEffect(() => () => keep(), [])
 
   // Tap a planet on the radar to get an arrow pointing to it; tap it again
   // to clear it.
@@ -329,8 +413,9 @@ export default function GravityWell() {
 
   // ---------- starting ----------
 
-  function play(nextMode = mode) {
-    gameRef.current = createGame(nextMode)
+  function play() {
+    gameRef.current = createGame(mode, { empires: rivals + 1 })
+    store(SAVE_KEY, null)
     viewRef.current.waypoint = null
     viewRef.current.toasts = [{ text: 'Find a planet nobody owns and land on it gently.', at: performance.now(), color: '#9dffbb' }]
     setResult(null)
@@ -338,12 +423,36 @@ export default function GravityWell() {
     setPhase('playing')
   }
 
+  function carryOn() {
+    viewRef.current.toasts = []
+    setPhase('playing')
+  }
+
+  // Changing the settings starts afresh, so check first if a game's on.
+  function okToDrop() {
+    return !inProgress() || window.confirm('Start a new game? The one you were playing will be lost.')
+  }
+
+  function fresh(nextMode, nextRivals) {
+    gameRef.current = createGame(nextMode, { empires: nextRivals + 1 })
+    store(SAVE_KEY, null)
+    setResult(null)
+    setPhase('ready')
+    setRound((r) => r + 1)
+  }
+
   function chooseMode(next) {
-    if (next === mode) return
+    if (next === mode || !okToDrop()) return
     saveMode(next)
     setMode(next)
-    gameRef.current = createGame(next)
-    setRound((r) => r + 1)
+    fresh(next, rivals)
+  }
+
+  function chooseRivals(next) {
+    if (next === rivals || !okToDrop()) return
+    store(RIVALS_KEY, String(next))
+    setRivals(next)
+    fresh(mode, next)
   }
 
   // ---------- render ----------
@@ -357,10 +466,25 @@ export default function GravityWell() {
       ))}
     </div>
   )
+  const rivalsPicker = (
+    <div className="gw-chips" role="group" aria-label="Computer empires">
+      {[1, 2, 3].map((n) => (
+        <button key={n} type="button" className={`gw-chip small ${rivals === n ? 'active' : ''}`} onClick={() => chooseRivals(n)}>
+          {n} {n === 1 ? 'rival' : 'rivals'}
+        </button>
+      ))}
+    </div>
+  )
   const modeNote = {
-    easy: 'Gentle gravity, a Brake button for landing, tougher shields and a slower Red empire.',
-    normal: 'Full gravity, stars burn you up, and Red plays to win.',
+    easy: 'Gentle gravity, a Brake button for landing, tougher shields and slower rivals.',
+    normal: 'Full gravity, stars burn you up, and the rivals play to win.',
   }[mode]
+  const rivalNames = ['Red', 'Red and Purple', 'Red, Purple and Yellow'][rivals - 1]
+  const board = (
+    <div className="gw-board">
+      <Leaderboard scores={scores} title={`Fastest wins · ${MODES[mode].label}, ${rivals} ${rivals === 1 ? 'rival' : 'rivals'}`} />
+    </div>
+  )
 
   let overlay = null
   if (phase === 'ready') {
@@ -380,15 +504,24 @@ export default function GravityWell() {
               <strong>Build:</strong> your freighters then fly out by themselves to build a Base, a Colony and a High Port.
             </li>
             <li>
-              <strong>Win:</strong> shoot Red's buildings and freighters until it has none left. Land on your own bases to
-              repair.
+              <strong>Win:</strong> shoot your rivals' buildings and freighters until they have none left. Land on your own
+              bases to repair, reload and pick up new inventions from your labs.
             </li>
           </ul>
+          {inProgress() && (
+            <button type="button" className="gw-btn primary" onClick={carryOn}>
+              Carry on ({formatTime(Math.floor(gameRef.current.time))})
+            </button>
+          )}
           {modePicker}
-          <p className="gw-note">{modeNote}</p>
-          <button type="button" className="gw-btn primary" onClick={() => play()}>
-            Start
+          {rivalsPicker}
+          <p className="gw-note">
+            {modeNote} Against {rivalNames}.
+          </p>
+          <button type="button" className={`gw-btn ${inProgress() ? '' : 'primary'}`} onClick={() => play()}>
+            {inProgress() ? 'New game' : 'Start'}
           </button>
+          {board}
         </div>
       </div>
     )
@@ -401,7 +534,7 @@ export default function GravityWell() {
             Resume
           </button>
           <button type="button" className="gw-link" onClick={() => setPhase('ready')}>
-            New game
+            Settings and new game
           </button>
         </div>
       </div>
@@ -410,16 +543,31 @@ export default function GravityWell() {
     overlay = (
       <div className="gw-overlay">
         <div className="gw-card">
-          <p className="gw-title">{result.won ? 'Sector conquered! 🎉' : 'Red took the sector'}</p>
+          <p className="gw-title">{result.won ? 'Sector conquered! 🎉' : `${result.victor ?? 'The rivals'} took the sector`}</p>
           <p className="gw-sub">
             {result.won
-              ? `You drove Red out in ${formatTime(result.time)}, holding ${result.planets} ${result.planets === 1 ? 'planet' : 'planets'}.`
+              ? `You drove out every rival in ${formatTime(result.time)}, holding ${result.planets} ${result.planets === 1 ? 'planet' : 'planets'}.`
               : `You held on for ${formatTime(result.time)}. Have another go!`}
           </p>
+          {result.won && (
+            <p className="gw-note">
+              {result.pending
+                ? 'Saving your time…'
+                : result.saved === false
+                  ? "Saved on this phone. It'll go on the family table when you're back online."
+                  : result.best && result.rank === 1
+                    ? 'Fastest in the family! 👑'
+                    : result.best
+                      ? `New personal best! Number ${result.rank} in the family.`
+                      : null}
+            </p>
+          )}
           <button type="button" className="gw-btn primary" onClick={() => play()}>
             Play again
           </button>
           {modePicker}
+          {rivalsPicker}
+          {board}
         </div>
       </div>
     )
@@ -439,8 +587,13 @@ export default function GravityWell() {
           <span className="gw-stat-label">Planets</span>
           <span className="gw-stat-value gw-tally">
             {game.empires.map((e, i) => (
-              <span key={e.id} style={{ color: e.color }} aria-label={`${e.name} ${hud.counts[i] ?? 0}`}>
-                ● {hud.counts[i] ?? 0}
+              <span
+                key={e.id}
+                className={hud.out[i] ? 'is-out' : ''}
+                style={{ color: e.color }}
+                aria-label={hud.out[i] ? `${e.name} is out` : `${e.name} ${hud.counts[i] ?? 0}`}
+              >
+                {hud.out[i] ? '✕' : `● ${hud.counts[i] ?? 0}`}
               </span>
             ))}
           </span>
@@ -461,7 +614,7 @@ export default function GravityWell() {
         {overlay}
       </div>
 
-      <div className={`gw-controls ${easy ? 'gw-controls--brake' : ''}`}>
+      <div className="gw-controls" style={{ '--gw-pads': 4 + (easy ? 1 : 0) + (hud.weapon ? 1 : 0) }}>
         <Pad label="Turn left" control="left" input={inputRef}>
           ⟲
         </Pad>
@@ -476,6 +629,12 @@ export default function GravityWell() {
         <Pad label="Fire" control="fire" input={inputRef} className="gw-pad--fire">
           Fire
         </Pad>
+        {hud.weapon && (
+          <Pad label={hud.weapon === 'missile' ? 'Missile' : 'Rocket'} control="launch" input={inputRef} className="gw-pad--rocket">
+            {hud.weapon === 'missile' ? 'Missile' : 'Rocket'}
+            <span className="gw-ammo">{hud.ammo}</span>
+          </Pad>
+        )}
         <Pad label="Thrust" control="thrust" input={inputRef} className="gw-pad--thrust">
           Thrust
         </Pad>

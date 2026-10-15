@@ -5,7 +5,9 @@
 // pull hard; planets pull a little. Land gently on a planet nobody holds and
 // it's yours: freighters then fly out on their own to build a Base, a Colony
 // and an orbiting High Port, in that order. Bases and ports shoot at enemies
-// in range. Colonies make the materials that pay for freighters. An empire
+// in range. Colonies make the materials that pay for freighters. Bases have
+// labs that slowly invent upgrades (rockets, then homing missiles, then
+// stronger shields), fitted when the fighter next lands at a base. An empire
 // with no buildings and no freighters left is out of the sector.
 //
 // Everything is plain data stepped on a fixed timestep (STEP) so the page,
@@ -34,6 +36,21 @@ const STOCK_MAX = 150
 const MAX_FREIGHTERS = 4
 const FREIGHTER_SPEED = 120
 const FREIGHTER_ACCEL = 80
+const ROCKET_SPEED = 330
+const ROCKET_DAMAGE = 35
+const ROCKET_EVERY = 0.7
+const AMMO_MAX = 6
+const MISSILE_TURN = 2.6
+export const SAVE_VERSION = 1
+
+// What the labs invent, in order, and how much research each takes in all.
+// Research runs at 0.75 a second with one base, up to 1.25 with three.
+export const UPGRADES = [
+  { key: 'rockets', label: 'Rockets', at: 60 },
+  { key: 'missiles', label: 'Homing missiles', at: 150 },
+  { key: 'shields', label: 'Stronger shields', at: 260 },
+]
+const SHIELD_BOOST = 1.6
 
 export const MODES = {
   easy: {
@@ -217,9 +234,12 @@ function makeSector(rand, empireCount) {
   for (const [cx, cy] of spots) {
     stars.push({ x: cx * SECTOR + (rand() - 0.5) * 320, y: cy * SECTOR + (rand() - 0.5) * 320, r: STAR_R })
   }
-  // Two planets a star, with one star sometimes getting a third.
-  const counts = stars.map(() => 2)
-  if (rand() < 0.6) counts[Math.floor(rand() * counts.length)] = 3
+  // Two planets a star (three with a crowded sector), with one star
+  // sometimes getting one more.
+  const each = empireCount > 2 ? 3 : 2
+  const counts = stars.map(() => each)
+  if (rand() < 0.6) counts[Math.floor(rand() * counts.length)] = each + 1
+  if (each === 3) counts[Math.floor(rand() * counts.length)] -= 1
   const names = [...PLANET_NAMES]
   for (let i = names.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1))
@@ -257,8 +277,8 @@ function makeSector(rand, empireCount) {
       }
     }
   })
-  // Homes in opposite corners: Blue bottom left, Red top right (and, later,
-  // Purple top left and Yellow bottom right).
+  // Homes in the corners: Blue bottom left, Red top right, Purple top left
+  // and Yellow bottom right.
   const corners = [
     [0, SECTOR],
     [SECTOR, 0],
@@ -319,6 +339,8 @@ export function createGame(mode = 'normal', { seed = Math.floor(Math.random() * 
       buildAt: 2 + e,
       respawnAt: 0,
       claimAt: 0,
+      research: 0,
+      ready: 0, // upgrades invented so far
     })
     spawnFighter(game, game.empires[e], home)
   }
@@ -334,6 +356,11 @@ function spawnFighter(game, empire, planet) {
   const ship = {
     id: game.nextId++,
     kind: 'fighter',
+    tech: 0,
+    ammo: 0,
+    rocketCool: 0,
+    launch: false,
+    baseShield: shield,
     owner: empire.id,
     x: planet.x + Math.cos(ang) * (planet.r + 8),
     y: planet.y + Math.sin(ang) * (planet.r + 8),
@@ -355,9 +382,24 @@ function spawnFighter(game, empire, planet) {
     lastHit: -99,
     brain: {},
   }
+  fitUpgrades(game, ship, empire)
+  ship.shield = ship.shieldMax
+  ship.ammo = ship.tech >= 1 ? AMMO_MAX : 0
   game.ships.push(ship)
   return ship
 }
+
+// Bring a fighter up to everything its labs have invented.
+function fitUpgrades(game, ship, empire) {
+  if (ship.tech >= empire.ready) return false
+  ship.tech = empire.ready
+  ship.shieldMax = ship.baseShield * (ship.tech >= 3 ? SHIELD_BOOST : 1)
+  if (ship.tech >= 1) ship.ammo = AMMO_MAX
+  return true
+}
+
+export const AMMO = AMMO_MAX
+export const weaponOf = (ship) => (ship.tech >= 2 ? 'missile' : ship.tech >= 1 ? 'rocket' : null)
 
 function spawnFreighter(game, empire, from, target) {
   const a = Math.atan2(target.y - from.y, target.x - from.x)
@@ -466,6 +508,15 @@ function runEconomy(game, dt) {
     const colonies = game.planets.filter((p) => p.owner === e.id && p.colony).length
     e.stock = Math.min(STOCK_MAX, e.stock + colonies * game.cfg.rate * dt)
 
+    const labs = Math.min(3, game.planets.filter((p) => p.owner === e.id && p.base).length)
+    if (labs && e.ready < UPGRADES.length) {
+      e.research += dt * (0.5 + labs * 0.25)
+      if (e.research >= UPGRADES[e.ready].at) {
+        e.ready += 1
+        emit(game, { type: 'invented', owner: e.id, level: e.ready })
+      }
+    }
+
     if (game.time >= e.buildAt && e.stock >= FREIGHTER_COST) {
       e.buildAt = game.time + 1
       const fleet = game.ships.filter((s) => s.kind === 'freighter' && s.owner === e.id).length
@@ -543,6 +594,17 @@ function stepFighter(game, s, dt) {
     if (p.owner === s.owner && (p.base || p.port)) {
       s.hull = Math.min(s.hullMax, s.hull + 15 * dt)
       s.shield = Math.min(s.shieldMax, s.shield + 30 * dt)
+      if (s.tech >= 1 && s.ammo < AMMO_MAX) {
+        s.reload = (s.reload ?? 0) + dt
+        if (s.reload >= 0.5) {
+          s.reload = 0
+          s.ammo += 1
+        }
+      }
+      // The labs are at the base.
+      if (p.base && fitUpgrades(game, s, game.empires[s.owner])) {
+        emit(game, { type: 'fitted', owner: s.owner, level: s.tech })
+      }
     }
     if (p.owner !== s.owner && hasInstall(p)) {
       // Someone built here while we sat on it: off you go.
@@ -686,8 +748,31 @@ function stepFreighter(game, f, dt) {
 
 // ---------- shooting ----------
 
-function fire(game, owner, x, y, vx, vy, dmg, life) {
-  game.bullets.push({ x, y, vx, vy, owner, dmg, life })
+function fire(game, owner, x, y, vx, vy, dmg, life, extra = null) {
+  game.bullets.push({ x, y, vx, vy, owner, dmg, life, ...extra })
+}
+
+// A missile picks the nearest enemy ship roughly ahead of it.
+function missileTarget(game, b) {
+  let best = null
+  let bestD = 700
+  const heading = Math.atan2(b.vy, b.vx)
+  for (const s of game.ships) {
+    if (s.owner === b.owner || s.dead) continue
+    const d = Math.hypot(s.x - b.x, s.y - b.y)
+    if (d >= bestD) continue
+    if (Math.abs(angleDiff(Math.atan2(s.y - b.y, s.x - b.x), heading)) > 1.2) continue
+    best = s
+    bestD = d
+  }
+  return best?.id ?? null
+}
+
+function hitBoom(game, b) {
+  if (b.kind) {
+    explode(game, b.x, b.y, '#ffb35c', 14, 120)
+    emit(game, { type: 'boom', owner: b.owner })
+  }
 }
 
 // Direction to shoot from (x, y) at speed `speed` to hit a target moving
@@ -744,21 +829,47 @@ function stepBullets(game, dt) {
   outer: for (const b of game.bullets) {
     b.life -= dt
     if (b.life <= 0) continue
+    if (b.kind === 'missile') {
+      // Steer towards the target, picking a new one if it's gone.
+      let t = b.target != null ? game.ships.find((s) => s.id === b.target && !s.dead) : null
+      if (!t) {
+        b.target = missileTarget(game, b)
+        t = b.target != null ? game.ships.find((s) => s.id === b.target) : null
+      }
+      const sp = Math.hypot(b.vx, b.vy)
+      let a = Math.atan2(b.vy, b.vx)
+      if (t) {
+        const want = leadAngle(b.x, b.y, t, sp)
+        const d = angleDiff(want, a)
+        a += Math.max(-MISSILE_TURN * dt, Math.min(MISSILE_TURN * dt, d))
+      }
+      const nsp = Math.min(ROCKET_SPEED + 120, sp + 90 * dt)
+      b.vx = Math.cos(a) * nsp
+      b.vy = Math.sin(a) * nsp
+    }
+    if (b.kind && Math.random() < 0.5) {
+      game.particles.push({ x: b.x, y: b.y, vx: -b.vx * 0.1 + (Math.random() - 0.5) * 20, vy: -b.vy * 0.1 + (Math.random() - 0.5) * 20, life: 0.35, max: 0.35, color: '#ffb35c' })
+    }
     b.x += b.vx * dt
     b.y += b.vy * dt
     for (const st of game.stars) {
-      if (Math.hypot(b.x - st.x, b.y - st.y) < st.r) continue outer
+      if (Math.hypot(b.x - st.x, b.y - st.y) < st.r) {
+        hitBoom(game, b)
+        continue outer
+      }
     }
     for (const p of game.planets) {
       if (p.owner === b.owner) continue // your own shots fly over your own planets
       if (p.port && Math.hypot(b.x - portPos(p).x, b.y - portPos(p).y) < PORT_R + 2) {
         sparks(game, b.x, b.y, '#ffd27a')
+        hitBoom(game, b)
         hurtInstall(game, p, 'port', b.dmg, b.owner)
         continue outer
       }
       const d = Math.hypot(b.x - p.x, b.y - p.y)
       if (d >= p.r) continue
       sparks(game, b.x, b.y, p.owner != null ? '#ffd27a' : '#7be08a')
+      hitBoom(game, b)
       if (p.owner != null) {
         // The building nearest where it landed takes the hit.
         const hit = Math.atan2(b.y - p.y, b.x - p.x)
@@ -772,8 +883,9 @@ function stepBullets(game, dt) {
     }
     for (const s of game.ships) {
       if (s.owner === b.owner || s.dead) continue
-      if (Math.hypot(b.x - s.x, b.y - s.y) < s.r + 3) {
+      if (Math.hypot(b.x - s.x, b.y - s.y) < s.r + (b.kind ? 5 : 3)) {
         sparks(game, b.x, b.y, s.shield > 0 ? '#9fe4ff' : '#ffb35c')
+        hitBoom(game, b)
         hurtShip(game, s, b.dmg, b.owner)
         continue outer
       }
@@ -785,8 +897,8 @@ function stepBullets(game, dt) {
 
 // ---------- the whole step ----------
 
-// `controls` maps an empire id to { turn, thrust, fire } for its fighter;
-// the page fills in the person's and ai.js the computer's before each step.
+// Each fighter's turn, thrust, fire and launch (rocket) are set before each
+// step: the person's by the page, the computer's by ai.js.
 export function step(game, dt = STEP) {
   if (game.status !== 'playing') {
     stepParticles(game, dt)
@@ -806,6 +918,18 @@ export function step(game, dt = STEP) {
         const ny = Math.sin(s.a)
         fire(game, s.owner, s.x + nx * (s.r + 3), s.y + ny * (s.r + 3), s.vx + nx * BULLET_SPEED, s.vy + ny * BULLET_SPEED, 10, 1.1)
         emit(game, { type: 'shot', owner: s.owner })
+      }
+      s.rocketCool -= dt
+      const kind = weaponOf(s)
+      if (!s.dead && s.launch && kind && s.ammo > 0 && s.rocketCool <= 0) {
+        s.rocketCool = ROCKET_EVERY
+        s.ammo -= 1
+        const nx = Math.cos(s.a)
+        const ny = Math.sin(s.a)
+        const b = { kind }
+        fire(game, s.owner, s.x + nx * (s.r + 4), s.y + ny * (s.r + 4), s.vx + nx * ROCKET_SPEED, s.vy + ny * ROCKET_SPEED, ROCKET_DAMAGE, 2.6, b)
+        if (kind === 'missile') game.bullets[game.bullets.length - 1].target = missileTarget(game, game.bullets[game.bullets.length - 1])
+        emit(game, { type: 'rocket', owner: s.owner, kind })
       }
     } else stepFreighter(game, s, dt)
   }
@@ -854,4 +978,23 @@ export function counts(game) {
 }
 
 export const speedOf = (s) => Math.hypot(s.vx, s.vy)
+
+// ---------- saving ----------
+
+// The game as a string to keep on the phone (sparks and messages aren't kept).
+export function saveGame(game) {
+  const { cfg, particles, events, ...rest } = game
+  return JSON.stringify({ v: SAVE_VERSION, ...rest })
+}
+
+export function loadGame(text) {
+  try {
+    const data = JSON.parse(text)
+    if (data?.v !== SAVE_VERSION || !MODES[data.mode] || data.status !== 'playing') return null
+    const { v, ...rest } = data
+    return { ...rest, cfg: MODES[data.mode], particles: [], events: [] }
+  } catch {
+    return null
+  }
+}
 export { MAX_SPEED, THRUST, ROT_SPEED, BULLET_SPEED, PORT_ORBIT, PORT_R, TURRET_RANGE }

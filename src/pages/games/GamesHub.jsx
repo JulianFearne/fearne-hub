@@ -196,7 +196,7 @@ const GAMES = [
   {
     key: 'gravity-well',
     title: 'Gravity Well',
-    blurb: 'Fly a wireframe fighter through the pull of the stars, land on planets to claim them and drive the Red empire out of the sector. Easy mode has a Brake button.',
+    blurb: 'Fly a wireframe fighter through the pull of the stars, land on planets to claim them and drive up to three rival empires out of the sector. Rockets, homing missiles, and a Brake button in Easy mode.',
     icon: 'orbit',
     to: '/games/gravity-well',
     tags: ['1 player, offline'],

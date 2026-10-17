@@ -8,9 +8,10 @@
      mean a new deploy fetches new files (cache miss -> network) automatically.
    - Cross-origin requests (Supabase REST/realtime, Google Fonts CDN) are left
      completely alone.
-   - /carve/ (CARVE's Godot web build, pushed in by the carve repo's workflow)
-     is left alone too: its files keep the same names on every build, so
-     cache-first would pin an old build forever.
+   - /carve/ and /carve-preview/ (CARVE's Godot web builds, pushed in by the
+     carve repo's workflow) are left alone too: their files keep the same names
+     on every build, so cache-first would pin an old build forever, and a
+     navigation to them must not be cached as the hub's index.html.
    - /logout-condition/ (pushed in by the logout-condition repo's workflow) is
      left alone as well: it is a separate page, and a navigation to it must not
      be cached as the hub's index.html.
@@ -44,6 +45,7 @@ self.addEventListener('fetch', (event) => {
   // Only handle same-origin requests. Supabase and font CDNs pass straight through.
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/carve/')) return;
+  if (url.pathname.startsWith('/carve-preview/')) return;
   if (url.pathname.startsWith('/logout-condition/')) return;
   if (url.pathname.startsWith('/logout-condition-preview/')) return;
 

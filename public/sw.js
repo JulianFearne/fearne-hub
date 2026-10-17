@@ -11,11 +11,14 @@
    - /carve/ (CARVE's Godot web build, pushed in by the carve repo's workflow)
      is left alone too: its files keep the same names on every build, so
      cache-first would pin an old build forever.
+   - /logout-condition/ (pushed in by the logout-condition repo's workflow) is
+     left alone as well: it is a separate page, and a navigation to it must not
+     be cached as the hub's index.html.
 
    IMPORTANT: bump CACHE_VERSION on every deploy. The activate step deletes old
    caches, which clears any stale bundles from a previous release. */
 
-const CACHE_VERSION = 'fearne-hub-v6';
+const CACHE_VERSION = 'fearne-hub-v7';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -41,6 +44,8 @@ self.addEventListener('fetch', (event) => {
   // Only handle same-origin requests. Supabase and font CDNs pass straight through.
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/carve/')) return;
+  if (url.pathname.startsWith('/logout-condition/')) return;
+  if (url.pathname.startsWith('/logout-condition-preview/')) return;
 
   // App navigations: network-first with an offline fallback to index.html.
   if (req.mode === 'navigate') {

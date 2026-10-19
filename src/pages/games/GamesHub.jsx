@@ -3,7 +3,7 @@
 // GAMES below and a route. `live: false` renders a "coming soon" card so the
 // roadmap is visible without needing a route yet. An entry with `href` instead
 // of `to` is a static page outside the React app (e.g. CARVE's Godot web build in
-// public/carve/), so it
+// public/carve/, or Marginalia's build in public/idle/), so it
 // gets a plain link and a full page load.
 //
 // The list is sorted and grouped alphabetically at render time (source order
@@ -227,6 +227,15 @@ const GAMES = [
     blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',
     icon: 'swords',
     href: '/carve/',
+    tags: ['1 player', 'Work in progress'],
+    live: true,
+  },
+  {
+    key: 'marginalia',
+    title: 'Marginalia',
+    blurb: 'Julian’s idle game: a snail knight crawls the margins of a medieval manuscript, scribing ever better gear to free the letters. In testing.',
+    icon: 'notebook-pen',
+    href: '/idle/',
     tags: ['1 player', 'Work in progress'],
     live: true,
   },

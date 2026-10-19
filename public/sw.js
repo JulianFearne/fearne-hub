@@ -12,14 +12,14 @@
      carve repo's workflow) are left alone too: their files keep the same names
      on every build, so cache-first would pin an old build forever, and a
      navigation to them must not be cached as the hub's index.html.
-   - /logout-condition/ (pushed in by the logout-condition repo's workflow) is
-     left alone as well: it is a separate page, and a navigation to it must not
-     be cached as the hub's index.html.
+   - /idle/ and /idle-preview/ (Marginalia, pushed in by the idle repo's
+     workflow) are left alone as well: they are separate pages, and a navigation
+     to them must not be cached as the hub's index.html.
 
    IMPORTANT: bump CACHE_VERSION on every deploy. The activate step deletes old
    caches, which clears any stale bundles from a previous release. */
 
-const CACHE_VERSION = 'fearne-hub-v7';
+const CACHE_VERSION = 'fearne-hub-v8';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -46,8 +46,8 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/carve/')) return;
   if (url.pathname.startsWith('/carve-preview/')) return;
-  if (url.pathname.startsWith('/logout-condition/')) return;
-  if (url.pathname.startsWith('/logout-condition-preview/')) return;
+  if (url.pathname.startsWith('/idle/')) return;
+  if (url.pathname.startsWith('/idle-preview/')) return;
 
   // App navigations: network-first with an offline fallback to index.html.
   if (req.mode === 'navigate') {

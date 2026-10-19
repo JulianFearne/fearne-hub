@@ -194,6 +194,14 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'iq-puzzler',
+    title: 'IQ Puzzler Pro',
+    blurb: 'Fit the coloured pieces into the board. Hundreds of challenges, from a few pieces for little ones to fiendish full boards.',
+    icon: 'puzzle',
+    tags: ['1 player, offline'],
+    live: false,
+  },
+  {
     key: 'gravity-well',
     title: 'Gravity Well',
     blurb: 'Fly a wireframe fighter through the pull of the stars, land on planets to claim them and drive up to three rival empires out of the sector. Rockets, homing missiles, and a Brake button in Easy mode.',

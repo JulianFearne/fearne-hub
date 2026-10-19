@@ -3,7 +3,8 @@
 // GAMES below and a route. `live: false` renders a "coming soon" card so the
 // roadmap is visible without needing a route yet. An entry with `href` instead
 // of `to` is a static page outside the React app (e.g. CARVE's Godot web build in
-// public/carve/), so it gets a plain link and a full page load.
+// public/carve/, or Logout Condition's build in public/logout-condition/), so it
+// gets a plain link and a full page load.
 //
 // The list is sorted and grouped alphabetically at render time (source order
 // above doesn't matter), with a search box and an A-Z index rail down the
@@ -226,6 +227,15 @@ const GAMES = [
     blurb: 'Julian’s monster-hunting deckbuilder, in testing. Turn the phone sideways.',
     icon: 'swords',
     href: '/carve/',
+    tags: ['1 player', 'Work in progress'],
+    live: true,
+  },
+  {
+    key: 'logout-condition',
+    title: 'Logout Condition',
+    blurb: 'Julian’s idle game: trapped in a fantasy world, every death loops you back to day one with what you learned. In testing.',
+    icon: 'log-out',
+    href: '/logout-condition/',
     tags: ['1 player', 'Work in progress'],
     live: true,
   },

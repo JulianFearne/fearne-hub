@@ -196,10 +196,11 @@ const GAMES = [
   {
     key: 'iq-puzzler',
     title: 'IQ Puzzler Pro',
-    blurb: 'Fit the coloured pieces into the board. Hundreds of challenges, from a few pieces for little ones to fiendish full boards.',
+    blurb: 'Fit the coloured pieces into the board. 120 challenges in five levels, from three pieces for little ones to a completely empty board.',
     icon: 'puzzle',
+    to: '/games/iq-puzzler',
     tags: ['1 player, offline'],
-    live: false,
+    live: true,
   },
   {
     key: 'gravity-well',

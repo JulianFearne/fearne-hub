@@ -55,6 +55,17 @@ export const SCORE_GAMES = {
       solo: { label: 'Solo', order: 'high', format: points },
     },
   },
+  'iq-puzzler': {
+    title: 'IQ Puzzler Pro',
+    to: '/games/iq-puzzler',
+    boards: {
+      starter: { label: 'Starter', order: 'low', format: formatTime },
+      junior: { label: 'Junior', order: 'low', format: formatTime },
+      expert: { label: 'Expert', order: 'low', format: formatTime },
+      master: { label: 'Master', order: 'low', format: formatTime },
+      wizard: { label: 'Wizard', order: 'low', format: formatTime },
+    },
+  },
   'gravity-well': {
     title: 'Gravity Well',
     to: '/games/gravity-well',

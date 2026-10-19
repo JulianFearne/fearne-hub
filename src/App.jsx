@@ -33,6 +33,7 @@ import Frogger from './pages/games/frogger/Frogger.jsx'
 import Checkers from './pages/games/checkers/Checkers.jsx'
 import GemClash from './pages/games/gem-clash/GemClash.jsx'
 import GravityWell from './pages/games/gravity-well/GravityWell.jsx'
+import IQPuzzler from './pages/games/iq-puzzler/IQPuzzler.jsx'
 import Chess from './pages/games/chess/Chess.jsx'
 import HighScores from './pages/games/HighScores.jsx'
 import AnimalPlaceThing from './pages/AnimalPlaceThing.jsx'
@@ -86,6 +87,7 @@ const ROUTE_HEADERS = {
   '/games/checkers': { title: 'Checkers', back: '/games' },
   '/games/gem-clash': { title: 'Gem Clash', back: '/games', fill: true },
   '/games/gravity-well': { title: 'Gravity Well', back: '/games', fill: true },
+  '/games/iq-puzzler': { title: 'IQ Puzzler Pro', back: '/games', fill: true },
   '/games/chess': { title: 'Chess', back: '/games' },
   '/games/scores': { title: 'High scores', back: '/games' },
   '/admin': { title: 'Family admin', back: '/' },
@@ -370,6 +372,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <GemClash />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/games/iq-puzzler"
+          element={
+            <ProtectedRoute>
+              <IQPuzzler />
             </ProtectedRoute>
           }
         />

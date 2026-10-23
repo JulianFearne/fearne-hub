@@ -14,6 +14,7 @@ Status: **live for a two-week test at fearne.org/wardrobe/** (phase 2a). Same ap
 | Outfit generation | **Rules engine first**, an AI stylist later | The dossier is already rules. Deterministic, instant, free, offline and explainable |
 | Occasion presets | **Formality level 1 to 5** plus occasion flags plus weather | "Office", "casual" and "smart" are not one axis. New presets cost nothing |
 | Photos | On-device colour reading in v1, Claude vision tagging later | Free, private, works in a shop with poor signal |
+| How pieces look | **Drawings by default**, made from type, colour and pattern. A small square photo (480 px, about 40 KB) is kept and shown on the piece itself. Photos in lists, or not keeping photos, are settings | Uniform, scannable lists for no storage; the photo still tells two navy crews apart and lets you re-tag later. AI-generated reference images were rejected: slow, paid per item, inconsistent, and they drift warm |
 | Weather | Open-Meteo, no key | Free; Malta, NL and IE are presets |
 
 ## What the prototype does

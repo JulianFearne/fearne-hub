@@ -3,7 +3,7 @@
 // picks one per target and injects DEFAULT_PROFILE from profile.json.
 import {
   CATEGORIES, SUBTYPES, LEVELS, WEATHER, SLOTS, SLOT_LABELS, bandForTemp, nearestColours, colourById, sub,
-  formality, zoneOf, slotFor, occasionById, evaluate, generate, buyNext, coverage, outfitGain, outfitKey,
+  formality, zoneOf, slotFor, occasionById, isSuede, evaluate, generate, buyNext, coverage, outfitGain, outfitKey,
   suggestSlot, slotOwned, fillFormula, partsFromItems, planWeek, demoWardrobe, lightness, virtualPieces, validateProfile,
 } from './engine.js'
 import { createStore } from './store-local.js'
@@ -173,6 +173,12 @@ const SHAPES = {
   jacket: '<path d="M30 17 L42 13 L50 19 L58 13 L70 17 L84 29 L90 80 L80 82 L72 44 L72 84 L28 84 L28 44 L20 82 L10 80 L16 29 Z"/><path class="d" d="M28 78 L72 78 L72 86 L28 86 Z M42 13 L44 20 L50 19 L56 20 L58 13"/><path class="l" d="M50 19 L50 78"/>',
   quilted: '<path d="M30 17 L42 13 Q50 20 58 13 L70 17 L84 29 L90 80 L80 82 L72 44 L72 86 L28 86 L28 44 L20 82 L10 80 L16 29 Z"/><path class="l" d="M50 18 L50 86 M30 30 L70 70 M30 50 L58 78 M42 22 L70 50 M70 30 L30 70 M70 50 L42 78 M58 22 L30 50"/>',
   coat: '<path d="M30 14 L42 10 L50 18 L58 10 L70 14 L84 26 L90 80 L80 82 L72 40 L75 98 L25 98 L28 40 L20 82 L10 80 L16 26 Z"/><path class="l" d="M42 10 L45 36 L50 50 L55 36 L58 10 M50 50 L50 98"/><circle class="b" cx="46" cy="58" r="1.8"/><circle class="b" cx="46" cy="72" r="1.8"/>',
+  shirtbd: '<path d="M30 18 L42 13 L50 22 L58 13 L70 18 L84 30 L90 82 L80 84 L72 44 L72 90 L28 90 L28 44 L20 84 L10 82 L16 30 Z"/><path class="d" d="M42 13 L45 25 L50 22 L55 25 L58 13"/><path class="l" d="M50 22 L50 90 M34 34 L42 34 L42 42 L34 42"/><circle class="b" cx="45" cy="24" r="1.2"/><circle class="b" cx="55" cy="24" r="1.2"/>',
+  field: '<path d="M30 17 L42 13 L50 19 L58 13 L70 17 L84 29 L90 80 L80 82 L72 44 L72 88 L28 88 L28 44 L20 82 L10 80 L16 29 Z"/><path class="d" d="M42 13 L44 21 L50 19 L56 21 L58 13"/><path class="l" d="M50 19 L50 88 M32 34 L45 34 L45 46 L32 46 Z M55 34 L68 34 L68 46 L55 46 Z M31 60 L46 60 L46 76 L31 76 Z M54 60 L69 60 L69 76 L54 76 Z"/>',
+  mac: '<path d="M30 14 L42 10 L50 18 L58 10 L70 14 L84 26 L90 80 L80 82 L72 40 L75 98 L25 98 L28 40 L20 82 L10 80 L16 26 Z"/><path class="d" d="M27 54 L73 54 L73 60 L27 60 Z"/><path class="l" d="M42 10 L45 34 L50 44 L55 34 L58 10 M50 44 L50 98 M16 26 L30 32 M84 26 L70 32"/><circle class="b" cx="44" cy="50" r="1.6"/><circle class="b" cx="56" cy="50" r="1.6"/>',
+  tailored: '<path d="M30 8 L70 8 L74 94 L56 94 L50 34 L44 94 L26 94 Z"/><path class="l" d="M30 14 L70 14 M50 14 L50 30 M36 16 L35 94 M64 16 L65 94"/>',
+  oxfordshoe: '<path d="M10 64 Q12 50 28 48 L46 46 Q56 56 74 56 Q90 58 90 68 L90 72 L10 72 Z"/><path class="d" d="M10 72 L90 72 L90 77 L10 77 Z"/><path class="l" d="M70 56 Q66 64 72 72 M38 48 L48 56"/>',
+  desert: '<path d="M22 38 L46 36 L50 54 Q66 56 80 59 Q90 61 90 68 L90 72 L20 72 Z"/><path class="d" d="M20 72 L90 72 L90 77 L20 77 Z"/><path class="l" d="M40 40 L46 50 M38 44 L44 47 M40 49 L46 52"/>',
   trousers: '<path d="M30 8 L70 8 L74 94 L56 94 L50 34 L44 94 L26 94 Z"/><path class="l" d="M30 14 L70 14 M50 14 L50 30"/>',
   jeans: '<path d="M30 8 L70 8 L74 94 L56 94 L50 34 L44 94 L26 94 Z"/><path class="l" d="M30 14 L70 14 M50 14 L50 30 M31 15 Q38 26 46 22 M69 15 Q62 26 54 22"/>',
   shorts: '<path d="M28 22 L72 22 L76 66 L54 68 L50 42 L46 68 L24 66 Z"/><path class="l" d="M28 28 L72 28"/>',
@@ -215,6 +221,10 @@ function garmentSVG(item) {
     defs = `<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${hex}"/><rect width="8" height="3" fill="${shade(hex, light ? -0.18 : 0.2)}" opacity=".8"/><rect width="3" height="8" fill="${shade(hex, light ? -0.18 : 0.2)}" opacity=".6"/></pattern>`
     fill = `url(#${id})`
   }
+  if (isSuede(item) && item.pattern === 'solid') {
+    defs = `<pattern id="${id}" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="${hex}"/><circle cx="1" cy="1" r=".6" fill="${detail}"/><circle cx="3.5" cy="3" r=".5" fill="${detail}"/></pattern>`
+    fill = `url(#${id})`
+  }
   const body = (SHAPES[s.shape] || SHAPES.bag)
     .replace(/<path d=/g, `<path fill="${fill}" stroke="${stroke}" d=`)
     .replace(/<path class="d"/g, `<path fill="${detail}" stroke="${stroke}"`)
@@ -227,11 +237,26 @@ function garmentSVG(item) {
   return `<svg viewBox="0 0 100 100" aria-hidden="true" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><defs>${defs}</defs>${body}</svg>`
 }
 
-function tile(item, size = '') {
-  const src = item && !item.virtual ? photos.get(item.id) : null
-  const inner = !item ? '' : src ? `<img src="${src}" alt="${esc(item.name)}" loading="lazy">` : garmentSVG(item)
-  return `<div class="tile ${size}">${inner}</div>`
+const settings = () => ({ visual: 'drawings', keepPhotos: true, ...state.settings })
+
+// Number among pieces of the same type and colour (two navy merino crews
+// show as 1 and 2), or 0 when the piece is the only one.
+function twinNumber(item) {
+  if (!item || item.virtual) return 0
+  const twins = state.items.filter((it) => it.subtype === item.subtype && it.colour === item.colour)
+  return twins.length > 1 ? twins.indexOf(item) + 1 : 0
 }
+
+// Drawings are the default look everywhere; photos show in lists only when
+// chosen in Profile, and always in the piece's own sheet.
+function tile(item, size = '', { photo = settings().visual === 'photos' } = {}) {
+  const src = photo && item && !item.virtual ? photos.get(item.id) : null
+  const inner = !item ? '' : src ? `<img src="${src}" alt="${esc(item.name)}" loading="lazy">` : garmentSVG(item)
+  const n = twinNumber(item)
+  return `<div class="tile ${size}">${inner}${n ? `<span class="twin" title="One of several ${esc(sub(item).label.toLowerCase())}s in this colour">${n}</span>` : ''}</div>`
+}
+
+const label = (it) => (it.detail ? `${it.name} (${it.detail})` : it.name)
 
 const dot = (colourId) => `<i class="dot" style="background:${colourById(P(), colourId).hex}"></i>`
 
@@ -352,7 +377,7 @@ function itemCard(it) {
     ${tile(it)}
     ${it.status === 'laundry' ? '<span class="badge">In the wash</span>' : ''}
     ${it.demo ? '<span class="badge demo">Demo</span>' : ''}
-    <div class="meta"><div class="name">${esc(it.name)}</div>
+    <div class="meta"><div class="name">${esc(it.name)}</div>${it.detail ? `<div class="detail">${esc(it.detail)}</div>` : ''}
     <div class="sub">${dot(it.colour)}${esc(c.name)}${it.wears?.length ? ` · worn ${it.wears.length}×` : ''}</div></div>
   </button>`
 }
@@ -365,6 +390,7 @@ function draftFor(it, mode) {
     mode,
     id: it?.id || null,
     name: base.name || '',
+    detail: base.detail || '',
     subtype: base.subtype,
     colour: base.colour,
     pattern: base.pattern || 'solid',
@@ -426,12 +452,13 @@ function sheetItem() {
   return `<div class="head"><h2>${title}</h2><button class="x" data-act="closeSheet" aria-label="Close">×</button></div>
     ${check ? '<p class="serif muted" style="margin-top:-4px">Photograph it in the shop. You get a palette verdict, whether it fills a gap on your buy list, and how many new outfits it unlocks.</p>' : ''}
     <div class="row" style="align-items:flex-start;gap:14px;margin-bottom:12px">
-      <div style="width:132px;flex:none">${d.photo ? `<div class="tile lg"><img src="${d.photo}" alt=""></div>` : `<div class="tile lg">${garmentSVG(preview)}</div>`}</div>
+      ${d.photo ? `<div class="compare"><div><div class="tile lg"><img src="${d.photo}" alt=""></div><div class="cap">Photo</div></div><div><div class="tile lg">${garmentSVG(preview)}</div><div class="cap">Drawing</div></div></div>` : `<div style="width:132px;flex:none"><div class="tile lg">${garmentSVG(preview)}</div></div>`}
       <div style="flex:1;min-width:170px">
         <label class="btn ghost sm" style="cursor:pointer">${d.photo ? 'Change photo' : 'Take or choose photo'}
           <input type="file" accept="image/*" capture="environment" data-change="photo" class="hide"></label>
         ${d.photo ? '<button class="btn quiet sm" data-act="dropPhoto" style="margin-left:4px">Remove</button>' : ''}
-        ${d.suggestions ? `<div style="margin-top:10px"><span class="label">Colour read from photo</span><div class="chips wrap" style="margin-top:4px">${d.suggestions.map((id) => `<button class="chip" data-act="pickColour" data-v="${id}" aria-pressed="${d.colour === id}">${dot(id)}${esc(colourById(P(), id).name)}</button>`).join('')}</div></div>` : '<p class="small muted" style="margin-top:8px">Plain, light background works best for reading the colour.</p>'}
+        ${d.suggestions ? `<div style="margin-top:10px"><span class="label">Colour read from photo</span><div class="chips wrap" style="margin-top:4px">${d.suggestions.map((id) => `<button class="chip" data-act="pickColour" data-v="${id}" aria-pressed="${d.colour === id}">${dot(id)}${esc(colourById(P(), id).name)}</button>`).join('')}</div></div>` : `<p class="small muted" style="margin-top:8px">Lay it flat on a plain, light surface and fill the frame.${settings().keepPhotos ? '' : ' The photo is only used to read the colour, then discarded.'}</p>`}
+        ${d.photo && !settings().keepPhotos && !check ? '<p class="small muted" style="margin-top:6px">Not kept: only the colour is saved.</p>' : ''}
       </div>
     </div>
     <label class="field"><span class="label">Type</span><select data-bind="subtype" data-rerender="1">${subtypeOptions(d.subtype)}</select></label>
@@ -441,6 +468,7 @@ function sheetItem() {
       <label class="field"><span class="label">Name</span><input data-bind="name" value="${esc(d.name)}" placeholder="${esc(colourById(P(), d.colour).name.split(' / ')[0] + ' ' + s.label.toLowerCase())}"></label>
       <label class="field"><span class="label">Pattern</span><select data-bind="pattern" data-rerender="1">${['solid', 'stripe', 'check'].map((p) => `<option${p === d.pattern ? ' selected' : ''}>${p}</option>`).join('')}</select></label>
     </div>
+    <label class="field"><span class="label">Detail (optional)</span><input data-bind="detail" value="${esc(d.detail)}" placeholder="e.g. fine gauge, button-down, raw denim" maxlength="40"></label>
     ${check ? '' : `<label class="field"><span class="label">Buy-list slot</span><select data-bind="slotId">
       <option value="">Not on the buy list</option>
       ${slots.map((sl) => { const n = slotOwned(sl, others).length; return `<option value="${sl.id}"${sl.id === slotValue ? ' selected' : ''}>Tier ${sl.tier} · ${esc(sl.name)} (${n}/${sl.qty})</option>` }).join('')}
@@ -476,6 +504,7 @@ function draftToItem(d) {
     colour: d.colour,
     pattern: d.pattern,
     slotId: slotId || null,
+    ...(d.detail.trim() ? { detail: d.detail.trim() } : {}),
     status: 'available',
     wears: [],
     createdAt: todayISO(),
@@ -522,7 +551,7 @@ function outfitCard(parts, e, actions, title) {
   return `<div class="outfit">
     <div class="spread">${title ? `<b>${esc(title)}</b>` : '<span></span>'}${e ? `<span class="score">${e.ok ? 'score ' + e.score : 'not wearable'}</span>` : ''}</div>
     <div class="thumbs" style="margin-top:6px">${partsList(parts).map((it) => tile(it, 'sm')).join('')}</div>
-    <div class="names">${partsList(parts).map((it) => `<span>${esc(it.name)}</span>`).join(' · ')}</div>
+    <div class="names">${partsList(parts).map((it) => `<span>${esc(label(it))}</span>`).join(' · ')}</div>
     ${e ? reasons(e) : ''}
     ${actions ? `<div class="row" style="margin-top:10px">${actions}</div>` : ''}
   </div>`
@@ -570,7 +599,7 @@ function viewBuild() {
     if (!options.length) return ''
     return `<div class="pickrow"><span class="label">${SLOT_LABELS[slot]}${slot === 'mid' ? ' (over a shirt)' : ''}</span><div class="scroller">
       <button class="pick none" data-act="buildPick" data-slot="${slot}" data-id="" aria-pressed="${!ui.build[slot]}"><div class="tile">–</div><span>None</span></button>
-      ${options.map((it) => `<button class="pick" data-act="buildPick" data-slot="${slot}" data-id="${it.id}" aria-pressed="${ui.build[slot] === it.id}">${tile(it)}<span>${esc(it.name)}</span></button>`).join('')}
+      ${options.map((it) => `<button class="pick" data-act="buildPick" data-slot="${slot}" data-id="${it.id}" aria-pressed="${ui.build[slot] === it.id}">${tile(it)}<span>${esc(label(it))}</span></button>`).join('')}
     </div></div>`
   }).join('')
   return `${ctxControls({ forecast: false })}
@@ -652,7 +681,7 @@ function dayCard(d, i, isToday) {
       ${parts ? `<button class="chip" data-act="dayLock" data-i="${i}" aria-pressed="${!!d.locked}">${d.locked ? 'Locked' : 'Lock'}</button>` : ''}
     </div>
     ${parts ? `<div class="outfit" style="margin:0;background:var(--paper)"><div class="thumbs">${partsList(parts).map((it) => tile(it, 'sm')).join('')}</div>
-      <div class="names">${partsList(parts).map((it) => esc(it.name)).join(' · ')}</div>${e && !e.ok ? reasons({ blocks: e.blocks, warns: [], pros: [] }) : ''}
+      <div class="names">${partsList(parts).map((it) => esc(label(it))).join(' · ')}</div>${e && !e.ok ? reasons({ blocks: e.blocks, warns: [], pros: [] }) : ''}
       <div class="row" style="margin-top:8px"><button class="btn quiet sm" data-act="daySwap" data-i="${i}"${d.locked ? ' disabled' : ''}>Swap</button><button class="btn quiet sm" data-act="dayWore" data-i="${i}">${partsList(parts).every((it) => it.wears?.includes(iso(date))) ? 'Logged' : 'Wore it'}</button><button class="btn quiet sm" data-act="dayClear" data-i="${i}">Clear</button></div></div>`
       : `<p class="small muted" style="margin:0">${d.planned === false ? 'No outfit passes the rules for this day. Change the occasion or weather.' : 'Not planned yet.'}</p>`}
   </div>`
@@ -768,6 +797,10 @@ function viewProfile() {
         <div class="row"><button class="btn ghost sm" data-act="exportBackup">Export backup</button>
         <label class="btn ghost sm" style="cursor:pointer">Restore backup<input type="file" accept="application/json,.json" data-change="importBackup" class="hide"></label>
         <button class="btn danger sm" data-act="resetAll">Erase everything</button></div></div>
+      <div><b>Display</b><p class="small muted" style="margin:2px 0 8px">Drawings keep every list uniform. A piece's own sheet always shows its photo when there is one.</p>
+        <div class="row"><span class="small muted">Show</span>${[['drawings', 'Drawings'], ['photos', 'Photos']].map(([v, l]) => `<button class="chip" data-act="setting" data-k="visual" data-v="${v}" aria-pressed="${settings().visual === v}">${l}</button>`).join('')}
+        <span class="small muted" style="margin-left:8px">Keep photos</span>${[['yes', 'Yes'], ['no', 'No']].map(([v, l]) => `<button class="chip" data-act="setting" data-k="keepPhotos" data-v="${v}" aria-pressed="${settings().keepPhotos === (v === 'yes')}">${l}</button>`).join('')}</div>
+        ${!settings().keepPhotos && photos.size ? `<button class="btn danger sm" style="margin-top:8px" data-act="dropAllPhotos">Delete ${plural(photos.size, 'stored photo')}</button>` : ''}</div>
       <div class="row"><span class="small muted">Theme</span>${['auto', 'light', 'dark'].map((t) => `<button class="chip" data-act="theme" data-v="${t}" aria-pressed="${(document.documentElement.dataset.theme || 'auto') === t}">${t}</button>`).join('')}</div>
     </div></div>`
 }
@@ -793,13 +826,37 @@ function loadImage(file) {
   })
 }
 
-function downscale(img, max = 900) {
-  const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
+// Every kept photo is the same shape and size: the whole garment centred on
+// a square of its own background colour, 480 px, about 40 KB.
+function squarePhoto(img, size = 480) {
   const c = document.createElement('canvas')
-  c.width = Math.round(img.naturalWidth * k)
-  c.height = Math.round(img.naturalHeight * k)
-  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
-  return c.toDataURL('image/jpeg', 0.82)
+  c.width = c.height = size
+  const g = c.getContext('2d')
+  g.fillStyle = `rgb(${backgroundColour(img).join(',')})`
+  g.fillRect(0, 0, size, size)
+  const k = Math.min(size / img.naturalWidth, size / img.naturalHeight) * 0.92
+  const w = img.naturalWidth * k
+  const h = img.naturalHeight * k
+  g.drawImage(img, (size - w) / 2, (size - h) / 2, w, h)
+  return c.toDataURL('image/jpeg', 0.75)
+}
+
+function backgroundColour(img) {
+  const N = 32
+  const c = document.createElement('canvas')
+  c.width = c.height = N
+  const g = c.getContext('2d', { willReadFrequently: true })
+  g.drawImage(img, 0, 0, N, N)
+  const px = g.getImageData(0, 0, N, N).data
+  const sum = [0, 0, 0]
+  let n = 0
+  for (let i = 0; i < N; i++) {
+    for (const [x, y] of [[i, 0], [i, N - 1], [0, i], [N - 1, i]]) {
+      const j = (y * N + x) * 4
+      sum[0] += px[j]; sum[1] += px[j + 1]; sum[2] += px[j + 2]; n++
+    }
+  }
+  return sum.map((v) => Math.round(v / n))
 }
 
 // Dominant garment colour: estimate the background from the border, drop
@@ -934,7 +991,8 @@ const ACTIONS = {
       for (const k of ['f', 'warmth', 'waterproof', 'price']) if (!(k in it)) delete existing[k]
       delete existing.demo
     } else state.items.push(it)
-    if (d.photo !== (photos.get(it.id) || null)) await setPhoto(it.id, d.photo)
+    const photo = settings().keepPhotos ? d.photo : null
+    if (photo !== (photos.get(it.id) || null)) await setPhoto(it.id, photo)
     save()
     ui.sheet = null
     ui.gen.results = null
@@ -1091,6 +1149,17 @@ const ACTIONS = {
     download(`wardrobe-backup-${todayISO()}.json`, { format: 'fearne-wardrobe-backup', state, photos: out })
   },
   reload: () => location.reload(),
+  setting: ({ k, v }) => {
+    state.settings = { ...state.settings, [k]: k === 'keepPhotos' ? v === 'yes' : v }
+    save()
+    render()
+  },
+  dropAllPhotos: async () => {
+    if (!confirm(`Delete ${plural(photos.size, 'stored photo')}? The drawings and colours stay.`)) return
+    for (const id of [...photos.keys()]) await setPhoto(id, null)
+    toast('Photos deleted')
+    render()
+  },
   resetAll: async () => {
     if (!confirm('Erase all pieces, outfits, plans and photos on this device?')) return
     for (const id of [...photos.keys()]) await setPhoto(id, null)
@@ -1114,7 +1183,7 @@ const CHANGES = {
     try {
       const img = await loadImage(file)
       const d = ui.sheet.draft
-      d.photo = downscale(img)
+      d.photo = squarePhoto(img)
       const near = nearestColours(P(), dominantColour(img), 4)
       d.suggestions = near.map((n) => n.colour.id)
       d.colour = d.suggestions[0]

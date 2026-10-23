@@ -7,6 +7,8 @@
    its height to the page inside (which should flex:1 / min-height:0). */
 .fh-app--fill{height:100dvh;min-height:0}
 .fh-app--fill .fh-app__body{display:flex;flex-direction:column;min-height:0;overflow:hidden;padding-top:var(--sp-5);padding-bottom:var(--sp-5)}
+/* Game pages have no tab bar, so the body clears the home indicator itself. */
+.fh-app--game .fh-app__body{padding-bottom:max(var(--sp-5),env(safe-area-inset-bottom))}
 
 .fh-home__greet{font:var(--type-display-sm);color:var(--ink-1);margin-bottom:var(--sp-2)}
 .fh-home__sub{font:var(--type-body-lg);color:var(--ink-3);margin-bottom:var(--sp-7)}

@@ -101,8 +101,11 @@ function HubShell({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const meta = ROUTE_HEADERS[location.pathname] ?? { title: 'Fearne Hub', back: '/' }
+  // Inside a game the only chrome is the header's back arrow: no tab bar or
+  // theme toggle for small fingers to hit by accident mid-game.
+  const inGame = location.pathname.startsWith('/games/') && location.pathname !== '/games/scores'
 
-  const actions = (
+  const actions = inGame ? null : (
     <>
       <ThemeToggle />
       {location.pathname === '/' && (
@@ -116,7 +119,7 @@ function HubShell({ children }) {
   )
 
   return (
-    <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}${meta.fill ? ' fh-app--fill' : ''}`}>
+    <div className={`fh-app${meta.wide ? ' fh-app--wide' : ''}${meta.fill ? ' fh-app--fill' : ''}${inGame ? ' fh-app--game' : ''}`}>
       <HubHeader
         wordmark={meta.wordmark}
         title={meta.title}
@@ -124,7 +127,7 @@ function HubShell({ children }) {
         actions={actions}
       />
       <div className="fh-app__body">{children}</div>
-      <TabBar items={TAB_ITEMS} />
+      {!inGame && <TabBar items={TAB_ITEMS} />}
     </div>
   )
 }

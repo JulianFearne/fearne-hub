@@ -1,0 +1,169 @@
+{
+  "format": "fearne-style-profile",
+  "version": 1,
+  "meta": {
+    "name": "Cut for the long line",
+    "owner": "Julian",
+    "source": "The Wardrobe Dossier, Ed. 01 + The Wardrobe, From Scratch",
+    "summary": "Cool-toned, medium-high contrast, quiet-luxury. Slim-straight fit, texture for presence, long coats.",
+    "unconfirmed": [
+      "Palette is a lead read (Deep / Cool Winter vs Soft Summer). Do the daylight emerald vs dusty slate-blue test before buying statement colours.",
+      "Burgundy sits next to purple: test against the face before committing."
+    ]
+  },
+
+  "palette": [
+    { "id": "navy", "name": "Ink navy", "hex": "#1F2A44", "role": "core", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "charcoal", "name": "Charcoal", "hex": "#35383B", "role": "core", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "cool-grey", "name": "Cool grey", "hex": "#7A7D80", "role": "core", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "mid-grey", "name": "Mid grey", "hex": "#8A8D90", "role": "core", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "light-grey", "name": "Light grey", "hex": "#C7C9C6", "role": "core", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "greige", "name": "Cool greige", "hex": "#B4AEA2", "role": "core", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "black", "name": "True black", "hex": "#1A1A1C", "role": "core", "face": "warn", "lower": "ok", "feet": "ok", "note": "Best away from the face, or broken with white or navy at the collar." },
+
+    { "id": "white", "name": "Cool white", "hex": "#F4F4F0", "role": "white", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "ecru", "name": "Ecru / soft white", "hex": "#E7E6DF", "role": "lower", "face": "warn", "lower": "ok", "feet": "ok", "note": "Checklist colour lock keeps ecru off knits and jackets at the face; the dossier capsule lists an ecru knit. Decide." },
+    { "id": "stone", "name": "Stone", "hex": "#C9C2B4", "role": "lower", "face": "warn", "lower": "ok", "feet": "ok", "note": "Reserve for trousers and shorts. The mac and linen blazer in stone break this." },
+
+    { "id": "soft-blue", "name": "Soft blue", "hex": "#A9C2D4", "role": "blue", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "cool-mid-blue", "name": "Cool mid-blue", "hex": "#6E93B0", "role": "blue", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "indigo", "name": "Dark indigo", "hex": "#2A3A52", "role": "blue", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "denim-mid", "name": "Mid-blue denim", "hex": "#4E6E8E", "role": "blue", "face": "ok", "lower": "ok", "feet": "ok" },
+
+    { "id": "steel-blue", "name": "Steel blue", "hex": "#5A7A8C", "role": "accent", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "deep-teal", "name": "Deep teal", "hex": "#23474E", "role": "accent", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "teal", "name": "Teal", "hex": "#3E7C82", "role": "accent", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "airforce", "name": "Airforce", "hex": "#3E5C6E", "role": "accent", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "forest", "name": "Forest green", "hex": "#2F5D50", "role": "accent", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "sage", "name": "Sage", "hex": "#9CB2A2", "role": "accent", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "burgundy", "name": "Burgundy", "hex": "#6B2F38", "role": "accent", "face": "warn", "lower": "ok", "feet": "ok", "note": "Flagged: test against your face first." },
+
+    { "id": "emerald", "name": "Emerald", "hex": "#17715C", "role": "statement", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "royal", "name": "Royal blue", "hex": "#274690", "role": "statement", "face": "ok", "lower": "ok", "feet": "ok" },
+    { "id": "cool-red", "name": "Cool true red", "hex": "#A62A2A", "role": "statement", "face": "ok", "lower": "ok", "feet": "ok" },
+
+    { "id": "espresso", "name": "Espresso / dark brown", "hex": "#3B2A22", "role": "leather", "face": "ok", "lower": "warn", "feet": "ok" },
+    { "id": "espresso-suede", "name": "Espresso suede", "hex": "#4A3428", "role": "leather", "face": "ok", "lower": "warn", "feet": "ok" },
+    { "id": "black-leather", "name": "Black leather", "hex": "#1C1A18", "role": "leather", "face": "warn", "lower": "ok", "feet": "ok" },
+    { "id": "oxblood", "name": "Oxblood", "hex": "#4A1C22", "role": "leather", "face": "warn", "lower": "warn", "feet": "ok" },
+    { "id": "tan", "name": "Tan / cognac", "hex": "#A9743F", "role": "leather", "face": "block", "lower": "block", "feet": "casual", "note": "Casual shoes only (formality 2 or below). The colour lock bans tan, but the checklist recommends tan loafers and slides." },
+    { "id": "steel", "name": "Steel / silver", "hex": "#9BA0A4", "role": "metal", "face": "ok", "lower": "ok", "feet": "ok" },
+
+    { "id": "camel", "name": "Golden camel", "hex": "#C19A6B", "role": "avoid", "face": "block", "lower": "warn", "feet": "warn" },
+    { "id": "mustard", "name": "Mustard", "hex": "#C9A227", "role": "avoid", "face": "block", "lower": "warn", "feet": "warn" },
+    { "id": "olive", "name": "Olive", "hex": "#6B6B3A", "role": "avoid", "face": "block", "lower": "warn", "feet": "warn" },
+    { "id": "khaki", "name": "Khaki / beige", "hex": "#BDB07A", "role": "avoid", "face": "block", "lower": "warn", "feet": "warn" },
+    { "id": "orange", "name": "Orange", "hex": "#D2691E", "role": "avoid", "face": "block", "lower": "block", "feet": "warn" },
+    { "id": "warm-brown", "name": "Warm brown", "hex": "#7A5233", "role": "avoid", "face": "block", "lower": "warn", "feet": "ok" },
+    { "id": "purple", "name": "Purple", "hex": "#6A4C93", "role": "avoid", "face": "block", "lower": "block", "feet": "block" },
+    { "id": "neon", "name": "Neon / highlighter", "hex": "#B5E61D", "role": "avoid", "face": "block", "lower": "block", "feet": "block" }
+  ],
+
+  "rules": {
+    "max_statement": 1,
+    "max_colour_pieces": 2,
+    "max_patterns": 1,
+    "colour_at_face_bonus": true,
+    "contrast_bonus_min": 28,
+    "notes": [
+      "Slim-straight, never skin-tight, never loose.",
+      "Buy for the shoulder, alter the waist, sleeves and hems.",
+      "Patterns small in scale, cool in ground.",
+      "Cool tones near the face, warm tones (if any) below the waist."
+    ]
+  },
+
+  "occasions": [
+    { "id": "beach", "label": "Malta heat / beach", "level": 1 },
+    { "id": "casual", "label": "Casual weekend", "level": 2 },
+    { "id": "family", "label": "Family day", "level": 2 },
+    { "id": "travel", "label": "Travel", "level": 2 },
+    { "id": "smart-casual", "label": "Smart casual", "level": 3 },
+    { "id": "date", "label": "Date night", "level": 3 },
+    { "id": "office-1", "label": "Office L1", "level": 3, "office": true },
+    { "id": "office-2", "label": "Office L2", "level": 4, "office": true },
+    { "id": "office-3", "label": "Office L3", "level": 5, "office": true, "require": "tailoring" },
+    { "id": "evening", "label": "Smart evening", "level": 4 },
+    { "id": "wedding", "label": "Wedding / formal", "level": 5, "require": "tailoring" }
+  ],
+  "office_excludes": ["tee", "shorts", "slides", "camp-shirt"],
+
+  "formulas": [
+    { "name": "Office L1, Malta", "occasion": "office-1", "parts": [["linen-shirt", "soft-blue"], ["cotton-trousers", "ecru"], ["loafers", "espresso"]], "why": "Structure lives in the crisp shirt alone, cool tones at the face." },
+    { "name": "Office L2, stepped up", "occasion": "office-2", "parts": [["blazer", "navy"], ["poplin", "white"], ["wool-trousers", "mid-grey"], ["derby|oxford-shoe", "espresso"]], "why": "Blazer and contrast trouser: authority without stiffness." },
+    { "name": "Office L3, genuinely smart", "occasion": "office-3", "parts": [["suit-jacket", "navy"], ["suit-trousers", "navy"], ["poplin", "white"], ["oxford-shoe", "black-leather"]], "why": "The one true suit. Navy over grey or black for cool, high-contrast colouring." },
+    { "name": "Smart casual with colour", "occasion": "smart-casual", "parts": [["polo-knit", "emerald"], ["chinos", "navy"], ["loafers", "espresso-suede"]], "why": "Colour at the face on a knit, neutrals below." },
+    { "name": "Casual weekend", "occasion": "casual", "parts": [["tee", "navy"], ["overshirt", "greige"], ["jeans", "indigo"], ["trainers", "white"]], "why": "The overshirt gives structure; a fine stripe adds width across the chest." },
+    { "name": "Family day / school run", "occasion": "family", "parts": [["tee", "cool-grey"], ["harrington", "navy"], ["chinos", "stone"], ["trainers", "white"]], "why": "Fast and comfortable, nothing baggy." },
+    { "name": "Date night", "occasion": "date", "parts": [["roll-neck", "charcoal"], ["jeans", "indigo"], ["chelsea", "espresso-suede"], ["suede-blouson", "espresso-suede"]], "why": "Tonal cool monochrome; the roll neck is the quiet power piece." },
+    { "name": "Malta casual (heat)", "occasion": "beach", "parts": [["camp-shirt", "ecru"], ["shorts", "stone"], ["slides", "tan"]], "why": "Linen and a tailored short keep the line clean." },
+    { "name": "Malta smart evening", "occasion": "evening", "parts": [["linen-blazer", "stone"], ["polo-knit", "navy"], ["linen-trousers", "ecru"], ["loafers", "espresso"]], "why": "Breathable smart, structure in one unlined jacket." },
+    { "name": "Family gathering", "occasion": "smart-casual", "parts": [["linen-shirt", "soft-blue"], ["half-zip", "navy"], ["cotton-trousers", "ecru"], ["loafers", "espresso"]], "why": "Relaxed but intentional, light cool neutrals." },
+    { "name": "Wedding guest", "occasion": "wedding", "parts": [["suit-jacket", "navy"], ["suit-trousers", "navy"], ["poplin", "white"], ["oxford-shoe", "black-leather"]], "why": "Navy flatters more than grey or black for celebration." },
+    { "name": "Travel / airport", "occasion": "travel", "parts": [["tee", "cool-grey"], ["merino-crew", "navy"], ["chinos", "navy"], ["harrington", "navy"], ["trainers", "white"]], "why": "Layers to add and shed between a Dutch gate and a Maltese arrival." }
+  ],
+
+  "slots": [
+    { "id": "t1-blazer", "tier": 1, "name": "Navy blazer", "qty": 1, "subtypes": ["blazer"], "colours": ["navy"], "best": ["navy"], "material": "wool hopsack, half-lined", "fit": "soft shoulder, slim, covers the seat" },
+    { "id": "t1-oxford-white", "tier": 1, "name": "Oxford shirt, white", "qty": 1, "subtypes": ["oxford"], "colours": ["white", "soft-blue"], "best": ["white"], "material": "oxford cotton", "fit": "slim-straight, sleeve to wrist bone" },
+    { "id": "t1-oxford-blue", "tier": 1, "name": "Oxford shirt, blue", "qty": 1, "subtypes": ["oxford"], "colours": ["soft-blue"], "best": ["soft-blue"], "material": "oxford cotton", "fit": "slim-straight, tuck-length hem" },
+    { "id": "t1-poplin", "tier": 1, "name": "Poplin dress shirt", "qty": 1, "subtypes": ["poplin"], "colours": ["white"], "best": ["white"], "material": "crisp cotton poplin", "fit": "slim, clean collar" },
+    { "id": "t1-jeans", "tier": 1, "name": "Dark indigo jeans", "qty": 1, "subtypes": ["jeans"], "colours": ["indigo"], "best": ["indigo"], "material": "rigid or slight-stretch denim", "fit": "straight-slim, gentle taper" },
+    { "id": "t1-charcoal-trouser", "tier": 1, "name": "Wool trousers", "qty": 1, "subtypes": ["wool-trousers"], "colours": ["charcoal", "mid-grey"], "best": ["charcoal"], "material": "wool or wool-blend", "fit": "slim-tapered, small break" },
+    { "id": "t1-navy-chino", "tier": 1, "name": "Chinos", "qty": 1, "subtypes": ["chinos"], "colours": ["navy", "stone"], "best": ["navy"], "material": "cotton twill", "fit": "flat front, slim-tapered" },
+    { "id": "t1-merino", "tier": 1, "name": "Merino crew jumper", "qty": 1, "subtypes": ["merino-crew"], "colours": ["navy", "charcoal", "forest"], "best": ["navy"], "material": "fine-gauge merino", "fit": "trim, ribbed hem holds" },
+    { "id": "t1-tees", "tier": 1, "name": "Crew tees", "qty": 3, "subtypes": ["tee"], "colours": ["white", "navy", "cool-grey", "ecru"], "best": ["white", "navy", "cool-grey"], "material": "mid-weight cotton", "fit": "a little air, sleeve mid-bicep" },
+    { "id": "t1-trainers", "tier": 1, "name": "Leather trainers", "qty": 1, "subtypes": ["trainers"], "colours": ["white", "ecru"], "best": ["white"], "material": "smooth leather", "fit": "low profile, slim sole" },
+    { "id": "t1-derby", "tier": 1, "name": "Derby shoes", "qty": 1, "subtypes": ["derby"], "colours": ["espresso", "black-leather"], "best": ["espresso"], "material": "calf, Goodyear welt", "fit": "almond toe, medium sole" },
+    { "id": "t1-belt", "tier": 1, "name": "Leather belt", "qty": 1, "subtypes": ["belt"], "colours": ["espresso", "black-leather"], "best": ["espresso"], "material": "full-grain, silver buckle", "fit": "matched to shoes" },
+    { "id": "t1-mac", "tier": 1, "name": "Waterproof mac / trench", "qty": 1, "subtypes": ["mac"], "colours": ["stone", "navy"], "best": ["stone"], "material": "cotton gabardine or technical", "fit": "clean shoulder, knee length", "climate": "nl" },
+
+    { "id": "t2-grey-trouser", "tier": 2, "name": "Wool trousers, grey", "qty": 1, "subtypes": ["wool-trousers"], "colours": ["mid-grey", "cool-grey"], "best": ["mid-grey"], "material": "high-twist cool wool", "fit": "slim-tapered" },
+    { "id": "t2-stone-chino", "tier": 2, "name": "Chinos, stone", "qty": 1, "subtypes": ["chinos"], "colours": ["stone", "ecru"], "best": ["stone"], "material": "cotton twill", "fit": "flat front, slim-tapered" },
+    { "id": "t2-midblue-jeans", "tier": 2, "name": "Jeans, mid-blue", "qty": 1, "subtypes": ["jeans"], "colours": ["denim-mid"], "best": ["denim-mid"], "material": "denim, cool wash", "fit": "straight-slim" },
+    { "id": "t2-rollneck", "tier": 2, "name": "Roll neck", "qty": 1, "subtypes": ["roll-neck"], "colours": ["charcoal", "navy", "cool-grey"], "best": ["charcoal"], "material": "fine merino", "fit": "trim through the body" },
+    { "id": "t2-halfzip", "tier": 2, "name": "Half-zip or second crew knit", "qty": 1, "subtypes": ["half-zip", "merino-crew"], "colours": ["cool-grey", "ecru", "teal"], "best": ["cool-grey"], "material": "merino or lambswool", "fit": "trim, layers over a shirt" },
+    { "id": "t2-overshirt", "tier": 2, "name": "Overshirt", "qty": 1, "subtypes": ["overshirt"], "colours": ["charcoal", "navy", "sage"], "best": ["charcoal"], "material": "wool-blend or moleskin", "fit": "defined line, worn open" },
+    { "id": "t2-harrington", "tier": 2, "name": "Harrington jacket", "qty": 1, "subtypes": ["harrington"], "colours": ["navy", "stone"], "best": ["navy"], "material": "cotton", "fit": "gathers at waist and cuff" },
+    { "id": "t2-chelsea", "tier": 2, "name": "Chelsea boots", "qty": 1, "subtypes": ["chelsea"], "colours": ["espresso", "espresso-suede"], "best": ["espresso"], "material": "leather or suede, rubber sole", "fit": "almond toe" },
+    { "id": "t2-loafers", "tier": 2, "name": "Loafers", "qty": 1, "subtypes": ["loafers"], "colours": ["espresso", "tan"], "best": ["espresso"], "material": "leather", "fit": "almond toe, slim sole" },
+    { "id": "t2-knitpolo", "tier": 2, "name": "Knitted polo", "qty": 2, "subtypes": ["polo-knit"], "colours": ["navy", "forest", "teal", "emerald"], "best": ["navy", "forest"], "material": "textured knitted cotton", "fit": "structured collar, trim" },
+    { "id": "t2-pattern-shirt", "tier": 2, "name": "Pattern shirt (check or stripe)", "qty": 1, "subtypes": ["pattern-shirt"], "colours": ["soft-blue", "navy"], "best": ["soft-blue"], "material": "cotton", "fit": "slim-straight, small-scale pattern" },
+    { "id": "t2-watch", "tier": 2, "name": "Watch", "qty": 1, "subtypes": ["watch"], "colours": ["steel", "navy"], "best": ["steel"], "material": "steel case", "fit": "38 to 40 mm" },
+    { "id": "t2-scarf", "tier": 2, "name": "Merino scarf", "qty": 1, "subtypes": ["scarf"], "colours": ["navy", "charcoal", "cool-grey"], "best": ["navy"], "material": "fine merino", "fit": "easiest cool upgrade at the face", "climate": "nl" },
+
+    { "id": "t3-navy-suit", "tier": 3, "name": "Navy suit (jacket + trousers)", "qty": 2, "subtypes": ["suit-jacket", "suit-trousers"], "colours": ["navy"], "best": ["navy"], "material": "high-twist cool wool or wool-linen", "fit": "slim, soft shoulder" },
+    { "id": "t3-oxfords", "tier": 3, "name": "Oxford shoes, formal", "qty": 1, "subtypes": ["oxford-shoe"], "colours": ["black-leather", "espresso"], "best": ["black-leather"], "material": "calf, leather sole", "fit": "plain cap-toe" },
+    { "id": "t3-ties", "tier": 3, "name": "Ties", "qty": 2, "subtypes": ["tie"], "colours": ["navy", "forest", "burgundy"], "best": ["navy"], "material": "knitted, linen or grenadine", "fit": "standard width" },
+    { "id": "t3-blazer2", "tier": 3, "name": "Second blazer, textured", "qty": 1, "subtypes": ["blazer"], "colours": ["cool-grey", "charcoal"], "best": ["cool-grey"], "material": "grey hopsack or subtle cool check", "fit": "soft shoulder" },
+    { "id": "t3-grey-suit", "tier": 3, "name": "Grey suit (later second)", "qty": 2, "subtypes": ["suit-jacket", "suit-trousers"], "colours": ["mid-grey", "charcoal"], "best": ["mid-grey"], "material": "worsted wool", "fit": "slim, soft shoulder" },
+
+    { "id": "t4-overcoat", "tier": 4, "name": "Overcoat", "qty": 1, "subtypes": ["overcoat"], "colours": ["navy", "charcoal"], "best": ["navy"], "material": "wool or wool-cashmere", "fit": "clean shoulder, knee length", "climate": "nl" },
+    { "id": "t4-waxed", "tier": 4, "name": "Waxed cotton jacket", "qty": 1, "subtypes": ["waxed-jacket"], "colours": ["navy", "espresso"], "best": ["navy"], "material": "waxed cotton", "fit": "waist definition, trim", "climate": "nl" },
+    { "id": "t4-quilted", "tier": 4, "name": "Quilted liner jacket", "qty": 1, "subtypes": ["quilted"], "colours": ["navy", "charcoal"], "best": ["navy"], "material": "slim quilted, low fill", "fit": "trim, low volume", "climate": "nl" },
+    { "id": "t4-winterknit", "tier": 4, "name": "Chunkier winter knit", "qty": 1, "subtypes": ["chunky-knit"], "colours": ["ecru", "navy", "charcoal"], "best": ["ecru"], "material": "lambswool, fuller gauge", "fit": "trim", "climate": "nl" },
+    { "id": "t4-suede-blouson", "tier": 4, "name": "Suede blouson", "qty": 1, "subtypes": ["suede-blouson"], "colours": ["espresso-suede", "cool-grey"], "best": ["espresso-suede"], "material": "suede, proofed", "fit": "trim casual jacket" },
+
+    { "id": "t5-linen-shirt", "tier": 5, "name": "Linen shirt", "qty": 2, "subtypes": ["linen-shirt"], "colours": ["white", "ecru", "soft-blue", "sage"], "best": ["white", "ecru"], "material": "linen", "fit": "fitted with airflow", "climate": "malta" },
+    { "id": "t5-camp", "tier": 5, "name": "Cotton-linen camp-collar shirt", "qty": 1, "subtypes": ["camp-shirt"], "colours": ["ecru", "stone", "soft-blue"], "best": ["ecru"], "material": "cotton-linen", "fit": "short sleeve, revere collar", "climate": "malta" },
+    { "id": "t5-linen-trouser", "tier": 5, "name": "Linen trousers", "qty": 1, "subtypes": ["linen-trousers", "cotton-trousers"], "colours": ["ecru", "navy", "stone"], "best": ["ecru"], "material": "linen or cotton-linen", "fit": "slight taper", "climate": "malta" },
+    { "id": "t5-linen-blazer", "tier": 5, "name": "Unstructured linen blazer", "qty": 1, "subtypes": ["linen-blazer"], "colours": ["navy", "stone"], "best": ["navy"], "material": "linen, unlined", "fit": "soft shoulder", "climate": "malta" },
+    { "id": "t5-shorts", "tier": 5, "name": "Tailored shorts", "qty": 2, "subtypes": ["shorts"], "colours": ["stone", "navy", "sage"], "best": ["stone", "navy"], "material": "cotton", "fit": "flat front, above the knee", "climate": "malta" },
+    { "id": "t5-swim", "tier": 5, "name": "Swim shorts", "qty": 1, "subtypes": ["swim"], "colours": ["navy", "deep-teal", "forest"], "best": ["navy"], "material": "quick-dry", "fit": "tailored, mid-thigh", "climate": "malta" },
+    { "id": "t5-slides", "tier": 5, "name": "Leather slides / sandals", "qty": 1, "subtypes": ["slides"], "colours": ["tan", "espresso", "black-leather"], "best": ["tan"], "material": "leather", "fit": "plain, minimal", "climate": "malta" },
+
+    { "id": "t6-sunglasses", "tier": 6, "name": "Sunglasses", "qty": 1, "subtypes": ["sunglasses"], "colours": ["black-leather", "steel"], "best": ["black-leather"], "material": "acetate or metal", "fit": "medium rectangular or soft-square" },
+    { "id": "t6-work-bag", "tier": 6, "name": "Work bag", "qty": 1, "subtypes": ["bag"], "colours": ["espresso", "black-leather"], "best": ["espresso"], "material": "structured leather", "fit": "slim briefcase or tote" },
+    { "id": "t6-weekender", "tier": 6, "name": "Weekender bag", "qty": 1, "subtypes": ["bag"], "colours": ["espresso"], "best": ["espresso"], "material": "leather or waxed canvas", "fit": "medium scale" },
+    { "id": "t6-cap", "tier": 6, "name": "Plain cap", "qty": 1, "subtypes": ["cap"], "colours": ["navy", "ecru", "cool-grey"], "best": ["navy"], "material": "cotton", "fit": "no loud branding" },
+    { "id": "t6-beanie", "tier": 6, "name": "Cuffed beanie", "qty": 1, "subtypes": ["beanie"], "colours": ["navy", "cool-grey"], "best": ["navy"], "material": "merino or lambswool", "fit": "close to the head", "climate": "nl" },
+    { "id": "t6-knit-waistcoat", "tier": 6, "name": "Knitted waistcoat (optional)", "qty": 1, "subtypes": ["knit-vest"], "colours": ["navy", "cool-grey"], "best": ["navy"], "material": "fine knit", "fit": "trim, adds torso structure" }
+  ],
+
+  "conflicts": [
+    "Tan: the colour lock bans tan, but the checklist recommends tan loafers and tan slides. Modelled as allowed on casual shoes only.",
+    "Stone and ecru: 'never as a knit or jacket at the face', yet the stone mac is the best colour, the Malta evening look uses a stone linen blazer, and the capsule lists an ecru chunky knit. Modelled as a warning, not a block.",
+    "Overshirt colour: dossier says greige, checklist says charcoal is best.",
+    "Climates: the checklist adds Ireland; the dossier covers Malta and the Netherlands only."
+  ]
+}

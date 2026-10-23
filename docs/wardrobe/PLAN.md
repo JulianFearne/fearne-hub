@@ -2,7 +2,7 @@
 
 A private wardrobe app for Julian, built on the style dossier and buy list. It holds the wardrobe, runs the buy list, and suggests outfits and week plans that follow the style rules. Start as a local prototype, then become a private section of Fearne Hub.
 
-Status: **prototype working** (`prototypes/wardrobe/`). Hub integration not started.
+Status: **live for a two-week test at fearne.org/wardrobe/** (phase 2a). Same app as the prototype, saved privately to Supabase through the hub login.
 
 ## Decisions
 
@@ -75,7 +75,22 @@ All thresholds come from the profile (`rules`, palette verdicts, occasions), so 
 ### Phase 1: prototype (done)
 Local single-file app plus engine, profile, tests and docs. **Exit:** Julian uses it with real photos for two weeks and notes what's missing or wrong.
 
-### Phase 2: into Fearne Hub
+### Phase 2a: two-week test on the hub (now)
+- The same single-file app is built a second time with a Supabase storage adapter and served from `public/wardrobe/`, the same way CARVE and Marginalia are hosted.
+- It shares fearne.org's origin, so the hub login carries over.
+- Data goes in one owner-only row (`wardrobe_state`) and photos in a private bucket. Setup: run `_reference/wardrobe-state-schema.sql` once.
+- A Wardrobe tile appears on Home only for users who have opened it.
+- **During the test, note:** what was tedious to add, outfits that were wrong (and which rule should have caught them), anything missing, and how often you opened it.
+- **Exit:** decide whether it earns the full React port below, needs rule changes only, or should be dropped.
+
+### Phase 2b: fit card (proposed)
+Store fit data privately in the same row, never in the repo:
+- body measurements: chest, waist, shoulder, sleeve, inseam, neck, shoe size
+- more useful: the flat measurements of the three or four garments that fit best (chest pit to pit, shoulder, sleeve, body length, trouser rise and inseam)
+
+The shop check then compares a product's size chart against those reference garments, e.g. "sleeve 2 cm shorter than your best shirt: size up or budget for alteration". Body numbers alone predict ready-to-wear fit poorly. Reference garments are what make the advice reliable.
+
+### Phase 2: full React section in Fearne Hub (if the test earns it)
 1. Run `_reference/wardrobe-schema.sql` in Supabase (tables and a private `wardrobe` storage bucket, all RLS owner-only).
 2. Move `engine.js` to `src/lib/wardrobe/engine.js` unchanged, with tests alongside.
 3. `src/pages/wardrobeData.js` follows the `recipesData.js` / `mealPlanData.js` pattern.
@@ -109,7 +124,7 @@ Vision tagger and stylist chat as Edge Functions, using the Claude API key held 
 | Cataloguing fatigue kills it | Only three fields are required (photo, type, colour), and the colour comes from the photo. The demo wardrobe means the app is useful before day one |
 | Palette is unconfirmed | Verdicts live in one JSON. After the daylight test, change it and re-import, with no code change |
 | Guide contradicts itself | Listed on the Profile tab and modelled as warnings until decided (see below) |
-| Personal data | The section is private per user (RLS owner-only, private bucket). The profile holds style rules only, no body measurements |
+| Personal data | The section is private per user (RLS owner-only, private bucket). The committed profile holds style rules only. Body or fit data goes in the private row, never the public repo |
 | Combination counts look huge | Shown as a percentage of current coverage. Raw counts are secondary |
 | Browser storage cleared (prototype) | Backup and restore including photos. Phase 2 removes the risk |
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { supabase } from '../supabaseClient'
 import { displayName } from './accountData'
 import { fetchEvents, nextOccurrence, toISODate, formatEventDate, formatEventTime } from './calendarData'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
@@ -35,10 +36,26 @@ function useUpcomingEvents(limit = 3) {
   }, [events, limit])
 }
 
+// The wardrobe (public/wardrobe/, a standalone build) is private per user, so
+// its tile only shows for someone who has opened it before. RLS means this
+// query can only ever see the viewer's own row.
+function useHasWardrobe() {
+  const [has, setHas] = useState(false)
+  useEffect(() => {
+    supabase
+      .from('wardrobe_state')
+      .select('user_id')
+      .maybeSingle()
+      .then(({ data }) => setHas(!!data))
+  }, [])
+  return has
+}
+
 export default function Home() {
   const { user, profile } = useAuth()
   const name = profile ? displayName(profile, user?.email) : 'there'
   const upcoming = useUpcomingEvents()
+  const hasWardrobe = useHasWardrobe()
 
   return (
     <div>
@@ -67,6 +84,17 @@ export default function Home() {
             </div>
           </Card>
         ))}
+        {hasWardrobe && (
+          <Card href="/wardrobe/" tile>
+            <span className="fh-home__mark">
+              <Icon name="shirt" size={20} />
+            </span>
+            <div>
+              <CardTitle>Wardrobe</CardTitle>
+              <CardMeta>Outfits, week plan, buy list</CardMeta>
+            </div>
+          </Card>
+        )}
       </div>
 
       {upcoming.length > 0 && (

@@ -1,10 +1,12 @@
-// Wardrobe prototype UI. Local-first: state and photos live in IndexedDB on
-// this device. DEFAULT_PROFILE is injected by build.mjs from profile.json.
+// Wardrobe UI. Storage comes from createStore(): IndexedDB on this device
+// (store-local.js) or Supabase via the hub login (store-hub.js); build.mjs
+// picks one per target and injects DEFAULT_PROFILE from profile.json.
 import {
   CATEGORIES, SUBTYPES, LEVELS, WEATHER, SLOTS, SLOT_LABELS, bandForTemp, nearestColours, colourById, sub,
   formality, zoneOf, slotFor, occasionById, evaluate, generate, buyNext, coverage, outfitGain, outfitKey,
   suggestSlot, slotOwned, fillFormula, partsFromItems, planWeek, demoWardrobe, lightness, virtualPieces, validateProfile,
 } from './engine.js'
+import { createStore } from './store-local.js'
 
 // ---------- small helpers ----------
 
@@ -36,69 +38,77 @@ const ROLE_LABELS = {
 }
 const VERDICT_TEXT = { ok: 'Works', warn: 'Caution', block: 'Off-palette', casual: 'Casual only' }
 
-// ---------- storage (IndexedDB, falls back to memory) ----------
+// ---------- storage ----------
 
-let db = null
+const store = createStore()
+const HUB = store.kind === 'hub'
 let storageOk = true
+let gate = null // hub only: { kind: 'signed-out' | 'pending' | 'setup' | 'error', message }
 const photos = new Map()
 let state
 let saveTimer
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    let req
-    try { req = indexedDB.open('fearne-wardrobe', 1) } catch (e) { reject(e); return }
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore('kv')
-      req.result.createObjectStore('photos')
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
-}
-
-function tx(store, mode, fn) {
-  return new Promise((resolve, reject) => {
-    const t = db.transaction(store, mode)
-    const req = fn(t.objectStore(store))
-    t.oncomplete = () => resolve(req?.result)
-    t.onerror = () => reject(t.error)
-  })
-}
+let dirty = false
+let lastSync = null
 
 function freshState() {
   return { version: 1, profile: structuredClone(DEFAULT_PROFILE), items: [], outfits: [], weeks: {}, location: 'malta' }
 }
 
 function save() {
+  dirty = true
   clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => {
-    if (!db) return
-    tx('kv', 'readwrite', (s) => s.put(state, 'state')).catch(() => { storageOk = false; render() })
-  }, 200)
+  saveTimer = setTimeout(async () => {
+    try {
+      lastSync = await store.saveState(state)
+      dirty = false
+      if (!storageOk) { storageOk = true; render() }
+    } catch {
+      if (storageOk) { storageOk = false; render() }
+    }
+  }, 400)
 }
 
 async function setPhoto(id, data) {
   if (data) photos.set(id, data)
   else photos.delete(id)
-  if (!db) return
-  try { await tx('photos', 'readwrite', (s) => (data ? s.put(data, id) : s.delete(id))) } catch { storageOk = false }
+  try {
+    if (data) await store.putPhoto(id, data)
+    else await store.deletePhoto(id)
+  } catch {
+    storageOk = false
+    toast('Photo not saved')
+  }
 }
 
 async function boot() {
   try {
-    db = await openDB()
-    state = (await tx('kv', 'readonly', (s) => s.get('state'))) || freshState()
-    const keys = await tx('photos', 'readonly', (s) => s.getAllKeys())
-    const vals = await tx('photos', 'readonly', (s) => s.getAll())
-    keys.forEach((k, i) => photos.set(k, vals[i]))
-  } catch {
-    db = null
-    storageOk = false
+    const r = await store.init()
+    state = r.state || freshState()
+    for (const [k, v] of r.photos) photos.set(k, v)
+    lastSync = r.updatedAt
+    if (!r.state && HUB) save()
+  } catch (e) {
     state = freshState()
+    if (HUB) gate = { kind: e.code || 'error', message: e.message }
+    else storageOk = false
   }
   render()
 }
+
+// Pick up changes made on another device when the page comes back into view.
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || !store.refresh || gate || dirty) return
+  try {
+    const r = await store.refresh()
+    if (r && r.updatedAt !== lastSync && !dirty) {
+      state = r.state
+      lastSync = r.updatedAt
+      ui.gen.results = null
+      ui.buy = null
+      render()
+    }
+  } catch {}
+})
 
 // ---------- UI state ----------
 
@@ -246,9 +256,30 @@ const TABS = [
 
 // ---------- render ----------
 
+const STORAGE_BANNER = HUB
+  ? '<div class="banner">Changes are not saving to Fearne Hub right now. Check your connection, or sign in again on the hub.</div>'
+  : '<div class="banner">This browser is blocking storage, so nothing will be kept after you close the page. Open the file directly in Safari or Chrome to keep your wardrobe.</div>'
+
+function viewGate() {
+  const g = gate
+  const body = {
+    'signed-out': ['Sign in to Fearne Hub', 'Your wardrobe is private to your hub account. Sign in, then come back to this page.', '<a class="btn" href="/login">Sign in</a>'],
+    pending: ['Waiting for approval', 'A family admin needs to approve your hub account first.', '<a class="btn ghost" href="/">Back to the hub</a>'],
+    setup: ['Not set up yet', 'The wardrobe tables are missing in Supabase. Run _reference/wardrobe-state-schema.sql in the Supabase SQL editor, then reload.', '<button class="btn" data-act="reload">Reload</button>'],
+    error: ['Could not load your wardrobe', g.message || 'Something went wrong.', '<button class="btn" data-act="reload">Try again</button>'],
+  }[g.kind] || ['Could not load your wardrobe', g.message, '<button class="btn" data-act="reload">Try again</button>']
+  return `<div class="empty"><h2>${esc(body[0])}</h2><p class="serif">${esc(body[1])}</p><div class="row" style="justify-content:center">${body[2]}</div></div>`
+}
+
 function render() {
   document.title = 'Wardrobe'
-  $('#main').innerHTML = (storageOk ? '' : '<div class="banner">This browser is blocking storage, so nothing will be kept after you close the page. Open the file directly in Safari or Chrome to keep your wardrobe.</div>') + VIEWS[ui.tab]()
+  $('#back').innerHTML = HUB ? '<a href="/" class="small">‹ Fearne Hub</a>' : ''
+  if (gate) {
+    $('#main').innerHTML = viewGate()
+    $('#tabs').innerHTML = ''
+    return
+  }
+  $('#main').innerHTML = (storageOk ? '' : STORAGE_BANNER) + VIEWS[ui.tab]()
   $('#tabs').innerHTML = `<div class="inner">${TABS.map(([id, label]) => `<button data-act="tab" data-v="${id}"${ui.tab === id ? ' aria-current="page"' : ''}>${icon(id)}${label}</button>`).join('')}</div>`
   $('#subtitle').textContent = P().meta?.name || 'Style profile'
   renderSheet()
@@ -733,7 +764,7 @@ function viewProfile() {
         <div class="row"><button class="btn ghost sm" data-act="copyPrompt">Copy conversion prompt</button>
         <label class="btn ghost sm" style="cursor:pointer">Import profile JSON<input type="file" accept="application/json,.json" data-change="importProfile" class="hide"></label>
         <button class="btn quiet sm" data-act="exportProfile">Export profile</button></div></div>
-      <div><b>Backup</b><p class="small muted" style="margin:2px 0 8px">Everything lives on this device only. Export a backup, including photos, before clearing the browser.</p>
+      <div><b>Backup</b><p class="small muted" style="margin:2px 0 8px">${HUB ? 'Saved privately to your Fearne Hub account. Restore a backup from the standalone prototype to bring its pieces and photos across.' : 'Everything lives on this device only. Export a backup, including photos, before clearing the browser.'}</p>
         <div class="row"><button class="btn ghost sm" data-act="exportBackup">Export backup</button>
         <label class="btn ghost sm" style="cursor:pointer">Restore backup<input type="file" accept="application/json,.json" data-change="importBackup" class="hide"></label>
         <button class="btn danger sm" data-act="resetAll">Erase everything</button></div></div>
@@ -836,6 +867,18 @@ function download(name, data) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 500)
 }
 
+// Hub photos are signed URLs; backups carry the image data itself.
+async function asDataURL(src) {
+  if (src.startsWith('data:')) return src
+  const blob = await (await fetch(src)).blob()
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(r.result)
+    r.onerror = () => reject(r.error)
+    r.readAsDataURL(blob)
+  })
+}
+
 function readJSONFile(file) {
   return file.text().then((t) => JSON.parse(t))
 }
@@ -891,7 +934,7 @@ const ACTIONS = {
       for (const k of ['f', 'warmth', 'waterproof', 'price']) if (!(k in it)) delete existing[k]
       delete existing.demo
     } else state.items.push(it)
-    await setPhoto(it.id, d.photo)
+    if (d.photo !== (photos.get(it.id) || null)) await setPhoto(it.id, d.photo)
     save()
     ui.sheet = null
     ui.gen.results = null
@@ -902,7 +945,7 @@ const ACTIONS = {
     const d = ui.sheet.draft
     if (!confirm('Delete this piece? Saved outfits that use it will lose it.')) return
     state.items = state.items.filter((x) => x.id !== d.id)
-    await setPhoto(d.id, null)
+    if (photos.has(d.id)) await setPhoto(d.id, null)
     save()
     ui.sheet = null
     ui.gen.results = null
@@ -1039,7 +1082,15 @@ const ACTIONS = {
     }
   },
   exportProfile: () => download('style-profile.json', P()),
-  exportBackup: () => download(`wardrobe-backup-${todayISO()}.json`, { format: 'fearne-wardrobe-backup', state, photos: Object.fromEntries(photos) }),
+  exportBackup: async () => {
+    toast('Preparing backup…')
+    const out = {}
+    for (const [id, src] of photos) {
+      try { out[id] = await asDataURL(src) } catch {}
+    }
+    download(`wardrobe-backup-${todayISO()}.json`, { format: 'fearne-wardrobe-backup', state, photos: out })
+  },
+  reload: () => location.reload(),
   resetAll: async () => {
     if (!confirm('Erase all pieces, outfits, plans and photos on this device?')) return
     for (const id of [...photos.keys()]) await setPhoto(id, null)

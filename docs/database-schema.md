@@ -619,3 +619,23 @@ the owner or an admin. Scores made offline are queued in localStorage
 live in
 [`_reference/game-scores-schema.sql`](../_reference/game-scores-schema.sql)
 — run that file to create the table.
+
+## Wardrobe: `wardrobe_state` (+ `wardrobe` storage bucket)
+
+Read/written by `public/wardrobe/index.html`, a standalone build of
+`prototypes/wardrobe/` (see `store-hub.js`) served at `/wardrobe/`, and checked
+by `useHasWardrobe()` in `Home.jsx` to decide whether to show the Wardrobe
+tile. SQL: [`_reference/wardrobe-state-schema.sql`](../_reference/wardrobe-state-schema.sql).
+
+| Column | Type | Notes |
+|---|---|---|
+| `user_id` | uuid | PK, references `auth.users.id` |
+| `state` | jsonb | the whole wardrobe: style profile, items, saved outfits, week plans |
+| `updated_at` | timestamptz | set by the client on every save; used to pick up edits from another device |
+
+**Owner-only**, unlike the family-shared tables: one policy, `user_id =
+auth.uid()`, for every operation. Photos live in the private `wardrobe`
+bucket at `<user id>/<item id>.jpg`, with a matching owner-only policy on
+`storage.objects`, and are shown through 7-day signed URLs. A normalised
+replacement for a full React section is drafted in
+`_reference/wardrobe-schema.sql` but not applied.

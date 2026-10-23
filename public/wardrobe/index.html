@@ -1,0 +1,2170 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wardrobe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+<style>
+:root {
+  --paper: #edeee9; --paper-2: #e4e5de; --card: #f7f7f3; --ink: #191d21; --slate: #46555e;
+  --mute: #646c6e; --line: #c9cac1; --line-2: #dcddd5; --accent: #23474e; --accent-ink: #eef4f4;
+  --accent-soft: #dfe9ea; --warn: #7a4f0e; --warn-bg: #f5ead3; --bad: #8f231c; --bad-bg: #f6dfdb;
+  --good: #2a5848; --good-bg: #dceae3; --tile: #e7e8e2; --scrim: rgba(20, 24, 27, .5);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121517; --paper-2: #171b1e; --card: #1c2124; --ink: #e7eae8; --slate: #b3c0c5;
+    --mute: #939c9f; --line: #323a3e; --line-2: #283034; --accent: #7fb3bb; --accent-ink: #0d1a1c;
+    --accent-soft: #1f3337; --warn: #e6bc72; --warn-bg: #2f2716; --bad: #f0958c; --bad-bg: #36211f;
+    --good: #93c9b3; --good-bg: #1a2c25; --tile: #dcddd6; --scrim: rgba(0, 0, 0, .62);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121517; --paper-2: #171b1e; --card: #1c2124; --ink: #e7eae8; --slate: #b3c0c5;
+  --mute: #939c9f; --line: #323a3e; --line-2: #283034; --accent: #7fb3bb; --accent-ink: #0d1a1c;
+  --accent-soft: #1f3337; --warn: #e6bc72; --warn-bg: #2f2716; --bad: #f0958c; --bad-bg: #36211f;
+  --good: #93c9b3; --good-bg: #1a2c25; --tile: #dcddd6; --scrim: rgba(0, 0, 0, .62);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box }
+html { -webkit-text-size-adjust: 100% }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 15px/1.5 "Space Grotesk", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -.01em; font-weight: 600 }
+p { margin: 0 0 10px }
+button, input, select, textarea { font: inherit; color: inherit }
+.serif { font-family: "Newsreader", Georgia, serif }
+.mono, .eyebrow, .label { font-family: "Space Mono", ui-monospace, monospace }
+.eyebrow { font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); display: flex; gap: 10px; align-items: center }
+.eyebrow::before { content: ""; width: 22px; height: 1px; background: currentColor }
+.label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute) }
+.muted { color: var(--mute) }
+.small { font-size: 13px }
+
+.app { max-width: 780px; margin: 0 auto; padding: 0 16px 104px }
+header.top { padding: 22px 0 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px }
+header.top h1 { font-size: 28px; font-weight: 700; margin-top: 8px }
+.banner { background: var(--warn-bg); color: var(--warn); padding: 10px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 12px }
+
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center;
+  background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+nav.tabs .inner { display: flex; max-width: 780px; width: 100%; justify-content: space-around }
+nav.tabs button {
+  background: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: 11px; color: var(--mute); padding: 6px 8px; min-width: 60px; cursor: pointer; border-radius: 6px;
+}
+nav.tabs button[aria-current="page"] { color: var(--accent); font-weight: 600 }
+nav.tabs svg { width: 22px; height: 22px }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px;
+  padding: 8px 14px; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent);
+  color: var(--accent-ink); font-weight: 600; cursor: pointer; text-decoration: none; font-size: 14px;
+}
+.btn.ghost { background: transparent; color: var(--accent) }
+.btn.quiet { background: transparent; border-color: var(--line); color: var(--slate); font-weight: 500 }
+.btn.danger { background: transparent; border-color: var(--bad); color: var(--bad) }
+.btn.sm { min-height: 32px; padding: 4px 10px; font-size: 13px }
+.btn:disabled { opacity: .45; cursor: default }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.row.end { justify-content: flex-end }
+.spread { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap }
+.stack > * + * { margin-top: 12px }
+
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: none }
+.chips.wrap { flex-wrap: wrap; overflow: visible }
+.chip {
+  flex: none; border: 1px solid var(--line); background: var(--card); color: var(--slate); border-radius: 999px;
+  padding: 6px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.chip[aria-pressed="true"] .muted { color: inherit; opacity: .8 }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .18); display: inline-block; flex: none }
+
+.section { margin-top: 22px }
+.section > h2 { font-size: 18px; margin-bottom: 10px }
+.panel { background: var(--card); border: 1px solid var(--line-2); border-radius: 6px; padding: 14px }
+.subtabs { display: flex; border-bottom: 1px solid var(--line); margin-bottom: 14px; overflow-x: auto }
+.subtabs button { background: none; border: 0; padding: 10px 12px; color: var(--mute); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap }
+.subtabs button[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); font-weight: 600 }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px }
+.stat { background: var(--card); border: 1px solid var(--line-2); border-radius: 6px; padding: 10px 12px }
+.stat b { display: block; font-size: 22px; line-height: 1.1 }
+.stat span { font-size: 12px; color: var(--mute) }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px }
+.card-item { background: var(--card); border: 1px solid var(--line-2); border-radius: 6px; padding: 0; text-align: left; cursor: pointer; overflow: hidden; position: relative }
+.card-item .meta { padding: 8px 10px 10px }
+.card-item .name { font-weight: 600; font-size: 14px; line-height: 1.25 }
+.card-item .sub { font-size: 12px; color: var(--mute); display: flex; gap: 6px; align-items: center; margin-top: 3px }
+.badge { position: absolute; top: 8px; left: 8px; background: var(--ink); color: var(--paper); font-size: 10px; padding: 2px 7px; border-radius: 999px; font-family: "Space Mono", monospace; letter-spacing: .06em; text-transform: uppercase }
+.badge.demo { left: auto; right: 8px; background: var(--accent); color: var(--accent-ink) }
+
+.tile { aspect-ratio: 1 / 1; background: var(--tile); display: grid; place-items: center; overflow: hidden }
+.tile img { width: 100%; height: 100%; object-fit: cover }
+.tile svg { width: 82%; height: 82% }
+.tile.sm { width: 64px; height: 64px; border-radius: 4px; flex: none }
+.tile.xs { width: 44px; height: 44px; border-radius: 4px; flex: none }
+.tile.lg { border-radius: 6px; max-width: 260px; margin: 0 auto }
+
+.outfit { background: var(--card); border: 1px solid var(--line-2); border-radius: 6px; padding: 12px; margin-bottom: 10px }
+.outfit .thumbs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px }
+.outfit .names { font-size: 14px; margin: 8px 0 6px }
+.outfit .score { font-family: "Space Mono", monospace; font-size: 12px; color: var(--accent) }
+ul.reasons { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px }
+ul.reasons li { display: flex; gap: 7px; padding: 2px 0; align-items: baseline }
+ul.reasons li::before { font-family: "Space Mono", monospace; font-weight: 700; flex: none; width: 12px }
+ul.reasons li.pro { color: var(--good) }
+ul.reasons li.pro::before { content: "+" }
+ul.reasons li.warn { color: var(--warn) }
+ul.reasons li.warn::before { content: "!" }
+ul.reasons li.block { color: var(--bad) }
+ul.reasons li.block::before { content: "×" }
+
+.verdict { border-radius: 4px; padding: 9px 11px; font-size: 13px; margin-top: 8px }
+.verdict.ok { background: var(--good-bg); color: var(--good) }
+.verdict.warn { background: var(--warn-bg); color: var(--warn) }
+.verdict.block { background: var(--bad-bg); color: var(--bad) }
+
+.pickrow { margin-bottom: 14px }
+.pickrow .scroller { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 6px }
+.pick { background: none; border: 2px solid transparent; border-radius: 6px; padding: 0; cursor: pointer; flex: none; width: 76px; text-align: center; font-size: 11px; color: var(--slate) }
+.pick .tile { border-radius: 4px }
+.pick[aria-pressed="true"] { border-color: var(--accent) }
+.pick span { display: block; padding: 3px 2px; line-height: 1.2 }
+.pick.none .tile { font-size: 22px; color: var(--mute) }
+
+.day { background: var(--card); border: 1px solid var(--line-2); border-radius: 6px; padding: 12px; margin-bottom: 10px }
+.day.today { border-color: var(--accent) }
+.day .controls { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 }
+.day select { min-height: 32px; padding: 2px 8px; font-size: 13px }
+
+.tier { margin-top: 22px }
+.tier h3 { font-size: 16px; margin-top: 4px }
+.slot { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center }
+.slot.full .sname { text-decoration: line-through; color: var(--mute) }
+.slot .sname { font-weight: 600 }
+.slot .spec { font-size: 12.5px; color: var(--mute); margin: 2px 0 6px }
+.sw { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--slate); background: var(--paper-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 8px 2px 3px; margin: 0 4px 4px 0 }
+.sw.best { border-color: var(--accent); color: var(--ink) }
+.pill { font-family: "Space Mono", monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--slate); margin-left: 6px }
+.bar { height: 6px; background: var(--line-2); border-radius: 999px; overflow: hidden; margin: 8px 0 4px }
+.bar i { display: block; height: 100%; background: var(--accent) }
+
+.next { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line-2) }
+.next:last-child { border: 0 }
+.next .gain { margin-left: auto; text-align: right; font-family: "Space Mono", monospace; font-size: 11px; color: var(--mute); white-space: nowrap }
+.next .gain b { display: block; font-size: 16px; color: var(--accent) }
+.buildbar { position: sticky; bottom: 78px; box-shadow: 0 -6px 20px rgba(0, 0, 0, .08); max-height: 40vh; overflow-y: auto }
+
+table.pal { width: 100%; border-collapse: collapse; font-size: 13px }
+table.pal td, table.pal th { padding: 6px 4px; border-bottom: 1px solid var(--line-2); text-align: left; vertical-align: middle }
+table.pal th { font-family: "Space Mono", monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); font-weight: 400 }
+.v-ok { color: var(--good) } .v-warn { color: var(--warn) } .v-block { color: var(--bad) } .v-casual { color: var(--warn) }
+
+.empty { text-align: center; padding: 36px 12px }
+.empty h2 { font-size: 22px; margin: 12px 0 8px }
+.empty p { color: var(--slate); max-width: 46ch; margin: 0 auto 16px }
+
+.field { display: block; margin-bottom: 12px }
+.field > .label { display: block; margin-bottom: 4px }
+.field input, .field select, .field textarea, select.inline {
+  width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper);
+}
+.field textarea { min-height: 160px; font-family: "Space Mono", monospace; font-size: 12px }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px }
+
+.sheet { position: fixed; inset: 0; z-index: 40; display: none }
+.sheet.open { display: block }
+.sheet .scrim { position: absolute; inset: 0; background: var(--scrim) }
+.sheet .panel-s {
+  position: absolute; left: 0; right: 0; bottom: 0; max-height: 92vh; overflow-y: auto; background: var(--paper);
+  border-radius: 12px 12px 0 0; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 780px; margin: 0 auto;
+}
+.sheet .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px }
+.sheet .head h2 { font-size: 20px }
+.x { background: none; border: 1px solid var(--line); border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 18px; line-height: 1; color: var(--slate) }
+
+.toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 6px; font-size: 14px; z-index: 60; max-width: calc(100% - 32px) }
+.callout { background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 14px 16px }
+.callout p { margin: 4px 0 0; font-size: 14px; opacity: .92 }
+.note-list { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--slate) }
+.note-list li { margin-bottom: 6px }
+.hide { display: none !important }
+
+@media (max-width: 420px) {
+  .stats { grid-template-columns: repeat(3, 1fr) }
+  .stat b { font-size: 19px }
+  .grid { grid-template-columns: repeat(2, 1fr) }
+  .two { grid-template-columns: 1fr 1fr }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div><div class="eyebrow">Fearne Hub · private</div><h1>Wardrobe</h1></div>
+    <div style="text-align:right"><div id="back"></div><span class="small muted" id="subtitle"></span></div>
+  </header>
+  <main id="main"></main>
+</div>
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<div class="sheet" id="sheet"></div>
+<div class="toast hide" id="toast" role="status"></div>
+<script>
+const SUPABASE_URL = "https://zcfidrjkpobpetxqmjiy.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_5OiN2Gtpt2xAyFa4k4terQ_yv9EPlM_";
+const DEFAULT_PROFILE = {"format":"fearne-style-profile","version":1,"meta":{"name":"Cut for the long line","owner":"Julian","source":"The Wardrobe Dossier, Ed. 01 + The Wardrobe, From Scratch","summary":"Cool-toned, medium-high contrast, quiet-luxury. Slim-straight fit, texture for presence, long coats.","unconfirmed":["Palette is a lead read (Deep / Cool Winter vs Soft Summer). Do the daylight emerald vs dusty slate-blue test before buying statement colours.","Burgundy sits next to purple: test against the face before committing."]},"palette":[{"id":"navy","name":"Ink navy","hex":"#1F2A44","role":"core","face":"ok","lower":"ok","feet":"ok"},{"id":"charcoal","name":"Charcoal","hex":"#35383B","role":"core","face":"ok","lower":"ok","feet":"ok"},{"id":"cool-grey","name":"Cool grey","hex":"#7A7D80","role":"core","face":"ok","lower":"ok","feet":"ok"},{"id":"mid-grey","name":"Mid grey","hex":"#8A8D90","role":"core","face":"ok","lower":"ok","feet":"ok"},{"id":"light-grey","name":"Light grey","hex":"#C7C9C6","role":"core","face":"ok","lower":"ok","feet":"ok"},{"id":"greige","name":"Cool greige","hex":"#B4AEA2","role":"core","face":"ok","lower":"ok","feet":"ok"},{"id":"black","name":"True black","hex":"#1A1A1C","role":"core","face":"warn","lower":"ok","feet":"ok","note":"Best away from the face, or broken with white or navy at the collar."},{"id":"white","name":"Cool white","hex":"#F4F4F0","role":"white","face":"ok","lower":"ok","feet":"ok"},{"id":"ecru","name":"Ecru / soft white","hex":"#E7E6DF","role":"lower","face":"warn","lower":"ok","feet":"ok","note":"Checklist colour lock keeps ecru off knits and jackets at the face; the dossier capsule lists an ecru knit. Decide."},{"id":"stone","name":"Stone","hex":"#C9C2B4","role":"lower","face":"warn","lower":"ok","feet":"ok","note":"Reserve for trousers and shorts. The mac and linen blazer in stone break this."},{"id":"soft-blue","name":"Soft blue","hex":"#A9C2D4","role":"blue","face":"ok","lower":"ok","feet":"ok"},{"id":"cool-mid-blue","name":"Cool mid-blue","hex":"#6E93B0","role":"blue","face":"ok","lower":"ok","feet":"ok"},{"id":"indigo","name":"Dark indigo","hex":"#2A3A52","role":"blue","face":"ok","lower":"ok","feet":"ok"},{"id":"denim-mid","name":"Mid-blue denim","hex":"#4E6E8E","role":"blue","face":"ok","lower":"ok","feet":"ok"},{"id":"steel-blue","name":"Steel blue","hex":"#5A7A8C","role":"accent","face":"ok","lower":"ok","feet":"ok"},{"id":"deep-teal","name":"Deep teal","hex":"#23474E","role":"accent","face":"ok","lower":"ok","feet":"ok"},{"id":"teal","name":"Teal","hex":"#3E7C82","role":"accent","face":"ok","lower":"ok","feet":"ok"},{"id":"airforce","name":"Airforce","hex":"#3E5C6E","role":"accent","face":"ok","lower":"ok","feet":"ok"},{"id":"forest","name":"Forest green","hex":"#2F5D50","role":"accent","face":"ok","lower":"ok","feet":"ok"},{"id":"sage","name":"Sage","hex":"#9CB2A2","role":"accent","face":"ok","lower":"ok","feet":"ok"},{"id":"burgundy","name":"Burgundy","hex":"#6B2F38","role":"accent","face":"warn","lower":"ok","feet":"ok","note":"Flagged: test against your face first."},{"id":"emerald","name":"Emerald","hex":"#17715C","role":"statement","face":"ok","lower":"ok","feet":"ok"},{"id":"royal","name":"Royal blue","hex":"#274690","role":"statement","face":"ok","lower":"ok","feet":"ok"},{"id":"cool-red","name":"Cool true red","hex":"#A62A2A","role":"statement","face":"ok","lower":"ok","feet":"ok"},{"id":"espresso","name":"Espresso / dark brown","hex":"#3B2A22","role":"leather","face":"ok","lower":"warn","feet":"ok"},{"id":"espresso-suede","name":"Espresso suede","hex":"#4A3428","role":"leather","face":"ok","lower":"warn","feet":"ok"},{"id":"black-leather","name":"Black leather","hex":"#1C1A18","role":"leather","face":"warn","lower":"ok","feet":"ok"},{"id":"oxblood","name":"Oxblood","hex":"#4A1C22","role":"leather","face":"warn","lower":"warn","feet":"ok"},{"id":"tan","name":"Tan / cognac","hex":"#A9743F","role":"leather","face":"block","lower":"block","feet":"casual","note":"Casual shoes only (formality 2 or below). The colour lock bans tan, but the checklist recommends tan loafers and slides."},{"id":"steel","name":"Steel / silver","hex":"#9BA0A4","role":"metal","face":"ok","lower":"ok","feet":"ok"},{"id":"camel","name":"Golden camel","hex":"#C19A6B","role":"avoid","face":"block","lower":"warn","feet":"warn"},{"id":"mustard","name":"Mustard","hex":"#C9A227","role":"avoid","face":"block","lower":"warn","feet":"warn"},{"id":"olive","name":"Olive","hex":"#6B6B3A","role":"avoid","face":"block","lower":"warn","feet":"warn"},{"id":"khaki","name":"Khaki / beige","hex":"#BDB07A","role":"avoid","face":"block","lower":"warn","feet":"warn"},{"id":"orange","name":"Orange","hex":"#D2691E","role":"avoid","face":"block","lower":"block","feet":"warn"},{"id":"warm-brown","name":"Warm brown","hex":"#7A5233","role":"avoid","face":"block","lower":"warn","feet":"ok"},{"id":"purple","name":"Purple","hex":"#6A4C93","role":"avoid","face":"block","lower":"block","feet":"block"},{"id":"neon","name":"Neon / highlighter","hex":"#B5E61D","role":"avoid","face":"block","lower":"block","feet":"block"}],"rules":{"max_statement":1,"max_colour_pieces":2,"max_patterns":1,"colour_at_face_bonus":true,"contrast_bonus_min":28,"notes":["Slim-straight, never skin-tight, never loose.","Buy for the shoulder, alter the waist, sleeves and hems.","Patterns small in scale, cool in ground.","Cool tones near the face, warm tones (if any) below the waist."]},"occasions":[{"id":"beach","label":"Malta heat / beach","level":1},{"id":"casual","label":"Casual weekend","level":2},{"id":"family","label":"Family day","level":2},{"id":"travel","label":"Travel","level":2},{"id":"smart-casual","label":"Smart casual","level":3},{"id":"date","label":"Date night","level":3},{"id":"office-1","label":"Office L1","level":3,"office":true},{"id":"office-2","label":"Office L2","level":4,"office":true},{"id":"office-3","label":"Office L3","level":5,"office":true,"require":"tailoring"},{"id":"evening","label":"Smart evening","level":4},{"id":"wedding","label":"Wedding / formal","level":5,"require":"tailoring"}],"office_excludes":["tee","shorts","slides","camp-shirt"],"formulas":[{"name":"Office L1, Malta","occasion":"office-1","parts":[["linen-shirt","soft-blue"],["cotton-trousers","ecru"],["loafers","espresso"]],"why":"Structure lives in the crisp shirt alone, cool tones at the face."},{"name":"Office L2, stepped up","occasion":"office-2","parts":[["blazer","navy"],["poplin","white"],["wool-trousers","mid-grey"],["derby|oxford-shoe","espresso"]],"why":"Blazer and contrast trouser: authority without stiffness."},{"name":"Office L3, genuinely smart","occasion":"office-3","parts":[["suit-jacket","navy"],["suit-trousers","navy"],["poplin","white"],["oxford-shoe","black-leather"]],"why":"The one true suit. Navy over grey or black for cool, high-contrast colouring."},{"name":"Smart casual with colour","occasion":"smart-casual","parts":[["polo-knit","emerald"],["chinos","navy"],["loafers","espresso-suede"]],"why":"Colour at the face on a knit, neutrals below."},{"name":"Casual weekend","occasion":"casual","parts":[["tee","navy"],["overshirt","greige"],["jeans","indigo"],["trainers","white"]],"why":"The overshirt gives structure; a fine stripe adds width across the chest."},{"name":"Family day / school run","occasion":"family","parts":[["tee","cool-grey"],["harrington","navy"],["chinos","stone"],["trainers","white"]],"why":"Fast and comfortable, nothing baggy."},{"name":"Date night","occasion":"date","parts":[["roll-neck","charcoal"],["jeans","indigo"],["chelsea","espresso-suede"],["suede-blouson","espresso-suede"]],"why":"Tonal cool monochrome; the roll neck is the quiet power piece."},{"name":"Malta casual (heat)","occasion":"beach","parts":[["camp-shirt","ecru"],["shorts","stone"],["slides","tan"]],"why":"Linen and a tailored short keep the line clean."},{"name":"Malta smart evening","occasion":"evening","parts":[["linen-blazer","stone"],["polo-knit","navy"],["linen-trousers","ecru"],["loafers","espresso"]],"why":"Breathable smart, structure in one unlined jacket."},{"name":"Family gathering","occasion":"smart-casual","parts":[["linen-shirt","soft-blue"],["half-zip","navy"],["cotton-trousers","ecru"],["loafers","espresso"]],"why":"Relaxed but intentional, light cool neutrals."},{"name":"Wedding guest","occasion":"wedding","parts":[["suit-jacket","navy"],["suit-trousers","navy"],["poplin","white"],["oxford-shoe","black-leather"]],"why":"Navy flatters more than grey or black for celebration."},{"name":"Travel / airport","occasion":"travel","parts":[["tee","cool-grey"],["merino-crew","navy"],["chinos","navy"],["harrington","navy"],["trainers","white"]],"why":"Layers to add and shed between a Dutch gate and a Maltese arrival."}],"slots":[{"id":"t1-blazer","tier":1,"name":"Navy blazer","qty":1,"subtypes":["blazer"],"colours":["navy"],"best":["navy"],"material":"wool hopsack, half-lined","fit":"soft shoulder, slim, covers the seat"},{"id":"t1-oxford-white","tier":1,"name":"Oxford shirt, white","qty":1,"subtypes":["oxford"],"colours":["white","soft-blue"],"best":["white"],"material":"oxford cotton","fit":"slim-straight, sleeve to wrist bone"},{"id":"t1-oxford-blue","tier":1,"name":"Oxford shirt, blue","qty":1,"subtypes":["oxford"],"colours":["soft-blue"],"best":["soft-blue"],"material":"oxford cotton","fit":"slim-straight, tuck-length hem"},{"id":"t1-poplin","tier":1,"name":"Poplin dress shirt","qty":1,"subtypes":["poplin"],"colours":["white"],"best":["white"],"material":"crisp cotton poplin","fit":"slim, clean collar"},{"id":"t1-jeans","tier":1,"name":"Dark indigo jeans","qty":1,"subtypes":["jeans"],"colours":["indigo"],"best":["indigo"],"material":"rigid or slight-stretch denim","fit":"straight-slim, gentle taper"},{"id":"t1-charcoal-trouser","tier":1,"name":"Wool trousers","qty":1,"subtypes":["wool-trousers"],"colours":["charcoal","mid-grey"],"best":["charcoal"],"material":"wool or wool-blend","fit":"slim-tapered, small break"},{"id":"t1-navy-chino","tier":1,"name":"Chinos","qty":1,"subtypes":["chinos"],"colours":["navy","stone"],"best":["navy"],"material":"cotton twill","fit":"flat front, slim-tapered"},{"id":"t1-merino","tier":1,"name":"Merino crew jumper","qty":1,"subtypes":["merino-crew"],"colours":["navy","charcoal","forest"],"best":["navy"],"material":"fine-gauge merino","fit":"trim, ribbed hem holds"},{"id":"t1-tees","tier":1,"name":"Crew tees","qty":3,"subtypes":["tee"],"colours":["white","navy","cool-grey","ecru"],"best":["white","navy","cool-grey"],"material":"mid-weight cotton","fit":"a little air, sleeve mid-bicep"},{"id":"t1-trainers","tier":1,"name":"Leather trainers","qty":1,"subtypes":["trainers"],"colours":["white","ecru"],"best":["white"],"material":"smooth leather","fit":"low profile, slim sole"},{"id":"t1-derby","tier":1,"name":"Derby shoes","qty":1,"subtypes":["derby"],"colours":["espresso","black-leather"],"best":["espresso"],"material":"calf, Goodyear welt","fit":"almond toe, medium sole"},{"id":"t1-belt","tier":1,"name":"Leather belt","qty":1,"subtypes":["belt"],"colours":["espresso","black-leather"],"best":["espresso"],"material":"full-grain, silver buckle","fit":"matched to shoes"},{"id":"t1-mac","tier":1,"name":"Waterproof mac / trench","qty":1,"subtypes":["mac"],"colours":["stone","navy"],"best":["stone"],"material":"cotton gabardine or technical","fit":"clean shoulder, knee length","climate":"nl"},{"id":"t2-grey-trouser","tier":2,"name":"Wool trousers, grey","qty":1,"subtypes":["wool-trousers"],"colours":["mid-grey","cool-grey"],"best":["mid-grey"],"material":"high-twist cool wool","fit":"slim-tapered"},{"id":"t2-stone-chino","tier":2,"name":"Chinos, stone","qty":1,"subtypes":["chinos"],"colours":["stone","ecru"],"best":["stone"],"material":"cotton twill","fit":"flat front, slim-tapered"},{"id":"t2-midblue-jeans","tier":2,"name":"Jeans, mid-blue","qty":1,"subtypes":["jeans"],"colours":["denim-mid"],"best":["denim-mid"],"material":"denim, cool wash","fit":"straight-slim"},{"id":"t2-rollneck","tier":2,"name":"Roll neck","qty":1,"subtypes":["roll-neck"],"colours":["charcoal","navy","cool-grey"],"best":["charcoal"],"material":"fine merino","fit":"trim through the body"},{"id":"t2-halfzip","tier":2,"name":"Half-zip or second crew knit","qty":1,"subtypes":["half-zip","merino-crew"],"colours":["cool-grey","ecru","teal"],"best":["cool-grey"],"material":"merino or lambswool","fit":"trim, layers over a shirt"},{"id":"t2-overshirt","tier":2,"name":"Overshirt","qty":1,"subtypes":["overshirt"],"colours":["charcoal","navy","sage"],"best":["charcoal"],"material":"wool-blend or moleskin","fit":"defined line, worn open"},{"id":"t2-harrington","tier":2,"name":"Harrington jacket","qty":1,"subtypes":["harrington"],"colours":["navy","stone"],"best":["navy"],"material":"cotton","fit":"gathers at waist and cuff"},{"id":"t2-chelsea","tier":2,"name":"Chelsea boots","qty":1,"subtypes":["chelsea"],"colours":["espresso","espresso-suede"],"best":["espresso"],"material":"leather or suede, rubber sole","fit":"almond toe"},{"id":"t2-loafers","tier":2,"name":"Loafers","qty":1,"subtypes":["loafers"],"colours":["espresso","tan"],"best":["espresso"],"material":"leather","fit":"almond toe, slim sole"},{"id":"t2-knitpolo","tier":2,"name":"Knitted polo","qty":2,"subtypes":["polo-knit"],"colours":["navy","forest","teal","emerald"],"best":["navy","forest"],"material":"textured knitted cotton","fit":"structured collar, trim"},{"id":"t2-pattern-shirt","tier":2,"name":"Pattern shirt (check or stripe)","qty":1,"subtypes":["pattern-shirt"],"colours":["soft-blue","navy"],"best":["soft-blue"],"material":"cotton","fit":"slim-straight, small-scale pattern"},{"id":"t2-watch","tier":2,"name":"Watch","qty":1,"subtypes":["watch"],"colours":["steel","navy"],"best":["steel"],"material":"steel case","fit":"38 to 40 mm"},{"id":"t2-scarf","tier":2,"name":"Merino scarf","qty":1,"subtypes":["scarf"],"colours":["navy","charcoal","cool-grey"],"best":["navy"],"material":"fine merino","fit":"easiest cool upgrade at the face","climate":"nl"},{"id":"t3-navy-suit","tier":3,"name":"Navy suit (jacket + trousers)","qty":2,"subtypes":["suit-jacket","suit-trousers"],"colours":["navy"],"best":["navy"],"material":"high-twist cool wool or wool-linen","fit":"slim, soft shoulder"},{"id":"t3-oxfords","tier":3,"name":"Oxford shoes, formal","qty":1,"subtypes":["oxford-shoe"],"colours":["black-leather","espresso"],"best":["black-leather"],"material":"calf, leather sole","fit":"plain cap-toe"},{"id":"t3-ties","tier":3,"name":"Ties","qty":2,"subtypes":["tie"],"colours":["navy","forest","burgundy"],"best":["navy"],"material":"knitted, linen or grenadine","fit":"standard width"},{"id":"t3-blazer2","tier":3,"name":"Second blazer, textured","qty":1,"subtypes":["blazer"],"colours":["cool-grey","charcoal"],"best":["cool-grey"],"material":"grey hopsack or subtle cool check","fit":"soft shoulder"},{"id":"t3-grey-suit","tier":3,"name":"Grey suit (later second)","qty":2,"subtypes":["suit-jacket","suit-trousers"],"colours":["mid-grey","charcoal"],"best":["mid-grey"],"material":"worsted wool","fit":"slim, soft shoulder"},{"id":"t4-overcoat","tier":4,"name":"Overcoat","qty":1,"subtypes":["overcoat"],"colours":["navy","charcoal"],"best":["navy"],"material":"wool or wool-cashmere","fit":"clean shoulder, knee length","climate":"nl"},{"id":"t4-waxed","tier":4,"name":"Waxed cotton jacket","qty":1,"subtypes":["waxed-jacket"],"colours":["navy","espresso"],"best":["navy"],"material":"waxed cotton","fit":"waist definition, trim","climate":"nl"},{"id":"t4-quilted","tier":4,"name":"Quilted liner jacket","qty":1,"subtypes":["quilted"],"colours":["navy","charcoal"],"best":["navy"],"material":"slim quilted, low fill","fit":"trim, low volume","climate":"nl"},{"id":"t4-winterknit","tier":4,"name":"Chunkier winter knit","qty":1,"subtypes":["chunky-knit"],"colours":["ecru","navy","charcoal"],"best":["ecru"],"material":"lambswool, fuller gauge","fit":"trim","climate":"nl"},{"id":"t4-suede-blouson","tier":4,"name":"Suede blouson","qty":1,"subtypes":["suede-blouson"],"colours":["espresso-suede","cool-grey"],"best":["espresso-suede"],"material":"suede, proofed","fit":"trim casual jacket"},{"id":"t5-linen-shirt","tier":5,"name":"Linen shirt","qty":2,"subtypes":["linen-shirt"],"colours":["white","ecru","soft-blue","sage"],"best":["white","ecru"],"material":"linen","fit":"fitted with airflow","climate":"malta"},{"id":"t5-camp","tier":5,"name":"Cotton-linen camp-collar shirt","qty":1,"subtypes":["camp-shirt"],"colours":["ecru","stone","soft-blue"],"best":["ecru"],"material":"cotton-linen","fit":"short sleeve, revere collar","climate":"malta"},{"id":"t5-linen-trouser","tier":5,"name":"Linen trousers","qty":1,"subtypes":["linen-trousers","cotton-trousers"],"colours":["ecru","navy","stone"],"best":["ecru"],"material":"linen or cotton-linen","fit":"slight taper","climate":"malta"},{"id":"t5-linen-blazer","tier":5,"name":"Unstructured linen blazer","qty":1,"subtypes":["linen-blazer"],"colours":["navy","stone"],"best":["navy"],"material":"linen, unlined","fit":"soft shoulder","climate":"malta"},{"id":"t5-shorts","tier":5,"name":"Tailored shorts","qty":2,"subtypes":["shorts"],"colours":["stone","navy","sage"],"best":["stone","navy"],"material":"cotton","fit":"flat front, above the knee","climate":"malta"},{"id":"t5-swim","tier":5,"name":"Swim shorts","qty":1,"subtypes":["swim"],"colours":["navy","deep-teal","forest"],"best":["navy"],"material":"quick-dry","fit":"tailored, mid-thigh","climate":"malta"},{"id":"t5-slides","tier":5,"name":"Leather slides / sandals","qty":1,"subtypes":["slides"],"colours":["tan","espresso","black-leather"],"best":["tan"],"material":"leather","fit":"plain, minimal","climate":"malta"},{"id":"t6-sunglasses","tier":6,"name":"Sunglasses","qty":1,"subtypes":["sunglasses"],"colours":["black-leather","steel"],"best":["black-leather"],"material":"acetate or metal","fit":"medium rectangular or soft-square"},{"id":"t6-work-bag","tier":6,"name":"Work bag","qty":1,"subtypes":["bag"],"colours":["espresso","black-leather"],"best":["espresso"],"material":"structured leather","fit":"slim briefcase or tote"},{"id":"t6-weekender","tier":6,"name":"Weekender bag","qty":1,"subtypes":["bag"],"colours":["espresso"],"best":["espresso"],"material":"leather or waxed canvas","fit":"medium scale"},{"id":"t6-cap","tier":6,"name":"Plain cap","qty":1,"subtypes":["cap"],"colours":["navy","ecru","cool-grey"],"best":["navy"],"material":"cotton","fit":"no loud branding"},{"id":"t6-beanie","tier":6,"name":"Cuffed beanie","qty":1,"subtypes":["beanie"],"colours":["navy","cool-grey"],"best":["navy"],"material":"merino or lambswool","fit":"close to the head","climate":"nl"},{"id":"t6-knit-waistcoat","tier":6,"name":"Knitted waistcoat (optional)","qty":1,"subtypes":["knit-vest"],"colours":["navy","cool-grey"],"best":["navy"],"material":"fine knit","fit":"trim, adds torso structure"}],"conflicts":["Tan: the colour lock bans tan, but the checklist recommends tan loafers and tan slides. Modelled as allowed on casual shoes only.","Stone and ecru: 'never as a knit or jacket at the face', yet the stone mac is the best colour, the Malta evening look uses a stone linen blazer, and the capsule lists an ecru chunky knit. Modelled as a warning, not a block.","Overshirt colour: dossier says greige, checklist says charcoal is best.","Climates: the checklist adds Ireland; the dossier covers Malta and the Netherlands only."]};
+// Wardrobe engine: garment catalogue, outfit rules, generator, week planner
+// and buy-next maths. Pure functions, no DOM, so it can move into the hub
+// unchanged (src/lib/wardrobe/engine.js) and be tested in Node.
+
+// ---------- catalogue ----------
+
+const CATEGORIES = [
+  { id: 'top', label: 'Tops & shirts' },
+  { id: 'knit', label: 'Knitwear' },
+  { id: 'outer', label: 'Jackets & coats' },
+  { id: 'bottom', label: 'Trousers & shorts' },
+  { id: 'shoes', label: 'Shoes' },
+  { id: 'accessory', label: 'Accessories' },
+]
+
+// f: formality range the piece can be worn at (1 off-duty ... 5 formal).
+// warmth: 1 light, 2 mid, 3 heavy. layer: base | mid | both (knits).
+// kind (outer only): tailoring | jacket | coat.
+const SUBTYPES = {
+  tee: { label: 'Crew tee', cat: 'top', layer: 'base', f: [1, 3], warmth: 1, shape: 'tee' },
+  'polo-knit': { label: 'Knitted polo', cat: 'top', layer: 'base', f: [2, 4], warmth: 1, shape: 'polo' },
+  oxford: { label: 'Oxford shirt', cat: 'top', layer: 'base', f: [2, 4], warmth: 1, shape: 'shirt', shirt: true },
+  poplin: { label: 'Poplin shirt', cat: 'top', layer: 'base', f: [3, 5], warmth: 1, shape: 'shirt', shirt: true },
+  'pattern-shirt': { label: 'Check / stripe shirt', cat: 'top', layer: 'base', f: [2, 4], warmth: 1, shape: 'shirt', shirt: true, pattern: 'check' },
+  'linen-shirt': { label: 'Linen shirt', cat: 'top', layer: 'base', f: [2, 4], warmth: 1, shape: 'shirt', shirt: true, linen: true },
+  'camp-shirt': { label: 'Camp-collar shirt', cat: 'top', layer: 'base', f: [1, 3], warmth: 1, shape: 'camp', linen: true },
+  'flannel-shirt': { label: 'Flannel / brushed shirt', cat: 'top', layer: 'base', f: [2, 4], warmth: 2, shape: 'shirt', shirt: true },
+  'merino-crew': { label: 'Merino crew', cat: 'knit', layer: 'both', f: [2, 4], warmth: 2, shape: 'knit' },
+  'roll-neck': { label: 'Roll neck', cat: 'knit', layer: 'base', f: [3, 4], warmth: 2, shape: 'rollneck' },
+  'half-zip': { label: 'Half-zip', cat: 'knit', layer: 'both', f: [2, 4], warmth: 2, shape: 'halfzip' },
+  'chunky-knit': { label: 'Chunky knit', cat: 'knit', layer: 'both', f: [2, 3], warmth: 3, shape: 'knit' },
+  'knit-vest': { label: 'Knitted waistcoat', cat: 'knit', layer: 'mid', f: [2, 4], warmth: 1, shape: 'vest' },
+  overshirt: { label: 'Overshirt', cat: 'outer', kind: 'jacket', f: [2, 3], warmth: 2, shape: 'overshirt' },
+  blazer: { label: 'Blazer', cat: 'outer', kind: 'tailoring', f: [3, 5], warmth: 2, shape: 'blazer' },
+  'linen-blazer': { label: 'Linen blazer', cat: 'outer', kind: 'tailoring', f: [3, 4], warmth: 1, shape: 'blazer', linen: true },
+  'suit-jacket': { label: 'Suit jacket', cat: 'outer', kind: 'tailoring', f: [4, 5], warmth: 2, shape: 'blazer', suit: true },
+  harrington: { label: 'Harrington', cat: 'outer', kind: 'jacket', f: [2, 3], warmth: 2, shape: 'jacket' },
+  'suede-blouson': { label: 'Suede blouson', cat: 'outer', kind: 'jacket', f: [2, 3], warmth: 2, shape: 'jacket', suede: true },
+  'waxed-jacket': { label: 'Waxed jacket', cat: 'outer', kind: 'jacket', f: [1, 3], warmth: 2, shape: 'jacket', waterproof: true },
+  quilted: { label: 'Quilted liner', cat: 'outer', kind: 'jacket', f: [2, 4], warmth: 2, shape: 'quilted' },
+  overcoat: { label: 'Overcoat', cat: 'outer', kind: 'coat', f: [3, 5], warmth: 3, shape: 'coat' },
+  mac: { label: 'Mac / trench', cat: 'outer', kind: 'coat', f: [2, 5], warmth: 2, shape: 'coat', waterproof: true },
+  'wool-trousers': { label: 'Wool trousers', cat: 'bottom', f: [3, 5], warmth: 2, shape: 'trousers' },
+  'suit-trousers': { label: 'Suit trousers', cat: 'bottom', f: [4, 5], warmth: 2, shape: 'trousers', suit: true },
+  chinos: { label: 'Chinos', cat: 'bottom', f: [2, 4], warmth: 2, shape: 'trousers' },
+  'cotton-trousers': { label: 'Smart cotton trousers', cat: 'bottom', f: [2, 4], warmth: 1, shape: 'trousers' },
+  'linen-trousers': { label: 'Linen trousers', cat: 'bottom', f: [2, 4], warmth: 1, shape: 'trousers', linen: true },
+  jeans: { label: 'Jeans', cat: 'bottom', f: [1, 3], warmth: 2, shape: 'jeans' },
+  shorts: { label: 'Tailored shorts', cat: 'bottom', f: [1, 2], warmth: 1, shape: 'shorts' },
+  trainers: { label: 'Leather trainers', cat: 'shoes', f: [1, 3], warmth: 1, shape: 'trainer' },
+  derby: { label: 'Derby shoes', cat: 'shoes', f: [3, 5], warmth: 2, shape: 'shoe' },
+  'oxford-shoe': { label: 'Oxford shoes', cat: 'shoes', f: [4, 5], warmth: 2, shape: 'shoe' },
+  loafers: { label: 'Loafers', cat: 'shoes', f: [2, 4], warmth: 1, shape: 'loafer' },
+  chelsea: { label: 'Chelsea boots', cat: 'shoes', f: [2, 4], warmth: 2, shape: 'boot', boot: true },
+  'desert-boot': { label: 'Desert boots', cat: 'shoes', f: [2, 3], warmth: 2, shape: 'boot', boot: true, suede: true },
+  slides: { label: 'Slides / sandals', cat: 'shoes', f: [1, 1], warmth: 1, shape: 'slide' },
+  belt: { label: 'Belt', cat: 'accessory', shape: 'belt' },
+  watch: { label: 'Watch', cat: 'accessory', shape: 'watch' },
+  scarf: { label: 'Scarf', cat: 'accessory', shape: 'scarf' },
+  tie: { label: 'Tie', cat: 'accessory', shape: 'tie' },
+  bag: { label: 'Bag', cat: 'accessory', shape: 'bag' },
+  sunglasses: { label: 'Sunglasses', cat: 'accessory', shape: 'glasses' },
+  cap: { label: 'Cap', cat: 'accessory', shape: 'cap' },
+  beanie: { label: 'Beanie', cat: 'accessory', shape: 'beanie' },
+  swim: { label: 'Swim shorts', cat: 'accessory', shape: 'shorts' },
+}
+
+const LEVELS = ['', 'Off-duty', 'Casual', 'Smart casual', 'Smart', 'Formal']
+
+const WEATHER = [
+  { id: 'hot', label: 'Hot', hint: '25°C+' },
+  { id: 'warm', label: 'Warm', hint: '19 to 24°C' },
+  { id: 'mild', label: 'Mild', hint: '13 to 18°C' },
+  { id: 'cold', label: 'Cold', hint: '12°C or below' },
+]
+
+function bandForTemp(t) {
+  if (t >= 25) return 'hot'
+  if (t >= 19) return 'warm'
+  if (t >= 13) return 'mild'
+  return 'cold'
+}
+
+const SLOTS = ['base', 'mid', 'outer', 'coat', 'bottom', 'shoes']
+const SLOT_LABELS = { base: 'Top', mid: 'Knit layer', outer: 'Jacket', coat: 'Coat', bottom: 'Bottoms', shoes: 'Shoes' }
+
+const SHIRT_BASES = new Set(['tee', 'oxford', 'poplin', 'pattern-shirt', 'linen-shirt', 'flannel-shirt'])
+
+// ---------- colour maths ----------
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.replace('#', ''), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+function rgbToLab([r, g, b]) {
+  const lin = (c) => {
+    c /= 255
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  }
+  const R = lin(r), G = lin(g), B = lin(b)
+  const x = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047
+  const y = R * 0.2126 + G * 0.7152 + B * 0.0722
+  const z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116)
+  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))]
+}
+
+function hexToLab(hex) {
+  return rgbToLab(hexToRgb(hex))
+}
+
+function lightness(hex) {
+  return hexToLab(hex)[0]
+}
+
+function deltaE(a, b) {
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+}
+
+// Nearest palette colours to a measured RGB, best first. Metals are skipped:
+// a photo of a garment is never "steel".
+function nearestColours(profile, rgb, n = 3) {
+  const lab = rgbToLab(rgb)
+  return profile.palette
+    .filter((c) => c.role !== 'metal')
+    .map((c) => ({ colour: c, d: deltaE(lab, hexToLab(c.hex)) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, n)
+}
+
+// ---------- lookups ----------
+
+const paletteCache = new WeakMap()
+function colourById(profile, id) {
+  let map = paletteCache.get(profile)
+  if (!map) {
+    map = new Map(profile.palette.map((c) => [c.id, c]))
+    paletteCache.set(profile, map)
+  }
+  return map.get(id) || { id, name: id, hex: '#999999', role: 'core', face: 'ok', lower: 'ok', feet: 'ok' }
+}
+
+function sub(item) {
+  return SUBTYPES[item.subtype] || { label: item.subtype, cat: 'accessory', shape: 'bag' }
+}
+
+function formality(item) {
+  return item.f || sub(item).f || [1, 5]
+}
+
+function warmth(item) {
+  return item.warmth || sub(item).warmth || 1
+}
+
+function zoneOf(item) {
+  const c = sub(item).cat
+  if (c === 'bottom') return 'lower'
+  if (c === 'shoes') return 'feet'
+  return 'face'
+}
+
+function isSuede(item) {
+  return !!sub(item).suede || /suede/.test(item.colour || '')
+}
+
+function isWaterproof(item) {
+  return !!(item.waterproof ?? sub(item).waterproof)
+}
+
+function slotFor(item) {
+  const s = sub(item)
+  if (s.cat === 'top') return 'base'
+  if (s.cat === 'knit') return s.layer === 'mid' ? 'mid' : 'base'
+  if (s.cat === 'outer') return s.kind === 'coat' ? 'coat' : 'outer'
+  if (s.cat === 'bottom') return 'bottom'
+  if (s.cat === 'shoes') return 'shoes'
+  return null
+}
+
+function occasionById(profile, id) {
+  return profile.occasions.find((o) => o.id === id) || profile.occasions[0]
+}
+
+// ---------- item-level checks ----------
+
+// Reasons a single piece can't be worn in this context at all. Used to prune
+// the generator's search and to explain blocks in the manual builder.
+function itemBlocks(item, ctx) {
+  const out = []
+  const s = sub(item)
+  const [lo, hi] = formality(item)
+  const { level, occasion, weather, profile } = ctx
+  if (item.status === 'laundry') out.push(`${item.name} is in the wash`)
+  if (level < lo || level > hi) out.push(`${item.name} is ${LEVELS[lo]}${hi > lo ? ' to ' + LEVELS[hi] : ''}, not ${LEVELS[level]}`)
+  if (occasion?.office && (profile.office_excludes || []).includes(item.subtype)) out.push(`${s.label} is not office wear`)
+  if (weather) {
+    if (weather.band === 'hot' && warmth(item) >= 3) out.push(`${item.name} is too heavy for the heat`)
+    if (weather.band === 'cold' && (item.subtype === 'shorts' || item.subtype === 'slides')) out.push(`${s.label} in the cold`)
+    if (weather.rain && s.cat === 'shoes' && (isSuede(item) || item.subtype === 'slides')) out.push(`${item.name} will not survive the rain`)
+  }
+  const c = colourById(profile, item.colour)
+  if (c[zoneOf(item)] === 'block') out.push(`${c.name} ${zoneOf(item) === 'face' ? 'near the face' : 'on ' + s.label.toLowerCase()} is off-palette`)
+  return out
+}
+
+// ---------- outfit evaluation ----------
+
+function pick(outfit, items) {
+  const o = {}
+  for (const k of SLOTS) o[k] = outfit[k] ? items.get(outfit[k]) || null : null
+  return o
+}
+
+function daysBetween(aISO, bISO) {
+  return Math.round((Date.parse(bISO) - Date.parse(aISO)) / 86400000)
+}
+
+// Scores one outfit. `o` maps slot -> item (or null). Returns blocks (rules
+// that make it unwearable), warns (allowed but costs points), pros and score.
+function evaluate(o, ctx) {
+  const { profile, level, occasion, weather = { band: 'mild', rain: false }, today } = ctx
+  const rules = profile.rules || {}
+  const blocks = []
+  const warns = []
+  const pros = []
+  let score = 10
+
+  if (!o.base) blocks.push('Needs a top')
+  if (!o.bottom) blocks.push('Needs trousers or shorts')
+  if (!o.shoes) blocks.push('Needs shoes')
+
+  const worn = SLOTS.map((k) => o[k]).filter(Boolean)
+  for (const it of worn) for (const r of itemBlocks(it, ctx)) blocks.push(r)
+
+  // structure
+  if (o.base && sub(o.base).layer === 'mid') blocks.push(`${o.base.name} needs a shirt under it`)
+  if (o.mid) {
+    if (!o.base || !SHIRT_BASES.has(o.base.subtype)) blocks.push(`${o.mid.name} layers over a shirt or tee, not ${o.base ? sub(o.base).label.toLowerCase() : 'nothing'}`)
+    else if (o.mid.subtype === 'knit-vest' && o.base.subtype === 'tee') blocks.push('A knitted waistcoat wants a collared shirt')
+  }
+  if (o.outer && o.coat) {
+    if (weather.band !== 'cold' && !(weather.band === 'mild' && weather.rain)) warns.push('Coat over a jacket is overkill in this weather')
+    else if (sub(o.outer).kind !== 'tailoring') warns.push('A coat over a casual jacket looks bulky')
+  }
+
+  // suits and required pieces
+  const jacket = o.outer
+  if (jacket && sub(jacket).suit && !(o.bottom && sub(o.bottom).suit && o.bottom.colour === jacket.colour)) blocks.push('Suit jacket without its trousers')
+  if (occasion?.require === 'tailoring' && !(jacket && sub(jacket).kind === 'tailoring')) blocks.push('Needs a tailored jacket')
+
+  // colour
+  let statements = 0
+  let colourPieces = 0
+  let patterns = 0
+  for (const it of worn) {
+    const c = colourById(profile, it.colour)
+    const z = zoneOf(it)
+    const v = c[z]
+    if (v === 'warn') warns.push(`${c.name} ${z === 'face' ? 'near the face' : 'here'}${c.note ? ': ' + c.note.split('.')[0] : ''}`)
+    if (v === 'casual' && level > 2) warns.push(`${c.name} ${sub(it).label.toLowerCase()} are for casual looks`)
+    if (sub(it).cat !== 'shoes') {
+      if (c.role === 'statement') statements++
+      if (c.role === 'statement' || c.role === 'accent') colourPieces++
+    }
+    if (it.pattern && it.pattern !== 'solid') patterns++
+  }
+  if (statements > (rules.max_statement ?? 1)) blocks.push('More than one statement colour')
+  if (colourPieces > (rules.max_colour_pieces ?? 2)) warns.push('Too many colours competing')
+  const maxP = rules.max_patterns ?? 1
+  if (patterns > maxP + 1) blocks.push('Too many patterns')
+  else if (patterns > maxP) warns.push('Two patterns at once: keep one plain')
+
+  // leather harmony
+  if (o.shoes && o.shoes.colour === 'black-leather' && worn.some((it) => it !== o.shoes && /espresso|tan/.test(it.colour))) warns.push('Black shoes with brown leather or suede')
+
+  // weather
+  const band = weather.band
+  const layered = !!(o.mid || o.outer || o.coat || (o.base && sub(o.base).cat === 'knit'))
+  if (band === 'hot') {
+    if (o.mid) blocks.push('No knit layers in the heat')
+    if (o.coat) blocks.push('No coat in the heat')
+    if (o.outer && warmth(o.outer) > 1) blocks.push(`${o.outer.name} is too warm for the heat`)
+    if (o.base && sub(o.base).cat === 'knit') blocks.push(`${o.base.name} in the heat`)
+    if (o.bottom && warmth(o.bottom) > 1 && o.bottom.subtype !== 'wool-trousers') warns.push(`${o.bottom.name} is heavy for the heat`)
+    if (o.shoes && sub(o.shoes).boot) warns.push('Boots in the heat')
+    if (o.base && warmth(o.base) === 1 && o.bottom && warmth(o.bottom) === 1) { score += 1; pros.push('Light, breathable fabrics for the heat') }
+  } else if (band === 'warm') {
+    if (o.coat) warns.push('Coat is probably unnecessary')
+    if (o.mid) warns.push('A knit may be too warm')
+  } else if (band === 'mild') {
+    if (o.bottom?.subtype === 'shorts') warns.push('Shorts are optimistic at this temperature')
+    if (!layered) warns.push('Add a layer for a mild day')
+  } else if (band === 'cold') {
+    if (!o.outer && !o.coat) blocks.push('Needs a jacket or coat')
+    if (worn.some((it) => sub(it).linen)) warns.push('Linen in the cold')
+    if (o.mid || (o.base && sub(o.base).cat === 'knit')) { score += 1; pros.push('A knit for warmth and texture') }
+    if (o.coat && warmth(o.coat) >= 3) { score += 1; pros.push('A proper coat, and your height carries it') }
+  }
+  if (weather.rain && band !== 'hot') {
+    const shell = [o.outer, o.coat].filter(Boolean)
+    if (shell.some(isWaterproof)) { score += 2; pros.push('Rainproof outer layer') }
+    else warns.push('Nothing rainproof on top')
+    if (shell.some((it) => isSuede(it))) warns.push('Suede in the rain')
+  }
+
+  // style bonuses drawn from the profile
+  const faceItem = o.mid || o.base
+  if (rules.colour_at_face_bonus !== false && faceItem && o.bottom) {
+    const fc = colourById(profile, faceItem.colour)
+    const bc = colourById(profile, o.bottom.colour)
+    if ((fc.role === 'accent' || fc.role === 'statement') && !['accent', 'statement'].includes(bc.role)) {
+      score += 1
+      pros.push('Colour at the face, neutrals below')
+    }
+  }
+  if (faceItem && o.bottom) {
+    const diff = Math.abs(lightness(colourById(profile, faceItem.colour).hex) - lightness(colourById(profile, o.bottom.colour).hex))
+    const outerDiff = o.outer ? Math.abs(lightness(colourById(profile, o.outer.colour).hex) - lightness(colourById(profile, faceItem.colour).hex)) : 0
+    if (diff >= (rules.contrast_bonus_min ?? 28) || outerDiff >= (rules.contrast_bonus_min ?? 28)) {
+      score += 1
+      pros.push('Clear contrast, which suits your colouring')
+    }
+  }
+
+  // fit to the occasion
+  for (const it of worn) {
+    const [lo, hi] = formality(it)
+    score -= 0.4 * Math.abs((lo + hi) / 2 - level)
+  }
+
+  // rotation
+  if (today) {
+    let fresh = 0
+    for (const it of worn) {
+      const last = (it.wears || []).filter((d) => d <= today).sort().pop()
+      if (last) {
+        const gap = daysBetween(last, today)
+        if (gap <= 2) score -= 2
+        else if (gap <= 6) score -= 0.7
+        else if (gap >= 30) fresh++
+      }
+    }
+    if (fresh >= 2) { score += 0.5; pros.push('Rotates in pieces you have not worn lately') }
+  }
+
+  score -= 3 * warns.length
+  return { ok: blocks.length === 0, blocks: [...new Set(blocks)], warns: [...new Set(warns)], pros, score: Math.round(score * 10) / 10 }
+}
+
+// ---------- generation ----------
+
+function mulberry32(seed) {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Candidate pieces per slot after item-level pruning. Knits that can be worn
+// alone or over a shirt sit in both the base and mid lists.
+function dims(pool, ctx) {
+  const d = { base: [], mid: [null], outer: [null], coat: [null], bottom: [], shoes: [] }
+  for (const it of pool) {
+    const slot = slotFor(it)
+    if (!slot) continue
+    if (itemBlocks(it, ctx).length) continue
+    if (slot === 'base' && sub(it).cat === 'knit' && sub(it).layer === 'both') d.mid.push(it)
+    d[slot].push(it)
+  }
+  if (ctx.weather?.band === 'hot') { d.mid = [null]; d.coat = [null] }
+  return { d }
+}
+
+function* combos(d) {
+  for (const base of d.base)
+    for (const mid of d.mid) {
+      if (mid && (mid === base || !SHIRT_BASES.has(base.subtype))) continue
+      for (const outer of d.outer)
+        for (const coat of d.coat)
+          for (const bottom of d.bottom)
+            for (const shoes of d.shoes) yield { base, mid, outer, coat, bottom, shoes }
+    }
+}
+
+function outfitKey(o) {
+  return SLOTS.map((k) => (o[k] ? o[k].id : '-')).join('|')
+}
+const key = outfitKey
+
+function overlap(a, b) {
+  let n = 0
+  for (const k of SLOTS) if (a[k] && a[k] === b[k]) n++
+  return n
+}
+
+// Best outfits for one context, made diverse: each pick differs from the
+// ones already chosen in at least two pieces.
+function generate(items, ctx, { limit = 6, seed = 1, jitter = 0.6, exclude = [] } = {}) {
+  const { d } = dims(items, ctx)
+  const rng = mulberry32(seed)
+  const skip = new Set(exclude)
+  const all = []
+  for (const o of combos(d)) {
+    const k = key(o)
+    if (skip.has(k)) continue
+    const e = evaluate(o, ctx)
+    if (!e.ok) continue
+    all.push({ parts: o, key: k, ...e, rank: e.score + rng() * jitter })
+  }
+  all.sort((a, b) => b.rank - a.rank)
+  const picked = []
+  for (const c of all) {
+    if (picked.every((p) => SLOTS.filter((k) => p.parts[k] || c.parts[k]).length - overlap(p.parts, c.parts) >= 2)) picked.push(c)
+    if (picked.length >= limit) break
+  }
+  return { results: picked, total: all.length }
+}
+
+// Count of valid outfits in a context; with `fixed`, only those using it.
+function countOutfits(items, ctx, fixed) {
+  const pool = fixed ? [...items, fixed] : items
+  const { d } = dims(pool, ctx)
+  if (fixed) {
+    const slot = slotFor(fixed)
+    if (!slot || itemBlocks(fixed, ctx).length) return 0
+    const variants = [{ ...d, [slot]: [fixed] }]
+    if (slot === 'base' && sub(fixed).layer === 'both') variants.push({ ...d, base: d.base.filter((x) => x !== fixed), mid: [fixed] })
+    let n = 0
+    for (const v of variants) for (const o of combos(v)) if (evaluate(o, ctx).ok) n++
+    return n
+  }
+  let n = 0
+  for (const o of combos(d)) if (evaluate(o, ctx).ok) n++
+  return n
+}
+
+// Everyday spread of contexts used to judge how useful a piece is.
+const SCENARIOS = [
+  { occasion: 'casual', band: 'mild' },
+  { occasion: 'family', band: 'hot' },
+  { occasion: 'smart-casual', band: 'mild' },
+  { occasion: 'date', band: 'cold' },
+  { occasion: 'office-1', band: 'warm' },
+  { occasion: 'office-2', band: 'mild' },
+  { occasion: 'office-2', band: 'cold', rain: true },
+  { occasion: 'wedding', band: 'warm' },
+]
+
+function scenarioCtx(profile, s) {
+  const occasion = occasionById(profile, s.occasion)
+  return { profile, occasion, level: occasion.level, weather: { band: s.band, rain: !!s.rain } }
+}
+
+// How many extra outfits a set of new pieces would add across SCENARIOS.
+// Pieces are counted in order, each against the wardrobe plus the pieces
+// after it, so outfits using two new pieces are not counted twice.
+function outfitGain(items, profile, newPieces) {
+  let gain = 0
+  newPieces.forEach((piece, i) => {
+    const pool = [...items, ...newPieces.slice(i + 1)]
+    for (const s of SCENARIOS) gain += countOutfits(pool, scenarioCtx(profile, s), piece)
+  })
+  return gain
+}
+
+function coverage(items, profile) {
+  return SCENARIOS.map((s) => ({ ...s, label: occasionById(profile, s.occasion).label, n: countOutfits(items, scenarioCtx(profile, s)) }))
+}
+
+// ---------- buy list ----------
+
+function slotOwned(slot, items) {
+  return items.filter((it) => it.slotId === slot.id)
+}
+
+function suggestSlot(profile, items, subtype, colour) {
+  const open = profile.slots.filter((s) => s.subtypes.includes(subtype) && slotOwned(s, items).length < s.qty)
+  return open.find((s) => s.colours.includes(colour)) || open[0] || null
+}
+
+// Virtual pieces representing an unfilled slot, in its best colours.
+function virtualPieces(slot, items) {
+  const owned = slotOwned(slot, items)
+  const pieces = []
+  const isSet = slot.subtypes.includes('suit-jacket') && slot.subtypes.includes('suit-trousers')
+  if (isSet) {
+    if (owned.length) return []
+    const colour = slot.best[0]
+    return [
+      { id: `v-${slot.id}-j`, name: `${slot.name} jacket`, subtype: 'suit-jacket', colour, virtual: true },
+      { id: `v-${slot.id}-t`, name: `${slot.name} trousers`, subtype: 'suit-trousers', colour, virtual: true },
+    ]
+  }
+  const ownedColours = new Set(owned.map((o) => o.colour))
+  const colours = [...slot.best, ...slot.colours].filter((c, i, a) => a.indexOf(c) === i && !ownedColours.has(c))
+  for (let i = owned.length; i < slot.qty; i++) {
+    const colour = colours.shift() || slot.best[0]
+    pieces.push({ id: `v-${slot.id}-${i}`, name: slot.name, subtype: slot.subtypes[0], colour, virtual: true })
+  }
+  return pieces
+}
+
+function buyNext(profile, items) {
+  const wearable = items.filter((it) => it.status !== 'laundry')
+  return profile.slots
+    .map((slot) => {
+      const pieces = virtualPieces(slot, items)
+      if (!pieces.length) return null
+      const first = pieces.slice(0, sub(pieces[0]).suit ? 2 : 1)
+      return { slot, pieces: first, gain: outfitGain(wearable, profile, first) }
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.gain - a.gain || a.slot.tier - b.slot.tier)
+}
+
+// ---------- formulas from the guide ----------
+
+function fillFormula(formula, items) {
+  return formula.parts.map(([subs, colour]) => {
+    const subtypes = subs.split('|')
+    const exact = items.find((it) => subtypes.includes(it.subtype) && it.colour === colour)
+    const close = exact ? null : items.find((it) => subtypes.includes(it.subtype))
+    return { subtypes, colour, item: exact || close, match: exact ? 'exact' : close ? 'close' : 'missing' }
+  })
+}
+
+// Turns a loose list of pieces into slots: a shirt plus a knit becomes base
+// and mid layer; a knit on its own is the base.
+function partsFromItems(list) {
+  const parts = {}
+  const tops = list.filter((it) => sub(it).cat === 'top')
+  const knits = list.filter((it) => sub(it).cat === 'knit')
+  if (tops.length) {
+    parts.base = tops[0]
+    if (knits.length) parts.mid = knits[0]
+  } else if (knits.length) {
+    parts.base = knits[0]
+  }
+  for (const it of list) {
+    const slot = slotFor(it)
+    if (slot && slot !== 'base' && slot !== 'mid') parts[slot] = it
+  }
+  return parts
+}
+
+// Starter wardrobe built from the buy list (best colours), for trying the
+// app before photographing anything.
+function demoWardrobe(profile, maxTier = 2) {
+  const items = []
+  for (const slot of profile.slots) {
+    if (slot.tier > maxTier) continue
+    for (const p of virtualPieces(slot, items)) {
+      const c = colourById(profile, p.colour)
+      items.push({
+        id: `demo-${slot.id}-${items.length}`,
+        name: `${c.name.split(' / ')[0]} ${sub(p).label.toLowerCase()}`,
+        subtype: p.subtype,
+        colour: p.colour,
+        pattern: sub(p).pattern || 'solid',
+        slotId: slot.id,
+        status: 'available',
+        wears: [],
+        demo: true,
+      })
+    }
+  }
+  return items
+}
+
+// ---------- week planning ----------
+
+// days: [{ date, occasion, weather, locked, exclude }]. locked is a parts
+// object kept as is; exclude is an outfit key the day must not repeat.
+// Greedy per day with variety penalties, repeated with jitter; best total wins.
+function planWeek(items, profile, days, { restarts = 24, seed = 7 } = {}) {
+  const cands = days.map((day) => {
+    if (day.locked) return null
+    const occasion = occasionById(profile, day.occasion)
+    const ctx = { profile, occasion, level: occasion.level, weather: day.weather, today: day.date }
+    const { d } = dims(items, ctx)
+    const list = []
+    for (const o of combos(d)) {
+      const e = evaluate(o, ctx)
+      if (e.ok) list.push({ parts: o, key: key(o), ...e })
+    }
+    list.sort((a, b) => b.score - a.score)
+    return list.slice(0, 400)
+  })
+
+  let best = null
+  for (let r = 0; r < restarts; r++) {
+    const rng = mulberry32(seed + r * 101)
+    const used = new Map()
+    const keys = new Set()
+    const plan = []
+    let total = 0
+    const note = (o) => {
+      for (const k of SLOTS) if (o[k]) used.set(o[k].id, [...(used.get(o[k].id) || []), k])
+      keys.add(key(o))
+    }
+    days.forEach((day, i) => {
+      if (day.locked) {
+        plan.push({ parts: day.locked, locked: true })
+        note(day.locked)
+        return
+      }
+      let top = null
+      let topScore = -Infinity
+      for (const c of cands[i]) {
+        if (keys.has(c.key) || c.key === day.exclude) continue
+        let s = c.score + (r ? rng() * 2.5 : 0)
+        for (const k of SLOTS) {
+          const it = c.parts[k]
+          if (!it) continue
+          const n = (used.get(it.id) || []).length
+          if (!n) continue
+          if (k === 'base') s -= 6 * n
+          else if (k === 'mid') s -= 2 * n
+          else if (k === 'bottom') s -= n >= 2 ? 3 * (n - 1) : 0.5
+          else if (k === 'shoes') s -= n >= 2 ? 1 * (n - 1) : 0
+          else s -= 0.3 * n
+        }
+        if (s > topScore) { topScore = s; top = c }
+      }
+      plan.push(top)
+      if (top) { note(top.parts); total += topScore } else total -= 20
+    })
+    if (!best || total > best.total) best = { plan, total }
+  }
+  return best.plan
+}
+
+// ---------- profile validation ----------
+
+// Problems with an imported style profile, as readable strings. Empty means
+// the profile is safe to use. Shared by the app import and validate-profile.mjs.
+function validateProfile(p) {
+  const errs = []
+  if (p?.format !== 'fearne-style-profile') errs.push('format must be "fearne-style-profile"')
+  if (!Array.isArray(p?.palette) || !p.palette.length) errs.push('palette is missing')
+  if (!Array.isArray(p?.occasions) || !p.occasions.length) errs.push('occasions are missing')
+  if (!Array.isArray(p?.slots)) errs.push('slots are missing')
+  if (errs.length) return errs
+  const ids = new Set(p.palette.map((c) => c.id))
+  for (const c of p.palette) if (!/^#[0-9a-f]{6}$/i.test(c.hex)) errs.push(`colour ${c.id} has a bad hex`)
+  for (const s of p.slots) {
+    for (const c of s.colours) if (!ids.has(c)) errs.push(`slot ${s.id} uses unknown colour ${c}`)
+    for (const t of s.subtypes) if (!SUBTYPES[t]) errs.push(`slot ${s.id} uses unknown type ${t}`)
+  }
+  for (const s of p.slots) for (const c of s.best || []) if (!s.colours.includes(c)) errs.push(`slot ${s.id} best colour ${c} is not in its colours`)
+  for (const f of p.formulas || []) {
+    if (!p.occasions.some((o) => o.id === f.occasion)) errs.push(`look "${f.name}" uses unknown occasion ${f.occasion}`)
+    for (const [t, c] of f.parts) {
+      if (!ids.has(c)) errs.push(`look "${f.name}" uses unknown colour ${c}`)
+      for (const x of t.split('|')) if (!SUBTYPES[x]) errs.push(`look "${f.name}" uses unknown type ${x}`)
+    }
+  }
+  const verdicts = new Set(['ok', 'warn', 'block', 'casual'])
+  for (const c of p.palette) for (const z of ['face', 'lower', 'feet']) if (!verdicts.has(c[z])) errs.push(`colour ${c.id} has no valid "${z}" verdict`)
+  for (const o of p.occasions) if (!(o.level >= 1 && o.level <= 5)) errs.push(`occasion ${o.id} needs a level from 1 to 5`)
+  const slotIds = p.slots.map((s) => s.id)
+  for (const id of new Set(slotIds.filter((x, i) => slotIds.indexOf(x) !== i))) errs.push(`slot id ${id} is used twice`)
+  return errs
+}
+
+// Storage adapter: Supabase, for the build served at fearne.org/wardrobe/.
+// The page shares fearne.org's origin, so supabase-js picks up the session
+// the hub already stored: no second login. Everything is owner-only under
+// RLS (see _reference/wardrobe-state-schema.sql). SUPABASE_URL and
+// SUPABASE_ANON_KEY are injected by build.mjs from src/supabaseClient.js.
+function createStore() {
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  const BUCKET = 'wardrobe'
+  const WEEK = 60 * 60 * 24 * 7
+  let user = null
+
+  const fail = (code, message) => Object.assign(new Error(message), { code })
+
+  async function readState() {
+    const { data, error } = await sb.from('wardrobe_state').select('state, updated_at').eq('user_id', user.id).maybeSingle()
+    if (error) throw fail('setup', error.message)
+    return data
+  }
+
+  return {
+    kind: 'hub',
+    async init() {
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) throw fail('signed-out', 'Not signed in')
+      user = session.user
+      const { data: profile } = await sb.from('profiles').select('approved').eq('id', user.id).maybeSingle()
+      if (profile && !profile.approved) throw fail('pending', 'Account waiting for approval')
+
+      const row = await readState()
+      const photos = new Map()
+      const { data: files, error } = await sb.storage.from(BUCKET).list(user.id, { limit: 1000 })
+      if (error) throw fail('setup', error.message)
+      if (files?.length) {
+        const paths = files.map((f) => `${user.id}/${f.name}`)
+        const { data: signed } = await sb.storage.from(BUCKET).createSignedUrls(paths, WEEK)
+        signed?.forEach((s, i) => { if (s.signedUrl) photos.set(files[i].name.replace(/\.jpg$/, ''), s.signedUrl) })
+      }
+      return { state: row?.state || null, photos, updatedAt: row?.updated_at || null }
+    },
+    async refresh() {
+      const row = await readState()
+      return row ? { state: row.state, updatedAt: row.updated_at } : null
+    },
+    async saveState(state) {
+      const updated_at = new Date().toISOString()
+      const { error } = await sb.from('wardrobe_state').upsert({ user_id: user.id, state, updated_at })
+      if (error) throw error
+      return updated_at
+    },
+    async putPhoto(id, dataURL) {
+      const blob = await (await fetch(dataURL)).blob()
+      const path = `${user.id}/${id}.jpg`
+      const { error } = await sb.storage.from(BUCKET).upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+      if (error) throw error
+      return dataURL
+    },
+    async deletePhoto(id) {
+      await sb.storage.from(BUCKET).remove([`${user.id}/${id}.jpg`])
+    },
+  }
+}
+
+// Wardrobe UI. Storage comes from createStore(): IndexedDB on this device
+// (store-local.js) or Supabase via the hub login (store-hub.js); build.mjs
+// picks one per target and injects DEFAULT_PROFILE from profile.json.
+
+// ---------- small helpers ----------
+
+const $ = (s, el = document) => el.querySelector(s)
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const todayISO = () => iso(new Date())
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x }
+function mondayOf(d) {
+  const x = new Date(d)
+  x.setHours(12, 0, 0, 0)
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7))
+  return x
+}
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : w.endsWith('s') ? 'es' : 's'}`
+
+const LOCATIONS = {
+  malta: { label: 'Malta', lat: 35.8989, lon: 14.5146 },
+  nl: { label: 'Netherlands', lat: 52.3676, lon: 4.9041 },
+  ie: { label: 'Ireland', lat: 53.3498, lon: -6.2603 },
+}
+const DEFAULT_WEEK = ['office-2', 'office-1', 'office-1', 'office-2', 'office-1', 'family', 'casual']
+const ROLE_LABELS = {
+  core: 'Core neutrals', white: 'Whites', lower: 'Lower half only', blue: 'Blues and denim', accent: 'Accents',
+  statement: 'Statement (one at a time)', leather: 'Leather', metal: 'Metals', avoid: 'Avoid',
+}
+const VERDICT_TEXT = { ok: 'Works', warn: 'Caution', block: 'Off-palette', casual: 'Casual only' }
+
+// ---------- storage ----------
+
+const store = createStore()
+const HUB = store.kind === 'hub'
+let storageOk = true
+let gate = null // hub only: { kind: 'signed-out' | 'pending' | 'setup' | 'error', message }
+const photos = new Map()
+let state
+let saveTimer
+let dirty = false
+let lastSync = null
+
+function freshState() {
+  return { version: 1, profile: structuredClone(DEFAULT_PROFILE), items: [], outfits: [], weeks: {}, location: 'malta' }
+}
+
+function save() {
+  dirty = true
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(async () => {
+    try {
+      lastSync = await store.saveState(state)
+      dirty = false
+      if (!storageOk) { storageOk = true; render() }
+    } catch {
+      if (storageOk) { storageOk = false; render() }
+    }
+  }, 400)
+}
+
+async function setPhoto(id, data) {
+  if (data) photos.set(id, data)
+  else photos.delete(id)
+  try {
+    if (data) await store.putPhoto(id, data)
+    else await store.deletePhoto(id)
+  } catch {
+    storageOk = false
+    toast('Photo not saved')
+  }
+}
+
+async function boot() {
+  try {
+    const r = await store.init()
+    state = r.state || freshState()
+    for (const [k, v] of r.photos) photos.set(k, v)
+    lastSync = r.updatedAt
+    if (!r.state && HUB) save()
+  } catch (e) {
+    state = freshState()
+    if (HUB) gate = { kind: e.code || 'error', message: e.message }
+    else storageOk = false
+  }
+  render()
+}
+
+// Pick up changes made on another device when the page comes back into view.
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || !store.refresh || gate || dirty) return
+  try {
+    const r = await store.refresh()
+    if (r && r.updatedAt !== lastSync && !dirty) {
+      state = r.state
+      lastSync = r.updatedAt
+      ui.gen.results = null
+      ui.buy = null
+      render()
+    }
+  } catch {}
+})
+
+// ---------- UI state ----------
+
+const ui = {
+  tab: 'wardrobe',
+  filter: 'all',
+  outTab: 'generate',
+  gen: { occasion: 'smart-casual', band: 'mild', rain: false, results: null, shown: [] },
+  build: {},
+  weekStart: mondayOf(new Date()),
+  sheet: null,
+  buy: null,
+  busy: null,
+}
+
+const P = () => state.profile
+const itemMap = () => new Map(state.items.map((it) => [it.id, it]))
+const available = () => state.items.filter((it) => it.status !== 'laundry')
+
+function genCtx(date = todayISO()) {
+  const occasion = occasionById(P(), ui.gen.occasion)
+  return { profile: P(), occasion, level: occasion.level, weather: { band: ui.gen.band, rain: ui.gen.rain }, today: date }
+}
+
+function partsToIds(parts) {
+  const out = {}
+  for (const k of SLOTS) if (parts[k]) out[k] = parts[k].id
+  return out
+}
+
+function idsToParts(ids) {
+  const m = itemMap()
+  const out = {}
+  for (const k of SLOTS) out[k] = ids?.[k] ? m.get(ids[k]) || null : null
+  return out
+}
+
+const partsList = (parts) => SLOTS.map((k) => parts[k]).filter(Boolean)
+const outfitName = (parts) => partsList(parts).map((it) => it.name).join(', ')
+
+function toast(msg) {
+  const el = $('#toast')
+  el.textContent = msg
+  el.classList.remove('hide')
+  clearTimeout(toast.t)
+  toast.t = setTimeout(() => el.classList.add('hide'), 2600)
+}
+
+// ---------- garment drawings (used when there is no photo) ----------
+
+const SHAPES = {
+  tee: '<path d="M28 20 L41 14 Q50 22 59 14 L72 20 L88 34 L78 45 L70 39 L70 88 L30 88 L30 39 L22 45 L12 34 Z"/>',
+  polo: '<path d="M28 20 L41 14 Q50 22 59 14 L72 20 L88 34 L78 45 L70 39 L70 88 L30 88 L30 39 L22 45 L12 34 Z"/><path class="d" d="M41 14 L45 25 L50 22 L55 25 L59 14"/><path class="l" d="M50 22 L50 36"/>',
+  shirt: '<path d="M30 18 L42 13 L50 22 L58 13 L70 18 L84 30 L90 82 L80 84 L72 44 L72 90 L28 90 L28 44 L20 84 L10 82 L16 30 Z"/><path class="d" d="M42 13 L45 25 L50 22 L55 25 L58 13"/><path class="l" d="M50 22 L50 90"/>',
+  camp: '<path d="M28 20 L41 14 L50 30 L59 14 L72 20 L88 34 L78 45 L70 39 L70 88 L30 88 L30 39 L22 45 L12 34 Z"/><path class="l" d="M50 30 L50 88"/>',
+  knit: '<path d="M30 18 L42 14 Q50 22 58 14 L70 18 L84 30 L90 82 L80 84 L72 44 L72 90 L28 90 L28 44 L20 84 L10 82 L16 30 Z"/><path class="l" d="M28 85 L72 85 M11 78 L20 80 M89 78 L80 80"/>',
+  rollneck: '<path d="M30 18 L42 14 L58 14 L70 18 L84 30 L90 82 L80 84 L72 44 L72 90 L28 90 L28 44 L20 84 L10 82 L16 30 Z"/><path class="d" d="M41 5 L59 5 L59 17 L41 17 Z"/><path class="l" d="M28 85 L72 85"/>',
+  halfzip: '<path d="M30 18 L42 14 Q50 22 58 14 L70 18 L84 30 L90 82 L80 84 L72 44 L72 90 L28 90 L28 44 L20 84 L10 82 L16 30 Z"/><path class="d" d="M42 9 L58 9 L58 17 L42 17 Z"/><path class="l" d="M50 17 L50 42 M28 85 L72 85"/>',
+  vest: '<path d="M34 16 L44 14 L50 36 L56 14 L66 16 L71 32 L71 88 L29 88 L29 32 Z"/><path class="l" d="M50 36 L50 88"/>',
+  blazer: '<path d="M30 16 L42 12 L50 20 L58 12 L70 16 L84 28 L90 84 L80 86 L72 44 L72 94 L28 94 L28 44 L20 86 L10 84 L16 28 Z"/><path class="l" d="M42 12 L45 40 L50 58 L55 40 L58 12 M33 72 L42 72 M58 72 L67 72"/><circle class="b" cx="50" cy="64" r="1.8"/><circle class="b" cx="50" cy="76" r="1.8"/>',
+  overshirt: '<path d="M30 17 L42 13 L50 21 L58 13 L70 17 L84 29 L90 84 L80 86 L72 44 L72 90 L28 90 L28 44 L20 86 L10 84 L16 29 Z"/><path class="d" d="M42 13 L45 24 L50 21 L55 24 L58 13"/><path class="l" d="M50 21 L50 90 M33 32 L45 32 L45 44 L33 44 Z M55 32 L67 32 L67 44 L55 44 Z"/>',
+  jacket: '<path d="M30 17 L42 13 L50 19 L58 13 L70 17 L84 29 L90 80 L80 82 L72 44 L72 84 L28 84 L28 44 L20 82 L10 80 L16 29 Z"/><path class="d" d="M28 78 L72 78 L72 86 L28 86 Z M42 13 L44 20 L50 19 L56 20 L58 13"/><path class="l" d="M50 19 L50 78"/>',
+  quilted: '<path d="M30 17 L42 13 Q50 20 58 13 L70 17 L84 29 L90 80 L80 82 L72 44 L72 86 L28 86 L28 44 L20 82 L10 80 L16 29 Z"/><path class="l" d="M50 18 L50 86 M30 30 L70 70 M30 50 L58 78 M42 22 L70 50 M70 30 L30 70 M70 50 L42 78 M58 22 L30 50"/>',
+  coat: '<path d="M30 14 L42 10 L50 18 L58 10 L70 14 L84 26 L90 80 L80 82 L72 40 L75 98 L25 98 L28 40 L20 82 L10 80 L16 26 Z"/><path class="l" d="M42 10 L45 36 L50 50 L55 36 L58 10 M50 50 L50 98"/><circle class="b" cx="46" cy="58" r="1.8"/><circle class="b" cx="46" cy="72" r="1.8"/>',
+  trousers: '<path d="M30 8 L70 8 L74 94 L56 94 L50 34 L44 94 L26 94 Z"/><path class="l" d="M30 14 L70 14 M50 14 L50 30"/>',
+  jeans: '<path d="M30 8 L70 8 L74 94 L56 94 L50 34 L44 94 L26 94 Z"/><path class="l" d="M30 14 L70 14 M50 14 L50 30 M31 15 Q38 26 46 22 M69 15 Q62 26 54 22"/>',
+  shorts: '<path d="M28 22 L72 22 L76 66 L54 68 L50 42 L46 68 L24 66 Z"/><path class="l" d="M28 28 L72 28"/>',
+  shoe: '<path d="M10 64 Q12 50 28 48 L46 46 Q56 56 74 56 Q90 58 90 68 L90 72 L10 72 Z"/><path class="d" d="M10 72 L90 72 L90 77 L10 77 Z"/><path class="l" d="M34 48 L46 58"/>',
+  loafer: '<path d="M10 64 Q12 54 28 52 L48 52 Q60 58 76 58 Q90 60 90 68 L90 72 L10 72 Z"/><path class="d" d="M10 72 L90 72 L90 76 L10 76 Z"/><path class="l" d="M52 55 L66 60"/>',
+  boot: '<path d="M22 22 L46 22 L48 52 Q64 54 80 58 Q90 60 90 68 L90 72 L20 72 Z"/><path class="d" d="M20 72 L90 72 L90 77 L20 77 Z M32 26 L42 26 L43 50 L33 50 Z"/>',
+  trainer: '<path d="M10 62 Q12 50 28 48 L44 46 Q56 54 74 55 Q90 57 90 66 L90 70 L10 70 Z"/><path class="s" d="M8 69 L92 69 L92 78 L8 78 Z"/><path class="l" d="M32 50 L46 58"/>',
+  slide: '<path class="d" d="M10 66 Q50 60 90 66 L90 72 Q50 68 10 72 Z"/><path d="M30 66 Q46 44 64 64 Z"/>',
+  belt: '<path d="M8 44 L92 44 L92 56 L8 56 Z"/><path class="m" d="M60 40 L74 40 L74 60 L60 60 Z"/>',
+  watch: '<path d="M42 10 L58 10 L58 90 L42 90 Z"/><circle class="m" cx="50" cy="50" r="17"/><circle class="f" cx="50" cy="50" r="13"/>',
+  scarf: '<path d="M30 10 L52 10 L52 90 L44 96 L30 90 Z"/><path d="M52 10 L70 10 L70 60 L52 60 Z"/>',
+  tie: '<path d="M44 10 L56 10 L54 20 L60 76 L50 90 L40 76 L46 20 Z"/>',
+  bag: '<path d="M18 36 L82 36 L82 84 L18 84 Z"/><path class="l" d="M36 36 Q50 16 64 36"/>',
+  glasses: '<path d="M14 42 L44 42 L42 60 Q30 66 16 58 Z M56 42 L86 42 L84 58 Q70 66 58 60 Z"/><path class="l" d="M44 46 Q50 42 56 46"/>',
+  cap: '<path d="M22 60 Q22 30 50 28 Q78 30 78 60 Z"/><path class="d" d="M50 60 L94 66 L78 56 Z"/>',
+  beanie: '<path d="M24 64 Q24 26 50 24 Q76 26 76 64 Z"/><path class="d" d="M22 58 L78 58 L78 74 L22 74 Z"/>',
+}
+
+let svgSeq = 0
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16)
+  const ch = (c) => Math.max(0, Math.min(255, Math.round(amt < 0 ? c * (1 + amt) : c + (255 - c) * amt)))
+  return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => ch(c).toString(16).padStart(2, '0')).join('')
+}
+
+function garmentSVG(item) {
+  const s = sub(item)
+  const hex = colourById(P(), item.colour).hex
+  const light = lightness(hex) > 45
+  const stroke = shade(hex, light ? -0.42 : 0.35)
+  const detail = shade(hex, light ? -0.16 : 0.14)
+  const id = `p${++svgSeq}`
+  let fill = hex
+  let defs = ''
+  if (item.pattern === 'stripe') {
+    const horiz = s.shape === 'tee'
+    defs = `<pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse"${horiz ? '' : ' patternTransform="rotate(90)"'}><rect width="6" height="6" fill="${hex}"/><rect width="6" height="2" fill="${light ? '#2f4a6b' : '#f2f2ee'}"/></pattern>`
+    fill = `url(#${id})`
+  } else if (item.pattern === 'check') {
+    defs = `<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${hex}"/><rect width="8" height="3" fill="${shade(hex, light ? -0.18 : 0.2)}" opacity=".8"/><rect width="3" height="8" fill="${shade(hex, light ? -0.18 : 0.2)}" opacity=".6"/></pattern>`
+    fill = `url(#${id})`
+  }
+  const body = (SHAPES[s.shape] || SHAPES.bag)
+    .replace(/<path d=/g, `<path fill="${fill}" stroke="${stroke}" d=`)
+    .replace(/<path class="d"/g, `<path fill="${detail}" stroke="${stroke}"`)
+    .replace(/<path class="l"/g, `<path fill="none" stroke="${stroke}"`)
+    .replace(/<path class="s"/g, `<path fill="#f4f4f0" stroke="#9a9d9a"`)
+    .replace(/<path class="m"/g, `<path fill="none" stroke="#8d9296" stroke-width="3"`)
+    .replace(/<circle class="b"/g, `<circle fill="${stroke}"`)
+    .replace(/<circle class="m"/g, `<circle fill="#9ba0a4" stroke="#6d7276"`)
+    .replace(/<circle class="f"/g, `<circle fill="${hex}"`)
+  return `<svg viewBox="0 0 100 100" aria-hidden="true" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><defs>${defs}</defs>${body}</svg>`
+}
+
+function tile(item, size = '') {
+  const src = item && !item.virtual ? photos.get(item.id) : null
+  const inner = !item ? '' : src ? `<img src="${src}" alt="${esc(item.name)}" loading="lazy">` : garmentSVG(item)
+  return `<div class="tile ${size}">${inner}</div>`
+}
+
+const dot = (colourId) => `<i class="dot" style="background:${colourById(P(), colourId).hex}"></i>`
+
+// ---------- icons ----------
+
+const ICONS = {
+  wardrobe: '<path d="M12 7.5a2 2 0 1 1 2-2c0 1-2 1.5-2 3v1.2"/><path d="M12 9.7 3.2 16.4c-.9.7-.4 2.1.7 2.1h16.2c1.1 0 1.6-1.4.7-2.1L12 9.7Z"/>',
+  outfits: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8Z"/>',
+  week: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  buy: '<path d="M5 8h14l-1.2 12.5H6.2Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+  profile: '<circle cx="12" cy="12" r="8.5"/><circle cx="8.5" cy="10" r="1.3"/><circle cx="12" cy="7.5" r="1.3"/><circle cx="15.5" cy="10" r="1.3"/><path d="M12 20.5c-1.5 0-2-1.2-1.2-2.2.8-1 .3-2.3-1-2.3H8"/>',
+}
+const icon = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`
+
+const TABS = [
+  ['wardrobe', 'Wardrobe'],
+  ['outfits', 'Outfits'],
+  ['week', 'Week'],
+  ['buy', 'Buy list'],
+  ['profile', 'Profile'],
+]
+
+// ---------- render ----------
+
+const STORAGE_BANNER = HUB
+  ? '<div class="banner">Changes are not saving to Fearne Hub right now. Check your connection, or sign in again on the hub.</div>'
+  : '<div class="banner">This browser is blocking storage, so nothing will be kept after you close the page. Open the file directly in Safari or Chrome to keep your wardrobe.</div>'
+
+function viewGate() {
+  const g = gate
+  const body = {
+    'signed-out': ['Sign in to Fearne Hub', 'Your wardrobe is private to your hub account. Sign in, then come back to this page.', '<a class="btn" href="/login">Sign in</a>'],
+    pending: ['Waiting for approval', 'A family admin needs to approve your hub account first.', '<a class="btn ghost" href="/">Back to the hub</a>'],
+    setup: ['Not set up yet', 'The wardrobe tables are missing in Supabase. Run _reference/wardrobe-state-schema.sql in the Supabase SQL editor, then reload.', '<button class="btn" data-act="reload">Reload</button>'],
+    error: ['Could not load your wardrobe', g.message || 'Something went wrong.', '<button class="btn" data-act="reload">Try again</button>'],
+  }[g.kind] || ['Could not load your wardrobe', g.message, '<button class="btn" data-act="reload">Try again</button>']
+  return `<div class="empty"><h2>${esc(body[0])}</h2><p class="serif">${esc(body[1])}</p><div class="row" style="justify-content:center">${body[2]}</div></div>`
+}
+
+function render() {
+  document.title = 'Wardrobe'
+  $('#back').innerHTML = HUB ? '<a href="/" class="small">‹ Fearne Hub</a>' : ''
+  if (gate) {
+    $('#main').innerHTML = viewGate()
+    $('#tabs').innerHTML = ''
+    return
+  }
+  $('#main').innerHTML = (storageOk ? '' : STORAGE_BANNER) + VIEWS[ui.tab]()
+  $('#tabs').innerHTML = `<div class="inner">${TABS.map(([id, label]) => `<button data-act="tab" data-v="${id}"${ui.tab === id ? ' aria-current="page"' : ''}>${icon(id)}${label}</button>`).join('')}</div>`
+  $('#subtitle').textContent = P().meta?.name || 'Style profile'
+  renderSheet()
+}
+
+function renderSheet() {
+  const el = $('#sheet')
+  if (!ui.sheet) { el.classList.remove('open'); el.innerHTML = ''; return }
+  el.classList.add('open')
+  const scroll = el.querySelector('.panel-s')?.scrollTop || 0
+  el.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="panel-s" role="dialog" aria-modal="true">${SHEETS[ui.sheet.kind]()}</div>`
+  el.querySelector('.panel-s').scrollTop = scroll
+}
+
+// ---------- wardrobe tab ----------
+
+function viewWardrobe() {
+  const items = state.items
+  if (!items.length) {
+    return `<div class="empty"><div class="eyebrow" style="justify-content:center">Digital wardrobe</div>
+      <h2>Start with what you own</h2>
+      <p class="serif">Photograph each piece on a plain background. The app reads its colour, checks it against your palette and links it to your buy list.</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" data-act="newItem">Add a piece</button>
+        <button class="btn ghost" data-act="loadDemo">Try with a demo wardrobe</button>
+      </div>
+      <p class="small muted" style="margin-top:14px">The demo fills Tiers 1 and 2 of your buy list in their best colours, so you can try outfits and the week planner straight away.</p></div>`
+  }
+  const today = todayISO()
+  const laundry = items.filter((it) => it.status === 'laundry').length
+  const counts = Object.fromEntries(CATEGORIES.map((c) => [c.id, items.filter((it) => sub(it).cat === c.id).length]))
+  const shown = items.filter((it) => ui.filter === 'all' || (ui.filter === 'laundry' ? it.status === 'laundry' : sub(it).cat === ui.filter))
+  const demo = items.some((it) => it.demo)
+
+  const worn = items.filter((it) => it.wears?.length)
+  const stale = items.filter((it) => {
+    const last = (it.wears || []).slice().sort().pop()
+    const since = last || it.createdAt
+    return since && (Date.parse(today) - Date.parse(since)) / 86400000 >= 30
+  })
+  const cpw = items.filter((it) => it.price && it.wears?.length).map((it) => ({ it, v: it.price / it.wears.length })).sort((a, b) => b.v - a.v)
+
+  return `
+    <div class="stats">
+      <div class="stat"><b>${items.length}</b><span>pieces</span></div>
+      <div class="stat"><b>${state.outfits.length}</b><span>saved outfits</span></div>
+      <div class="stat"><b>${laundry}</b><span>in the wash</span></div>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn" data-act="newItem">Add a piece</button>
+      <button class="btn ghost" data-act="checkItem">Check before buying</button>
+      ${demo ? '<button class="btn quiet sm" data-act="clearDemo">Remove demo pieces</button>' : ''}
+    </div>
+    <div class="chips">
+      <button class="chip" data-act="filter" data-v="all" aria-pressed="${ui.filter === 'all'}">All ${items.length}</button>
+      ${CATEGORIES.filter((c) => counts[c.id]).map((c) => `<button class="chip" data-act="filter" data-v="${c.id}" aria-pressed="${ui.filter === c.id}">${c.label} ${counts[c.id]}</button>`).join('')}
+      ${laundry ? `<button class="chip" data-act="filter" data-v="laundry" aria-pressed="${ui.filter === 'laundry'}">In the wash ${laundry}</button>` : ''}
+    </div>
+    <div class="grid">${shown.map(itemCard).join('')}</div>
+    ${stale.length || cpw.length ? `<div class="section"><h2>Insights</h2><div class="panel stack small">
+      ${stale.length ? `<div><span class="label">Not worn in 30+ days</span><div>${stale.slice(0, 8).map((it) => esc(it.name)).join(', ')}</div></div>` : ''}
+      ${cpw.length ? `<div><span class="label">Cost per wear, highest first</span><div>${cpw.slice(0, 5).map(({ it, v }) => `${esc(it.name)} €${v.toFixed(2)}`).join(' · ')}</div></div>` : ''}
+      ${!worn.length ? '' : `<div class="muted">Logged wears: ${worn.reduce((n, it) => n + it.wears.length, 0)}</div>`}
+    </div></div>` : ''}`
+}
+
+function itemCard(it) {
+  const c = colourById(P(), it.colour)
+  return `<button class="card-item" data-act="openItem" data-id="${it.id}">
+    ${tile(it)}
+    ${it.status === 'laundry' ? '<span class="badge">In the wash</span>' : ''}
+    ${it.demo ? '<span class="badge demo">Demo</span>' : ''}
+    <div class="meta"><div class="name">${esc(it.name)}</div>
+    <div class="sub">${dot(it.colour)}${esc(c.name)}${it.wears?.length ? ` · worn ${it.wears.length}×` : ''}</div></div>
+  </button>`
+}
+
+// ---------- item sheet (add, edit, check before buying) ----------
+
+function draftFor(it, mode) {
+  const base = it || { subtype: 'oxford', colour: 'white', pattern: 'solid' }
+  return {
+    mode,
+    id: it?.id || null,
+    name: base.name || '',
+    subtype: base.subtype,
+    colour: base.colour,
+    pattern: base.pattern || 'solid',
+    slotId: base.slotId ?? (it ? '' : null),
+    f: base.f || null,
+    warmth: base.warmth || null,
+    waterproof: base.waterproof ?? null,
+    price: base.price || '',
+    photo: it ? photos.get(it.id) || null : null,
+    suggestions: null,
+    result: null,
+  }
+}
+
+function openItemSheet(it, mode = 'edit', preset) {
+  const draft = draftFor(it, mode)
+  if (preset) Object.assign(draft, preset)
+  ui.sheet = { kind: 'item', draft }
+  renderSheet()
+}
+
+function verdictFor(colourId, subtype) {
+  const c = colourById(P(), colourId)
+  const z = zoneOf({ subtype })
+  const v = c[z]
+  const where = z === 'face' ? 'near the face' : z === 'lower' ? 'on the lower half' : 'on the feet'
+  const role = ROLE_LABELS[c.role] || c.role
+  if (v === 'block') return `<div class="verdict block"><b>${esc(c.name)} is off-palette ${where}.</b> ${esc(c.note || 'It fights your cool colouring.')}</div>`
+  if (v === 'warn') return `<div class="verdict warn"><b>${esc(c.name)} ${where}: use with care.</b> ${esc(c.note || '')}</div>`
+  if (v === 'casual') return `<div class="verdict warn"><b>${esc(c.name)}: casual looks only.</b> ${esc(c.note || '')}</div>`
+  return `<div class="verdict ok"><b>${esc(c.name)} works ${where}.</b> ${esc(role)}.</div>`
+}
+
+function subtypeOptions(selected) {
+  return CATEGORIES.map((c) => `<optgroup label="${c.label}">${Object.entries(SUBTYPES).filter(([, s]) => s.cat === c.id).map(([id, s]) => `<option value="${id}"${id === selected ? ' selected' : ''}>${s.label}</option>`).join('')}</optgroup>`).join('')
+}
+
+function colourOptions(selected) {
+  const roles = [...new Set(P().palette.map((c) => c.role))]
+  return roles.map((r) => `<optgroup label="${ROLE_LABELS[r] || r}">${P().palette.filter((c) => c.role === r).map((c) => `<option value="${c.id}"${c.id === selected ? ' selected' : ''}>${c.name}</option>`).join('')}</optgroup>`).join('')
+}
+
+function sheetItem() {
+  const d = ui.sheet.draft
+  const s = SUBTYPES[d.subtype]
+  const isNew = !d.id
+  const check = d.mode === 'check'
+  const [lo, hi] = d.f || s.f || [1, 5]
+  const w = d.warmth || s.warmth || 1
+  const wearable = s.cat !== 'accessory'
+  const preview = { id: d.id, subtype: d.subtype, colour: d.colour, pattern: d.pattern, name: d.name || s.label }
+  const others = state.items.filter((it) => it.id !== d.id)
+  const slots = P().slots.filter((sl) => sl.subtypes.includes(d.subtype))
+  const autoSlot = d.slotId === null ? suggestSlot(P(), others, d.subtype, d.colour) : null
+  const slotValue = d.slotId === null ? autoSlot?.id || '' : d.slotId
+  const item = d.id ? state.items.find((x) => x.id === d.id) : null
+  const title = check ? 'Check before buying' : isNew ? 'Add a piece' : 'Edit piece'
+
+  return `<div class="head"><h2>${title}</h2><button class="x" data-act="closeSheet" aria-label="Close">×</button></div>
+    ${check ? '<p class="serif muted" style="margin-top:-4px">Photograph it in the shop. You get a palette verdict, whether it fills a gap on your buy list, and how many new outfits it unlocks.</p>' : ''}
+    <div class="row" style="align-items:flex-start;gap:14px;margin-bottom:12px">
+      <div style="width:132px;flex:none">${d.photo ? `<div class="tile lg"><img src="${d.photo}" alt=""></div>` : `<div class="tile lg">${garmentSVG(preview)}</div>`}</div>
+      <div style="flex:1;min-width:170px">
+        <label class="btn ghost sm" style="cursor:pointer">${d.photo ? 'Change photo' : 'Take or choose photo'}
+          <input type="file" accept="image/*" capture="environment" data-change="photo" class="hide"></label>
+        ${d.photo ? '<button class="btn quiet sm" data-act="dropPhoto" style="margin-left:4px">Remove</button>' : ''}
+        ${d.suggestions ? `<div style="margin-top:10px"><span class="label">Colour read from photo</span><div class="chips wrap" style="margin-top:4px">${d.suggestions.map((id) => `<button class="chip" data-act="pickColour" data-v="${id}" aria-pressed="${d.colour === id}">${dot(id)}${esc(colourById(P(), id).name)}</button>`).join('')}</div></div>` : '<p class="small muted" style="margin-top:8px">Plain, light background works best for reading the colour.</p>'}
+      </div>
+    </div>
+    <label class="field"><span class="label">Type</span><select data-bind="subtype" data-rerender="1">${subtypeOptions(d.subtype)}</select></label>
+    <label class="field"><span class="label">Colour</span><select data-bind="colour" data-rerender="1">${colourOptions(d.colour)}</select></label>
+    ${verdictFor(d.colour, d.subtype)}
+    <div class="two" style="margin-top:12px">
+      <label class="field"><span class="label">Name</span><input data-bind="name" value="${esc(d.name)}" placeholder="${esc(colourById(P(), d.colour).name.split(' / ')[0] + ' ' + s.label.toLowerCase())}"></label>
+      <label class="field"><span class="label">Pattern</span><select data-bind="pattern" data-rerender="1">${['solid', 'stripe', 'check'].map((p) => `<option${p === d.pattern ? ' selected' : ''}>${p}</option>`).join('')}</select></label>
+    </div>
+    ${check ? '' : `<label class="field"><span class="label">Buy-list slot</span><select data-bind="slotId">
+      <option value="">Not on the buy list</option>
+      ${slots.map((sl) => { const n = slotOwned(sl, others).length; return `<option value="${sl.id}"${sl.id === slotValue ? ' selected' : ''}>Tier ${sl.tier} · ${esc(sl.name)} (${n}/${sl.qty})</option>` }).join('')}
+    </select></label>`}
+    ${wearable ? `<div class="two">
+      <label class="field"><span class="label">Formality from</span><select data-bind="flo">${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${n === lo ? ' selected' : ''}>${n} ${LEVELS[n]}</option>`).join('')}</select></label>
+      <label class="field"><span class="label">to</span><select data-bind="fhi">${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${n === hi ? ' selected' : ''}>${n} ${LEVELS[n]}</option>`).join('')}</select></label>
+    </div>
+    <div class="two">
+      <label class="field"><span class="label">Warmth</span><select data-bind="warmth">${['Light', 'Mid', 'Heavy'].map((l, i) => `<option value="${i + 1}"${i + 1 === w ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      ${check ? '' : '<label class="field"><span class="label">Price (€, optional)</span><input data-bind="price" inputmode="decimal" value="' + esc(d.price) + '" placeholder="for cost per wear"></label>'}
+    </div>
+    ${s.cat === 'outer' ? `<label class="check" style="margin-bottom:12px"><input type="checkbox" data-bind="waterproof"${(d.waterproof ?? !!s.waterproof) ? ' checked' : ''}> Rainproof</label>` : ''}` : ''}
+    ${check ? checkResult() : ''}
+    <div class="row end" style="margin-top:8px">
+      ${check ? `<button class="btn ghost" data-act="runCheck">Check it</button><button class="btn" data-act="boughtIt">Bought it: add</button>` : `
+      ${item ? `<button class="btn danger sm" data-act="deleteItem">Delete</button>
+        <button class="btn quiet sm" data-act="toggleWash">${item.status === 'laundry' ? 'Back from the wash' : 'In the wash'}</button>
+        <button class="btn quiet sm" data-act="wearItem">Worn today</button>` : ''}
+      <button class="btn" data-act="saveItem">${isNew ? 'Add to wardrobe' : 'Save'}</button>`}
+    </div>
+    ${item?.wears?.length ? `<p class="small muted" style="margin-top:10px">Worn ${item.wears.length}×, last ${esc(item.wears.slice().sort().pop())}${item.price ? ` · €${(item.price / item.wears.length).toFixed(2)} per wear` : ''}</p>` : ''}`
+}
+
+function draftToItem(d) {
+  const s = SUBTYPES[d.subtype]
+  const others = state.items.filter((it) => it.id !== d.id)
+  const slotId = d.slotId === null ? suggestSlot(P(), others, d.subtype, d.colour)?.id || '' : d.slotId
+  const it = {
+    id: d.id || uid(),
+    name: d.name.trim() || `${colourById(P(), d.colour).name.split(' / ')[0]} ${s.label.toLowerCase()}`,
+    subtype: d.subtype,
+    colour: d.colour,
+    pattern: d.pattern,
+    slotId: slotId || null,
+    status: 'available',
+    wears: [],
+    createdAt: todayISO(),
+  }
+  const def = s.f || [1, 5]
+  if (d.f && (d.f[0] !== def[0] || d.f[1] !== def[1])) it.f = d.f
+  if (d.warmth && d.warmth !== s.warmth) it.warmth = d.warmth
+  if (d.waterproof !== null && d.waterproof !== !!s.waterproof) it.waterproof = d.waterproof
+  const price = parseFloat(String(d.price).replace(',', '.'))
+  if (price > 0) it.price = price
+  return it
+}
+
+function checkResult() {
+  const r = ui.sheet.draft.result
+  if (!r) return ''
+  return `<div class="panel stack" style="margin:12px 0">
+    <div><span class="label">Fit with your palette</span>${r.verdict}</div>
+    <div><span class="label">Buy list</span><div>${r.slot ? `Fills an open slot: <b>Tier ${r.slot.tier} · ${esc(r.slot.name)}</b>${r.slot.best.includes(r.colour) ? ' in its best colour' : r.slot.colours.includes(r.colour) ? ' in a listed variant' : ', but not in a listed colour'}.` : 'Not on your buy list. Ask whether it replaces something or adds noise.'}</div></div>
+    ${r.dupes.length ? `<div class="verdict warn">You already own ${r.dupes.map((x) => esc(x.name)).join(', ')}.</div>` : ''}
+    <div><span class="label">Outfits it unlocks</span><div><b>+${r.gain.toLocaleString('en-GB')}</b> outfit combinations across eight everyday situations${r.base ? ` (+${Math.round((r.gain / r.base) * 100)}% on today)` : ''}.</div>
+    ${r.gain === 0 ? '<div class="small muted">Zero usually means you are missing a piece it needs (a top, bottoms or shoes at the same formality), or it is blocked by the palette.</div>' : ''}</div>
+  </div>`
+}
+
+// ---------- outfits tab ----------
+
+function ctxControls({ forecast = true } = {}) {
+  const g = ui.gen
+  return `<div class="label" style="margin-bottom:4px">Occasion</div>
+    <div class="chips">${P().occasions.map((o) => `<button class="chip" data-act="setGen" data-k="occasion" data-v="${o.id}" aria-pressed="${g.occasion === o.id}">${esc(o.label)}</button>`).join('')}</div>
+    <div class="label" style="margin:6px 0 4px">Weather</div>
+    <div class="chips wrap">${WEATHER.map((w) => `<button class="chip" data-act="setGen" data-k="band" data-v="${w.id}" aria-pressed="${g.band === w.id}">${w.label} <span class="muted small">${w.hint}</span></button>`).join('')}
+      <button class="chip" data-act="toggleRain" aria-pressed="${g.rain}">Rain</button>
+      ${forecast ? `<button class="chip" data-act="todayForecast">${ui.busy === 'forecast' ? 'Fetching…' : `Today in ${LOCATIONS[state.location].label}`}</button>` : ''}
+    </div>`
+}
+
+function reasons(e, max = 6) {
+  return `<ul class="reasons">${e.blocks.map((r) => `<li class="block">${esc(r)}</li>`).join('')}${e.warns.map((r) => `<li class="warn">${esc(r)}</li>`).join('')}${e.pros.slice(0, max).map((r) => `<li class="pro">${esc(r)}</li>`).join('')}</ul>`
+}
+
+function outfitCard(parts, e, actions, title) {
+  return `<div class="outfit">
+    <div class="spread">${title ? `<b>${esc(title)}</b>` : '<span></span>'}${e ? `<span class="score">${e.ok ? 'score ' + e.score : 'not wearable'}</span>` : ''}</div>
+    <div class="thumbs" style="margin-top:6px">${partsList(parts).map((it) => tile(it, 'sm')).join('')}</div>
+    <div class="names">${partsList(parts).map((it) => `<span>${esc(it.name)}</span>`).join(' · ')}</div>
+    ${e ? reasons(e) : ''}
+    ${actions ? `<div class="row" style="margin-top:10px">${actions}</div>` : ''}
+  </div>`
+}
+
+function viewOutfits() {
+  if (!state.items.length) return emptyNeedItems('Outfits come from your wardrobe')
+  const cur = ui.outTab
+  const tabs = [['generate', 'Generate'], ['build', 'Build'], ['saved', `Saved ${state.outfits.length || ''}`], ['guide', 'From your guide']]
+  return `<div class="subtabs">${tabs.map(([id, l]) => `<button data-act="outTab" data-v="${id}" aria-pressed="${cur === id}">${l}</button>`).join('')}</div>
+    ${cur === 'generate' ? viewGenerate() : cur === 'build' ? viewBuild() : cur === 'saved' ? viewSaved() : viewGuide()}`
+}
+
+function emptyNeedItems(title) {
+  return `<div class="empty"><h2>${title}</h2><p class="serif">Add a few pieces first: at least a top, bottoms and shoes.</p>
+    <div class="row" style="justify-content:center"><button class="btn" data-act="newItem">Add a piece</button><button class="btn ghost" data-act="loadDemo">Use the demo wardrobe</button></div></div>`
+}
+
+function viewGenerate() {
+  const r = ui.gen.results
+  return `${ctxControls()}
+    <div class="row" style="margin:10px 0 14px"><button class="btn" data-act="generate">Generate outfits</button>
+      ${r?.length ? '<button class="btn quiet" data-act="generateMore">Show different ones</button>' : ''}</div>
+    ${r ? (r.length ? r.map((o, i) => outfitCard(o.parts, o, `<button class="btn sm" data-act="wearGen" data-i="${i}">Wear today</button><button class="btn ghost sm" data-act="saveGen" data-i="${i}">Save</button><button class="btn quiet sm" data-act="editGen" data-i="${i}">Tweak</button>`)).join('')
+      : `<div class="panel"><b>Nothing passes the rules for this.</b><p class="small muted" style="margin:6px 0 0">${noResultHint()}</p></div>`) : '<p class="serif muted">Pick an occasion and the weather. Every suggestion passes your colour lock, formality and weather rules, and says why it works.</p>'}`
+}
+
+function noResultHint() {
+  const ctx = genCtx()
+  const pool = available()
+  const need = []
+  for (const [slot, label] of [['base', 'top'], ['bottom', 'bottoms'], ['shoes', 'shoes']]) {
+    if (!pool.some((it) => slotFor(it) === slot && formality(it)[0] <= ctx.level && formality(it)[1] >= ctx.level)) need.push(label)
+  }
+  if (ctx.occasion.require === 'tailoring' && !pool.some((it) => sub(it).kind === 'tailoring')) need.push('a tailored jacket')
+  if (ctx.weather.band === 'cold' && !pool.some((it) => sub(it).cat === 'outer')) need.push('a jacket or coat')
+  return need.length ? `You have no ${need.join(', ')} at ${LEVELS[ctx.level].toLowerCase()} level available.` : 'Try another weather setting, or check what is in the wash.'
+}
+
+function viewBuild() {
+  const parts = idsToParts(ui.build)
+  const e = evaluate(parts, genCtx())
+  const rows = SLOTS.map((slot) => {
+    const options = state.items.filter((it) => (slot === 'mid' ? sub(it).cat === 'knit' && sub(it).layer !== 'base' : slotFor(it) === slot))
+    if (!options.length) return ''
+    return `<div class="pickrow"><span class="label">${SLOT_LABELS[slot]}${slot === 'mid' ? ' (over a shirt)' : ''}</span><div class="scroller">
+      <button class="pick none" data-act="buildPick" data-slot="${slot}" data-id="" aria-pressed="${!ui.build[slot]}"><div class="tile">–</div><span>None</span></button>
+      ${options.map((it) => `<button class="pick" data-act="buildPick" data-slot="${slot}" data-id="${it.id}" aria-pressed="${ui.build[slot] === it.id}">${tile(it)}<span>${esc(it.name)}</span></button>`).join('')}
+    </div></div>`
+  }).join('')
+  return `${ctxControls({ forecast: false })}
+    <div style="margin-top:14px">${rows}</div>
+    <div class="outfit buildbar">
+      <div class="spread"><b>${partsList(parts).length ? 'This outfit' : 'Pick pieces above'}</b><span class="score">${e.ok ? `score ${e.score} · ${plural(e.pros.length, 'plus')}` : partsList(parts).length ? 'not wearable yet' : ''}</span></div>
+      ${partsList(parts).length ? reasons(e, 0) : ''}
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-act="wearBuild"${e.ok ? '' : ' disabled'}>Wear today</button><button class="btn ghost sm" data-act="saveBuild"${partsList(parts).length ? '' : ' disabled'}>Save</button><button class="btn quiet sm" data-act="clearBuild">Clear</button></div>
+    </div>`
+}
+
+function viewSaved() {
+  if (!state.outfits.length) return '<p class="serif muted">Saved outfits appear here. Save from Generate or Build.</p>'
+  return state.outfits.map((o) => {
+    const parts = idsToParts(o.parts)
+    const occ = occasionById(P(), o.occasion)
+    const e = evaluate(parts, { profile: P(), occasion: occ, level: occ.level, weather: { band: o.band || 'mild', rain: !!o.rain } })
+    return outfitCard(parts, e, `<button class="btn sm" data-act="wearSaved" data-id="${o.id}">Wear today</button><button class="btn ghost sm" data-act="editSaved" data-id="${o.id}">Tweak</button><button class="btn quiet sm" data-act="deleteSaved" data-id="${o.id}">Delete</button>`, `${occ.label}${o.band ? ' · ' + o.band : ''}`)
+  }).join('')
+}
+
+function viewGuide() {
+  return `<p class="serif muted">The looks from your dossier, filled from what you own. Exact means right piece and colour; close means right piece, different colour.</p>` +
+    P().formulas.map((f, i) => {
+      const fill = fillFormula(f, state.items)
+      const missing = fill.filter((x) => x.match === 'missing')
+      const parts = partsFromItems(fill.filter((x) => x.item).map((x) => x.item))
+      const occ = occasionById(P(), f.occasion)
+      const e = missing.length ? null : evaluate(parts, { profile: P(), occasion: occ, level: occ.level, weather: { band: 'mild', rain: false } })
+      return `<div class="outfit"><div class="spread"><b>${esc(f.name)}</b><span class="score">${missing.length ? `${fill.length - missing.length}/${fill.length} owned` : 'ready'}</span></div>
+        <p class="small muted serif" style="margin:4px 0 8px">${esc(f.why)}</p>
+        <div class="chips wrap">${fill.map((x) => `<span class="sw${x.match === 'exact' ? ' best' : ''}" title="${x.match}">${dot(x.colour)}${esc(SUBTYPES[x.subtypes[0]]?.label || x.subtypes[0])}${x.match === 'missing' ? ' · missing' : x.match === 'close' ? ' · close' : ''}</span>`).join('')}</div>
+        ${e ? reasons(e, 3) : ''}
+        <div class="row" style="margin-top:8px">${missing.length ? '<button class="btn quiet sm" data-act="tab" data-v="buy">See buy list</button>' : `<button class="btn ghost sm" data-act="guideBuild" data-i="${i}">Open in builder</button>`}</div></div>`
+    }).join('')
+}
+
+// ---------- week tab ----------
+
+function weekKey() { return iso(ui.weekStart) }
+
+function getWeek(create = true) {
+  const k = weekKey()
+  if (!state.weeks[k] && create) {
+    state.weeks[k] = { days: DEFAULT_WEEK.map((occasion) => ({ occasion, band: state.location === 'malta' ? 'warm' : 'mild', rain: false, parts: null, locked: false })) }
+  }
+  return state.weeks[k]
+}
+
+function viewWeek() {
+  if (!state.items.length) return emptyNeedItems('Plan a week of outfits')
+  const w = getWeek()
+  const today = todayISO()
+  const end = addDays(ui.weekStart, 6)
+  return `<div class="spread" style="margin-bottom:10px">
+      <div class="row"><button class="btn quiet sm" data-act="weekNav" data-v="-7" aria-label="Previous week">‹</button><b>${fmtDate(ui.weekStart)} to ${fmtDate(end)}</b><button class="btn quiet sm" data-act="weekNav" data-v="7" aria-label="Next week">›</button>
+      <button class="btn quiet sm" data-act="weekNav" data-v="0">This week</button></div>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <select class="inline" style="width:auto" data-change="location">${Object.entries(LOCATIONS).map(([id, l]) => `<option value="${id}"${state.location === id ? ' selected' : ''}>${l.label}</option>`).join('')}</select>
+      <button class="btn ghost sm" data-act="weekForecast">${ui.busy === 'week-forecast' ? 'Fetching…' : 'Use the forecast'}</button>
+      <button class="btn sm" data-act="planWeek">${ui.busy === 'plan' ? 'Planning…' : 'Plan the week'}</button>
+    </div>
+    <p class="small muted serif" style="margin-top:-4px">No top repeats in a week, trousers and shoes rotate, locked days stay put. Laundry is left out.</p>
+    ${w.days.map((d, i) => dayCard(d, i, iso(addDays(ui.weekStart, i)) === today)).join('')}`
+}
+
+function dayCard(d, i, isToday) {
+  const date = addDays(ui.weekStart, i)
+  const parts = d.parts ? idsToParts(d.parts) : null
+  const occ = occasionById(P(), d.occasion)
+  const e = parts ? evaluate(parts, { profile: P(), occasion: occ, level: occ.level, weather: { band: d.band, rain: d.rain } }) : null
+  return `<div class="day${isToday ? ' today' : ''}">
+    <div class="spread"><b>${DAY_NAMES[i]} <span class="muted small">${fmtDate(date)}</span></b>${d.temp != null ? `<span class="small muted">${Math.round(d.temp)}°C${d.rain ? ', rain likely' : ''}</span>` : ''}</div>
+    <div class="controls">
+      <select class="inline" style="width:auto" data-change="dayOcc" data-i="${i}">${P().occasions.map((o) => `<option value="${o.id}"${o.id === d.occasion ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}</select>
+      <select class="inline" style="width:auto" data-change="dayBand" data-i="${i}">${WEATHER.map((w) => `<option value="${w.id}"${w.id === d.band ? ' selected' : ''}>${w.label}</option>`).join('')}</select>
+      <button class="chip" data-act="dayRain" data-i="${i}" aria-pressed="${!!d.rain}">Rain</button>
+      ${parts ? `<button class="chip" data-act="dayLock" data-i="${i}" aria-pressed="${!!d.locked}">${d.locked ? 'Locked' : 'Lock'}</button>` : ''}
+    </div>
+    ${parts ? `<div class="outfit" style="margin:0;background:var(--paper)"><div class="thumbs">${partsList(parts).map((it) => tile(it, 'sm')).join('')}</div>
+      <div class="names">${partsList(parts).map((it) => esc(it.name)).join(' · ')}</div>${e && !e.ok ? reasons({ blocks: e.blocks, warns: [], pros: [] }) : ''}
+      <div class="row" style="margin-top:8px"><button class="btn quiet sm" data-act="daySwap" data-i="${i}"${d.locked ? ' disabled' : ''}>Swap</button><button class="btn quiet sm" data-act="dayWore" data-i="${i}">${partsList(parts).every((it) => it.wears?.includes(iso(date))) ? 'Logged' : 'Wore it'}</button><button class="btn quiet sm" data-act="dayClear" data-i="${i}">Clear</button></div></div>`
+      : `<p class="small muted" style="margin:0">${d.planned === false ? 'No outfit passes the rules for this day. Change the occasion or weather.' : 'Not planned yet.'}</p>`}
+  </div>`
+}
+
+// ---------- buy list tab ----------
+
+function itemsSignature() {
+  return state.items.map((it) => `${it.id}:${it.subtype}:${it.colour}:${it.status}:${it.slotId}:${(it.f || []).join('-')}`).join('|') + JSON.stringify(P().slots.length)
+}
+
+function ensureBuy() {
+  const sig = itemsSignature()
+  if (ui.buy?.sig === sig) return
+  ui.buy = { sig, pending: true }
+  setTimeout(() => {
+    const ranked = buyNext(P(), state.items)
+    const cov = coverage(available(), P())
+    ui.buy = { sig, ranked, total: cov.reduce((n, c) => n + c.n, 0), cov }
+    if (ui.tab === 'buy' || ui.tab === 'profile') render()
+  }, 30)
+}
+
+function viewBuy() {
+  ensureBuy()
+  const slots = P().slots
+  const units = slots.reduce((n, s) => n + s.qty, 0)
+  const owned = slots.reduce((n, s) => n + Math.min(s.qty, slotOwned(s, state.items).length), 0)
+  const tiers = [...new Set(slots.map((s) => s.tier))]
+  const b = ui.buy
+  let next = '<p class="small muted">Working out which buy unlocks the most outfits…</p>'
+  if (b && !b.pending) {
+    const top = b.ranked.slice(0, 5)
+    const anyGain = top.some((x) => x.gain > 0)
+    next = anyGain
+      ? top.map((x) => `<div class="next">${tile(x.pieces[0], 'xs')}<div><b>${esc(x.slot.name)}</b><div class="small muted">Tier ${x.slot.tier} · in ${esc(colourById(P(), x.pieces[0].colour).name)}</div></div><div class="gain"><b>${b.total ? `+${Math.round((x.gain / b.total) * 100)}%` : `+${x.gain.toLocaleString('en-GB')}`}</b>${b.total ? `${x.gain.toLocaleString('en-GB')} combos` : 'combos'}</div></div>`).join('')
+      : '<p class="small muted" style="margin:0">Once you own a top, bottoms and shoes that work together, this ranks every open slot by how many new outfits it unlocks. Until then, buy in tier order.</p>'
+  }
+  return `<div class="panel">
+      <div class="spread"><b>${owned} of ${units} pieces</b><span class="small muted">${Math.round((owned / units) * 100)}%</span></div>
+      <div class="bar"><i style="width:${(owned / units) * 100}%"></i></div>
+      <p class="small muted" style="margin:0">Pieces tick off when you add one to your wardrobe and link it to a slot.</p>
+    </div>
+    <div class="section"><h2>Best next buys</h2><div class="panel">${next}</div>
+    <p class="small muted" style="margin-top:6px">Ranked by new outfit combinations across eight everyday situations (office, casual, date, wedding; hot, mild, cold, rain), using each slot's best colour.</p></div>
+    ${tiers.map((t) => {
+      const ts = slots.filter((s) => s.tier === t)
+      return `<div class="tier"><span class="eyebrow">Tier ${t}</span>${ts.map(slotRow).join('')}</div>`
+    }).join('')}
+    <div class="callout" style="margin-top:22px"><b>Fit lock</b><p>Buy for the shoulder, then alter waist, sleeves and hems. On a lean frame that habit beats any upgrade in brand.</p></div>`
+}
+
+function slotRow(s) {
+  const owned = slotOwned(s, state.items)
+  const full = owned.length >= s.qty
+  return `<div class="slot${full ? ' full' : ''}"><div>
+      <div><span class="sname">${esc(s.name)}</span> <span class="muted small mono">${owned.length}/${s.qty}</span>${s.climate ? `<span class="pill">${s.climate === 'nl' ? 'NL / IE' : 'Malta'}</span>` : ''}</div>
+      <div class="spec">${esc(s.material)} · ${esc(s.fit)}</div>
+      <div>${s.colours.map((c) => `<span class="sw${s.best.includes(c) ? ' best' : ''}">${dot(c)}${esc(colourById(P(), c).name)}</span>`).join('')}</div>
+      ${owned.length ? `<div class="row" style="margin-top:6px">${owned.map((it) => `<button class="pick" style="width:52px" data-act="openItem" data-id="${it.id}">${tile(it, 'xs')}</button>`).join('')}</div>` : ''}
+    </div>
+    ${full ? '<span class="small muted">Done</span>' : `<button class="btn ghost sm" data-act="addFromSlot" data-id="${s.id}">Add</button>`}
+  </div>`
+}
+
+// ---------- profile tab ----------
+
+const PROFILE_PROMPT = `You convert a personal style guide into a JSON style profile for a wardrobe app.
+Return ONE JSON object, no commentary, with this shape:
+{
+  "format": "fearne-style-profile", "version": 1,
+  "meta": { "name": "", "owner": "", "source": "", "summary": "", "unconfirmed": [""] },
+  "palette": [ { "id": "kebab-id", "name": "", "hex": "#RRGGBB", "role": "core|white|lower|blue|accent|statement|leather|metal|avoid",
+                 "face": "ok|warn|block", "lower": "ok|warn|block", "feet": "ok|warn|block|casual", "note": "optional" } ],
+  "rules": { "max_statement": 1, "max_colour_pieces": 2, "max_patterns": 1, "colour_at_face_bonus": true, "contrast_bonus_min": 28, "notes": [""] },
+  "occasions": [ { "id": "", "label": "", "level": 1-5, "office": true?, "require": "tailoring"? } ],
+  "office_excludes": ["tee", "shorts", "slides", "camp-shirt"],
+  "formulas": [ { "name": "", "occasion": "<occasion id>", "parts": [["<subtype>|<alt subtype>", "<palette id>"]], "why": "" } ],
+  "slots": [ { "id": "", "tier": 1, "name": "", "qty": 1, "subtypes": ["<subtype>"], "colours": ["<palette id>"], "best": ["<palette id>"],
+               "material": "", "fit": "", "climate": "nl|malta" } ],
+  "conflicts": [ "places where the guide contradicts itself" ]
+}
+Formality levels: 1 off-duty, 2 casual, 3 smart casual, 4 smart, 5 formal.
+Subtypes (use only these): ${Object.keys(SUBTYPES).join(', ')}.
+Rules: every colour named in the guide goes in the palette with its hex; colours the guide says to avoid get role "avoid" with face "block".
+Use "warn" where the guide hedges ("test first", "away from the face"). Every palette id used in formulas or slots must exist.
+List genuine contradictions in "conflicts" rather than silently picking a side.`
+
+function viewProfile() {
+  const p = P()
+  ensureBuy()
+  const roles = [...new Set(p.palette.map((c) => c.role))]
+  const b = ui.buy
+  return `<div class="panel"><div class="eyebrow">Style profile</div><h2 style="margin:8px 0 4px">${esc(p.meta?.name || 'Untitled')}</h2>
+      <p class="serif" style="color:var(--slate)">${esc(p.meta?.summary || '')}</p>
+      ${p.meta?.unconfirmed?.length ? `<ul class="note-list">${p.meta.unconfirmed.map((u) => `<li>${esc(u)}</li>`).join('')}</ul>` : ''}
+    </div>
+    ${p.conflicts?.length ? `<div class="section"><h2>Where your guide contradicts itself</h2><div class="panel"><ul class="note-list">${p.conflicts.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+      <p class="small muted" style="margin:8px 0 0">These are modelled as warnings for now. Decide each one, edit the profile JSON and re-import.</p></div></div>` : ''}
+    <div class="section"><h2>Palette and where it may sit</h2><div class="panel" style="overflow-x:auto">
+      <table class="pal"><thead><tr><th>Colour</th><th>Face</th><th>Lower</th><th>Feet</th></tr></thead><tbody>
+      ${roles.map((r) => `<tr><td colspan="4" class="label" style="padding-top:12px;color:var(--accent)">${ROLE_LABELS[r] || r}</td></tr>` + p.palette.filter((c) => c.role === r).map((c) => `<tr><td><span class="row" style="gap:6px;flex-wrap:nowrap">${dot(c.id)}${esc(c.name)}</span></td>${['face', 'lower', 'feet'].map((z) => `<td class="v-${c[z]}">${VERDICT_TEXT[c[z]] || c[z]}</td>`).join('')}</tr>`).join('')).join('')}
+      </tbody></table></div></div>
+    <div class="section"><h2>Occasions</h2><div class="panel"><div class="chips wrap">${p.occasions.map((o) => `<span class="sw">${esc(o.label)} · ${o.level} ${LEVELS[o.level]}${o.office ? ' · office' : ''}${o.require ? ' · needs ' + o.require : ''}</span>`).join('')}</div>
+      <ul class="note-list" style="margin-top:8px">${(p.rules?.notes || []).map((n) => `<li>${esc(n)}</li>`).join('')}</ul></div></div>
+    <div class="section"><h2>What your wardrobe covers</h2><div class="panel small">${b && !b.pending ? b.cov.map((c) => `<div class="spread" style="padding:4px 0;border-bottom:1px solid var(--line-2)"><span>${esc(c.label)} · ${c.band}${c.rain ? ' + rain' : ''}</span><b class="mono">${c.n.toLocaleString('en-GB')}</b></div>`).join('') : 'Counting…'}</div></div>
+    <div class="section"><h2>Data</h2><div class="panel stack">
+      <div><b>Style profile</b><p class="small muted" style="margin:2px 0 8px">To use a different or updated guide: copy the conversion prompt, paste it into Claude with the guide, and import the JSON it returns.</p>
+        <div class="row"><button class="btn ghost sm" data-act="copyPrompt">Copy conversion prompt</button>
+        <label class="btn ghost sm" style="cursor:pointer">Import profile JSON<input type="file" accept="application/json,.json" data-change="importProfile" class="hide"></label>
+        <button class="btn quiet sm" data-act="exportProfile">Export profile</button></div></div>
+      <div><b>Backup</b><p class="small muted" style="margin:2px 0 8px">${HUB ? 'Saved privately to your Fearne Hub account. Restore a backup from the standalone prototype to bring its pieces and photos across.' : 'Everything lives on this device only. Export a backup, including photos, before clearing the browser.'}</p>
+        <div class="row"><button class="btn ghost sm" data-act="exportBackup">Export backup</button>
+        <label class="btn ghost sm" style="cursor:pointer">Restore backup<input type="file" accept="application/json,.json" data-change="importBackup" class="hide"></label>
+        <button class="btn danger sm" data-act="resetAll">Erase everything</button></div></div>
+      <div class="row"><span class="small muted">Theme</span>${['auto', 'light', 'dark'].map((t) => `<button class="chip" data-act="theme" data-v="${t}" aria-pressed="${(document.documentElement.dataset.theme || 'auto') === t}">${t}</button>`).join('')}</div>
+    </div></div>`
+}
+
+function sheetText() {
+  return `<div class="head"><h2>${esc(ui.sheet.title)}</h2><button class="x" data-act="closeSheet" aria-label="Close">×</button></div>
+    <p class="small muted">${esc(ui.sheet.hint || '')}</p>
+    <label class="field"><textarea readonly>${esc(ui.sheet.text)}</textarea></label>`
+}
+
+const VIEWS = { wardrobe: viewWardrobe, outfits: viewOutfits, week: viewWeek, buy: viewBuy, profile: viewProfile }
+const SHEETS = { item: sheetItem, text: sheetText }
+
+// ---------- photo processing ----------
+
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image')) }
+    img.src = url
+  })
+}
+
+function downscale(img, max = 900) {
+  const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
+  const c = document.createElement('canvas')
+  c.width = Math.round(img.naturalWidth * k)
+  c.height = Math.round(img.naturalHeight * k)
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
+  return c.toDataURL('image/jpeg', 0.82)
+}
+
+// Dominant garment colour: estimate the background from the border, drop
+// pixels close to it, then take the largest of three k-means clusters.
+function dominantColour(img) {
+  const N = 64
+  const c = document.createElement('canvas')
+  c.width = c.height = N
+  const g = c.getContext('2d', { willReadFrequently: true })
+  g.drawImage(img, 0, 0, N, N)
+  const px = g.getImageData(0, 0, N, N).data
+  const at = (x, y) => { const i = (y * N + x) * 4; return [px[i], px[i + 1], px[i + 2]] }
+  const border = []
+  for (let i = 0; i < N; i++) border.push(at(i, 0), at(i, N - 1), at(0, i), at(N - 1, i))
+  const bg = border.reduce((a, p) => a.map((v, j) => v + p[j] / border.length), [0, 0, 0])
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+  let pts = []
+  for (let y = 8; y < N - 8; y++) for (let x = 8; x < N - 8; x++) { const p = at(x, y); if (dist(p, bg) > 38) pts.push(p) }
+  if (pts.length < 60) { pts = []; for (let y = 20; y < N - 20; y++) for (let x = 20; x < N - 20; x++) pts.push(at(x, y)) }
+  let cents = [pts[0], pts[Math.floor(pts.length / 2)], pts[pts.length - 1]]
+  let groups = []
+  for (let it = 0; it < 8; it++) {
+    groups = cents.map(() => [])
+    for (const p of pts) { let bi = 0, bd = Infinity; cents.forEach((cc, i) => { const d = dist(p, cc); if (d < bd) { bd = d; bi = i } }); groups[bi].push(p) }
+    cents = groups.map((gr, i) => (gr.length ? gr.reduce((a, p) => a.map((v, j) => v + p[j] / gr.length), [0, 0, 0]) : cents[i]))
+  }
+  const big = groups.map((gr, i) => [gr.length, i]).sort((a, b) => b[0] - a[0])[0][1]
+  return cents[big].map(Math.round)
+}
+
+// ---------- forecast ----------
+
+async function forecast(start, end) {
+  const L = LOCATIONS[state.location]
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&daily=temperature_2m_max,precipitation_probability_max&timezone=auto&start_date=${start}&end_date=${end}`
+  const r = await fetch(url)
+  if (!r.ok) throw new Error('Forecast not available for those dates')
+  const j = await r.json()
+  return j.daily.time.map((t, i) => ({ date: t, temp: j.daily.temperature_2m_max[i], rain: (j.daily.precipitation_probability_max[i] ?? 0) >= 50 }))
+}
+
+// ---------- actions ----------
+
+function wear(itemsList, date = todayISO()) {
+  for (const it of itemsList) {
+    it.wears = it.wears || []
+    if (!it.wears.includes(date)) it.wears.push(date)
+  }
+  save()
+}
+
+function saveOutfit(parts, extra = {}) {
+  state.outfits.unshift({ id: uid(), parts: partsToIds(parts), occasion: ui.gen.occasion, band: ui.gen.band, rain: ui.gen.rain, created: todayISO(), ...extra })
+  save()
+  toast('Outfit saved')
+}
+
+function download(name, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 500)
+}
+
+// Hub photos are signed URLs; backups carry the image data itself.
+async function asDataURL(src) {
+  if (src.startsWith('data:')) return src
+  const blob = await (await fetch(src)).blob()
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(r.result)
+    r.onerror = () => reject(r.error)
+    r.readAsDataURL(blob)
+  })
+}
+
+function readJSONFile(file) {
+  return file.text().then((t) => JSON.parse(t))
+}
+
+function runGenerate(more = false) {
+  const ctx = genCtx()
+  const exclude = more ? ui.gen.shown : []
+  const { results } = generate(available(), ctx, { limit: 6, seed: Date.now() % 100000, jitter: more ? 2 : 0.6, exclude })
+  ui.gen.results = results
+  ui.gen.shown = more ? [...ui.gen.shown, ...results.map((r) => r.key)] : results.map((r) => r.key)
+}
+
+// Plans the whole week (onlyIndex null) or re-rolls one day, keeping every
+// other day fixed so the variety rules still see them.
+function planDays(onlyIndex = null) {
+  const w = getWeek()
+  const days = w.days.map((d, i) => {
+    const day = { date: iso(addDays(ui.weekStart, i)), occasion: d.occasion, weather: { band: d.band, rain: !!d.rain } }
+    const keep = onlyIndex === null ? d.locked && d.parts : i !== onlyIndex
+    if (keep) day.locked = d.parts ? idsToParts(d.parts) : {}
+    if (i === onlyIndex && d.parts) day.exclude = outfitKey(idsToParts(d.parts))
+    return day
+  })
+  const plan = planWeek(available(), P(), days, { seed: Date.now() % 9973 })
+  plan.forEach((p, i) => {
+    if (days[i].locked) return
+    w.days[i].parts = p ? partsToIds(p.parts) : null
+    w.days[i].planned = !!p
+  })
+  save()
+}
+
+const ACTIONS = {
+  tab: ({ v }) => { ui.tab = v; ui.sheet = null; window.scrollTo(0, 0); render() },
+  filter: ({ v }) => { ui.filter = v; render() },
+  newItem: () => openItemSheet(null, 'new'),
+  checkItem: () => openItemSheet(null, 'check'),
+  openItem: ({ id }) => openItemSheet(state.items.find((it) => it.id === id), 'edit'),
+  addFromSlot: ({ id }) => {
+    const s = P().slots.find((x) => x.id === id)
+    const v = virtualPieces(s, state.items)[0] || { subtype: s.subtypes[0], colour: s.best[0] }
+    openItemSheet(null, 'new', { subtype: v.subtype, colour: v.colour, slotId: id, pattern: SUBTYPES[v.subtype].pattern || 'solid' })
+  },
+  closeSheet: () => { ui.sheet = null; renderSheet() },
+  pickColour: ({ v }) => { ui.sheet.draft.colour = v; ui.sheet.draft.result = null; renderSheet() },
+  dropPhoto: () => { ui.sheet.draft.photo = null; ui.sheet.draft.suggestions = null; renderSheet() },
+  saveItem: async () => {
+    const d = ui.sheet.draft
+    const it = draftToItem(d)
+    const existing = state.items.find((x) => x.id === d.id)
+    if (existing) {
+      Object.assign(existing, { ...it, wears: existing.wears, status: existing.status, createdAt: existing.createdAt, demo: undefined })
+      for (const k of ['f', 'warmth', 'waterproof', 'price']) if (!(k in it)) delete existing[k]
+      delete existing.demo
+    } else state.items.push(it)
+    if (d.photo !== (photos.get(it.id) || null)) await setPhoto(it.id, d.photo)
+    save()
+    ui.sheet = null
+    ui.gen.results = null
+    toast(existing ? 'Saved' : `${it.name} added`)
+    render()
+  },
+  deleteItem: async () => {
+    const d = ui.sheet.draft
+    if (!confirm('Delete this piece? Saved outfits that use it will lose it.')) return
+    state.items = state.items.filter((x) => x.id !== d.id)
+    if (photos.has(d.id)) await setPhoto(d.id, null)
+    save()
+    ui.sheet = null
+    ui.gen.results = null
+    render()
+  },
+  toggleWash: () => {
+    const it = state.items.find((x) => x.id === ui.sheet.draft.id)
+    it.status = it.status === 'laundry' ? 'available' : 'laundry'
+    save()
+    ui.gen.results = null
+    ui.sheet = null
+    toast(it.status === 'laundry' ? 'Marked as in the wash' : 'Back in rotation')
+    render()
+  },
+  wearItem: () => {
+    const it = state.items.find((x) => x.id === ui.sheet.draft.id)
+    wear([it])
+    toast('Logged for today')
+    renderSheet()
+  },
+  runCheck: () => {
+    const d = ui.sheet.draft
+    const piece = { ...draftToItem({ ...d, slotId: null }), id: 'check-piece', virtual: true }
+    const pool = available()
+    const slot = suggestSlot(P(), state.items, d.subtype, d.colour)
+    const dupes = state.items.filter((it) => it.subtype === d.subtype && it.colour === d.colour)
+    const base = coverage(pool, P()).reduce((n, c) => n + c.n, 0)
+    d.result = { verdict: verdictFor(d.colour, d.subtype), slot, dupes, gain: SUBTYPES[d.subtype].cat === 'accessory' ? 0 : outfitGain(pool, P(), [piece]), base, colour: d.colour }
+    renderSheet()
+  },
+  boughtIt: () => { ui.sheet.draft.mode = 'new'; ui.sheet.draft.slotId = null; ui.sheet.draft.result = null; renderSheet() },
+  loadDemo: () => {
+    state.items.push(...demoWardrobe(P(), 2).filter((d) => !state.items.some((x) => x.id === d.id)))
+    save()
+    toast('Demo wardrobe loaded: Tiers 1 and 2')
+    render()
+  },
+  clearDemo: () => {
+    state.items = state.items.filter((it) => !it.demo)
+    state.outfits = state.outfits.filter((o) => Object.values(o.parts).every((id) => state.items.some((it) => it.id === id)))
+    state.weeks = {}
+    ui.gen.results = null
+    save()
+    render()
+  },
+  outTab: ({ v }) => { ui.outTab = v; render() },
+  setGen: ({ k, v }) => { ui.gen[k] = v; ui.gen.results = null; render() },
+  toggleRain: () => { ui.gen.rain = !ui.gen.rain; ui.gen.results = null; render() },
+  todayForecast: async () => {
+    ui.busy = 'forecast'
+    render()
+    try {
+      const [f] = await forecast(todayISO(), todayISO())
+      ui.gen.band = bandForTemp(f.temp)
+      ui.gen.rain = f.rain
+      ui.gen.results = null
+      toast(`${LOCATIONS[state.location].label}: ${Math.round(f.temp)}°C${f.rain ? ', rain likely' : ''}`)
+    } catch (e) {
+      toast('Could not reach the forecast. Set the weather by hand.')
+    }
+    ui.busy = null
+    render()
+  },
+  generate: () => { runGenerate(false); render() },
+  generateMore: () => { runGenerate(true); render() },
+  wearGen: ({ i }) => { const o = ui.gen.results[i]; wear(partsList(o.parts)); toast('Logged for today'); render() },
+  saveGen: ({ i }) => { saveOutfit(ui.gen.results[i].parts); render() },
+  editGen: ({ i }) => { ui.build = partsToIds(ui.gen.results[i].parts); ui.outTab = 'build'; render() },
+  buildPick: ({ slot, id }) => {
+    if (id) ui.build[slot] = id
+    else delete ui.build[slot]
+    if (slot === 'base' && id && ui.build.mid === id) delete ui.build.mid
+    if (slot === 'mid' && id && ui.build.base === id) delete ui.build.base
+    render()
+  },
+  clearBuild: () => { ui.build = {}; render() },
+  saveBuild: () => { saveOutfit(idsToParts(ui.build)); render() },
+  wearBuild: () => { wear(partsList(idsToParts(ui.build))); toast('Logged for today'); render() },
+  wearSaved: ({ id }) => { const o = state.outfits.find((x) => x.id === id); wear(partsList(idsToParts(o.parts))); toast('Logged for today'); render() },
+  editSaved: ({ id }) => {
+    const o = state.outfits.find((x) => x.id === id)
+    ui.build = { ...o.parts }
+    Object.assign(ui.gen, { occasion: o.occasion, band: o.band || 'mild', rain: !!o.rain })
+    ui.outTab = 'build'
+    render()
+  },
+  deleteSaved: ({ id }) => { state.outfits = state.outfits.filter((x) => x.id !== id); save(); render() },
+  guideBuild: ({ i }) => {
+    const f = P().formulas[i]
+    const fill = fillFormula(f, state.items)
+    ui.build = partsToIds(partsFromItems(fill.filter((x) => x.item).map((x) => x.item)))
+    ui.gen.occasion = f.occasion
+    ui.outTab = 'build'
+    render()
+  },
+  weekNav: ({ v }) => { ui.weekStart = v === '0' ? mondayOf(new Date()) : addDays(ui.weekStart, Number(v)); render() },
+  planWeek: () => {
+    ui.busy = 'plan'
+    render()
+    setTimeout(() => { planDays(); ui.busy = null; render() }, 20)
+  },
+  daySwap: ({ i }) => { planDays(Number(i)); render() },
+  dayLock: ({ i }) => { const d = getWeek().days[i]; d.locked = !d.locked; save(); render() },
+  dayRain: ({ i }) => { const d = getWeek().days[i]; d.rain = !d.rain; save(); render() },
+  dayClear: ({ i }) => { const d = getWeek().days[i]; d.parts = null; d.locked = false; delete d.planned; save(); render() },
+  dayWore: ({ i }) => {
+    const d = getWeek().days[i]
+    wear(partsList(idsToParts(d.parts)), iso(addDays(ui.weekStart, Number(i))))
+    toast('Logged')
+    render()
+  },
+  weekForecast: async () => {
+    ui.busy = 'week-forecast'
+    render()
+    try {
+      const w = getWeek()
+      const res = await forecast(iso(ui.weekStart), iso(addDays(ui.weekStart, 6)))
+      res.forEach((f, i) => { if (w.days[i] && f.temp != null) Object.assign(w.days[i], { band: bandForTemp(f.temp), rain: f.rain, temp: f.temp }) })
+      save()
+      toast(`Forecast for ${LOCATIONS[state.location].label} applied`)
+    } catch {
+      toast('Forecast only covers about two weeks either side of today')
+    }
+    ui.busy = null
+    render()
+  },
+  copyPrompt: async () => {
+    try {
+      await navigator.clipboard.writeText(PROFILE_PROMPT)
+      toast('Prompt copied. Paste it into Claude with your guide.')
+    } catch {
+      ui.sheet = { kind: 'text', title: 'Conversion prompt', hint: 'Copy this, then paste it into Claude along with your style guide.', text: PROFILE_PROMPT }
+      renderSheet()
+    }
+  },
+  exportProfile: () => download('style-profile.json', P()),
+  exportBackup: async () => {
+    toast('Preparing backup…')
+    const out = {}
+    for (const [id, src] of photos) {
+      try { out[id] = await asDataURL(src) } catch {}
+    }
+    download(`wardrobe-backup-${todayISO()}.json`, { format: 'fearne-wardrobe-backup', state, photos: out })
+  },
+  reload: () => location.reload(),
+  resetAll: async () => {
+    if (!confirm('Erase all pieces, outfits, plans and photos on this device?')) return
+    for (const id of [...photos.keys()]) await setPhoto(id, null)
+    state = freshState()
+    ui.gen.results = null
+    save()
+    render()
+  },
+  theme: ({ v }) => {
+    if (v === 'auto') delete document.documentElement.dataset.theme
+    else document.documentElement.dataset.theme = v
+    try { localStorage.setItem('wardrobe-theme', v) } catch {}
+    render()
+  },
+}
+
+const CHANGES = {
+  photo: async (el) => {
+    const file = el.files?.[0]
+    if (!file) return
+    try {
+      const img = await loadImage(file)
+      const d = ui.sheet.draft
+      d.photo = downscale(img)
+      const near = nearestColours(P(), dominantColour(img), 4)
+      d.suggestions = near.map((n) => n.colour.id)
+      d.colour = d.suggestions[0]
+      d.result = null
+      renderSheet()
+    } catch (e) {
+      toast(e.message)
+    }
+  },
+  location: (el) => { state.location = el.value; save(); render() },
+  dayOcc: (el) => { getWeek().days[el.dataset.i].occasion = el.value; save(); render() },
+  dayBand: (el) => { const d = getWeek().days[el.dataset.i]; d.band = el.value; delete d.temp; save(); render() },
+  importProfile: async (el) => {
+    try {
+      const p = await readJSONFile(el.files[0])
+      const errs = validateProfile(p)
+      if (errs.length) { alert('That profile has problems:\n\n' + errs.slice(0, 12).join('\n')); return }
+      state.profile = p
+      if (!p.occasions.some((o) => o.id === ui.gen.occasion)) ui.gen.occasion = p.occasions[0].id
+      save()
+      toast('Profile imported')
+      render()
+    } catch {
+      toast('Could not read that file as JSON')
+    }
+  },
+  importBackup: async (el) => {
+    try {
+      const b = await readJSONFile(el.files[0])
+      if (b.format !== 'fearne-wardrobe-backup') throw new Error()
+      if (!confirm('Replace everything on this device with this backup?')) return
+      for (const id of [...photos.keys()]) await setPhoto(id, null)
+      state = b.state
+      for (const [id, data] of Object.entries(b.photos || {})) await setPhoto(id, data)
+      save()
+      toast('Backup restored')
+      render()
+    } catch {
+      toast('That is not a wardrobe backup')
+    }
+  },
+}
+
+function bind(el, typing) {
+  const d = ui.sheet?.draft
+  if (!d) return
+  const k = el.dataset.bind
+  const v = el.type === 'checkbox' ? el.checked : el.value
+  if (k === 'flo' || k === 'fhi') {
+    const cur = d.f || SUBTYPES[d.subtype].f || [1, 5]
+    const n = Number(v)
+    d.f = k === 'flo' ? [n, Math.max(n, cur[1])] : [Math.min(cur[0], n), n]
+    if (!typing) renderSheet()
+    return
+  }
+  if (k === 'warmth') d.warmth = Number(v)
+  else d[k] = v
+  if (k === 'subtype') { d.f = null; d.warmth = null; d.waterproof = null; d.slotId = d.id ? '' : null; d.pattern = SUBTYPES[v].pattern || 'solid' }
+  if (k === 'subtype' || k === 'colour') d.result = null
+  if (el.dataset.rerender && !typing) renderSheet()
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-act]')
+  if (!t) return
+  const fn = ACTIONS[t.dataset.act]
+  if (!fn) return
+  e.preventDefault()
+  fn(t.dataset, t)
+})
+document.addEventListener('change', (e) => {
+  const t = e.target
+  if (t.dataset.change) CHANGES[t.dataset.change](t)
+  else if (t.dataset.bind) bind(t, false)
+})
+document.addEventListener('input', (e) => {
+  const t = e.target
+  if (t.dataset.bind && (t.tagName === 'INPUT' && t.type !== 'checkbox')) bind(t, true)
+})
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; renderSheet() }
+})
+
+try {
+  const t = localStorage.getItem('wardrobe-theme')
+  if (t && t !== 'auto') document.documentElement.dataset.theme = t
+} catch {}
+boot()
+
+</script>
+</body>
+</html>

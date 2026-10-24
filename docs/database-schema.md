@@ -623,9 +623,8 @@ live in
 ## Wardrobe: `wardrobe_state` (+ `wardrobe` storage bucket)
 
 Read/written by `public/wardrobe/index.html`, a standalone build of
-`prototypes/wardrobe/` (see `store-hub.js`) served at `/wardrobe/`, and checked
-by `useHasWardrobe()` in `Home.jsx` to decide whether to show the Wardrobe
-tile. SQL: [`_reference/wardrobe-state-schema.sql`](../_reference/wardrobe-state-schema.sql).
+`prototypes/wardrobe/` (see `store-hub.js`) served at `/wardrobe/`, linked
+from the Wardrobe tile on Home. SQL: [`_reference/wardrobe-state-schema.sql`](../_reference/wardrobe-state-schema.sql).
 
 | Column | Type | Notes |
 |---|---|---|

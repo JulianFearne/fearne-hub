@@ -80,7 +80,7 @@ Local single-file app plus engine, profile, tests and docs. **Exit:** Julian use
 - The same single-file app is built a second time with a Supabase storage adapter and served from `public/wardrobe/`, the same way CARVE and Marginalia are hosted.
 - It shares fearne.org's origin, so the hub login carries over.
 - Data goes in one owner-only row (`wardrobe_state`) and photos in a private bucket. Setup: run `_reference/wardrobe-state-schema.sql` once.
-- A Wardrobe tile appears on Home only for users who have opened it.
+- A Wardrobe tile sits on Home, replacing the "This week's meals" tile (the banner above already opens the meal plan). Anyone in the family can open it, but each person only ever sees their own wardrobe.
 - **During the test, note:** what was tedious to add, outfits that were wrong (and which rule should have caught them), anything missing, and how often you opened it.
 - **Exit:** decide whether it earns the full React port below, needs rule changes only, or should be dropped.
 

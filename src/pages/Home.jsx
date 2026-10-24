@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { supabase } from '../supabaseClient'
 import { displayName } from './accountData'
 import { fetchEvents, nextOccurrence, toISODate, formatEventDate, formatEventTime } from './calendarData'
 import Card, { CardTitle, CardMeta } from '../components/ds/Card.jsx'
@@ -10,11 +9,13 @@ import Icon from '../components/ds/Icon.jsx'
 
 const shortcuts = [
   { to: '/recipes', title: 'Recipes', blurb: 'Browse, cook, add your own', icon: 'soup' },
-  { to: '/planner', title: "This week's meals", blurb: '7 days, planned out', icon: 'calendar-days' },
   { to: '/lists', title: 'Lists', blurb: 'Shopping, to-dos, checklists and chores', icon: 'clipboard-list' },
   { to: '/calendar', title: 'Calendar', blurb: 'Events and birthdays', icon: 'calendar-days' },
   { to: '/workouts', title: 'Workouts', blurb: 'Log a session, see your progress', icon: 'dumbbell' },
   { to: '/games', title: 'Games', blurb: 'Connect Four, Sudoku, Hangman, and more', icon: 'gamepad-2' },
+  // A standalone build in public/wardrobe/, outside the router, so a plain link.
+  // Each person's wardrobe is private to them.
+  { href: '/wardrobe/', title: 'Wardrobe', blurb: 'Outfits, week plan, buy list', icon: 'shirt' },
 ]
 
 function useUpcomingEvents(limit = 3) {
@@ -36,26 +37,10 @@ function useUpcomingEvents(limit = 3) {
   }, [events, limit])
 }
 
-// The wardrobe (public/wardrobe/, a standalone build) is private per user, so
-// its tile only shows for someone who has opened it before. RLS means this
-// query can only ever see the viewer's own row.
-function useHasWardrobe() {
-  const [has, setHas] = useState(false)
-  useEffect(() => {
-    supabase
-      .from('wardrobe_state')
-      .select('user_id')
-      .maybeSingle()
-      .then(({ data }) => setHas(!!data))
-  }, [])
-  return has
-}
-
 export default function Home() {
   const { user, profile } = useAuth()
   const name = profile ? displayName(profile, user?.email) : 'there'
   const upcoming = useUpcomingEvents()
-  const hasWardrobe = useHasWardrobe()
 
   return (
     <div>
@@ -74,7 +59,7 @@ export default function Home() {
 
       <div className="fh-home__grid">
         {shortcuts.map((s) => (
-          <Card key={s.to} as={Link} to={s.to} tile>
+          <Card key={s.to || s.href} {...(s.to ? { as: Link, to: s.to } : { href: s.href })} tile>
             <span className="fh-home__mark">
               <Icon name={s.icon} size={20} />
             </span>
@@ -84,17 +69,6 @@ export default function Home() {
             </div>
           </Card>
         ))}
-        {hasWardrobe && (
-          <Card href="/wardrobe/" tile>
-            <span className="fh-home__mark">
-              <Icon name="shirt" size={20} />
-            </span>
-            <div>
-              <CardTitle>Wardrobe</CardTitle>
-              <CardMeta>Outfits, week plan, buy list</CardMeta>
-            </div>
-          </Card>
-        )}
       </div>
 
       {upcoming.length > 0 && (

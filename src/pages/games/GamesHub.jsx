@@ -243,7 +243,7 @@ const GAMES = [
   {
     key: 'wayhaven',
     title: 'Wayhaven',
-    blurb: 'Julian’s idle skilling game: watch your hero chop, mine and fish, then carry the haul home. Early build, nothing to play yet.',
+    blurb: 'Julian’s idle skilling game: watch your hero chop, mine and fish, then carry the haul home. Early grey-box build: watch your hero chop trees and bank the logs.',
     icon: 'castle',
     href: '/wayhaven/',
     tags: ['1 player', 'Work in progress'],

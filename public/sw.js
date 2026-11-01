@@ -21,7 +21,7 @@
    IMPORTANT: bump CACHE_VERSION on every deploy. The activate step deletes old
    caches, which clears any stale bundles from a previous release. */
 
-const CACHE_VERSION = 'fearne-hub-v9';
+const CACHE_VERSION = 'fearne-hub-v10';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

@@ -15,11 +15,13 @@
    - /idle/ and /idle-preview/ (Marginalia, pushed in by the idle repo's
      workflow) are left alone as well: they are separate pages, and a navigation
      to them must not be cached as the hub's index.html.
+   - /wayhaven/ (Wayhaven's Vite build, copied in from the wayhaven repo) is
+     left alone for the same reason.
 
    IMPORTANT: bump CACHE_VERSION on every deploy. The activate step deletes old
    caches, which clears any stale bundles from a previous release. */
 
-const CACHE_VERSION = 'fearne-hub-v8';
+const CACHE_VERSION = 'fearne-hub-v9';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -48,6 +50,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/carve-preview/')) return;
   if (url.pathname.startsWith('/idle/')) return;
   if (url.pathname.startsWith('/idle-preview/')) return;
+  if (url.pathname.startsWith('/wayhaven/')) return;
 
   // App navigations: network-first with an offline fallback to index.html.
   if (req.mode === 'navigate') {

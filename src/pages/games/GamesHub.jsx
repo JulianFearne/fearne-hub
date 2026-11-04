@@ -243,7 +243,7 @@ const GAMES = [
   {
     key: 'wayhaven',
     title: 'Wayhaven',
-    blurb: 'Julian’s idle skilling game: watch your hero chop, mine and fish, then carry the haul home. Early grey-box build: chop, mine and fish, find rare treasures, trade in the village and mend the bridge to open the east bank.',
+    blurb: 'Julian’s idle skilling game: watch your hero chop, mine, fish and fight, then carry the haul home. Early grey-box build: gather and find rare treasures, spar with bramble boars and mossback bears for keepsakes and coins, trade in the village and mend the bridge to open the east bank.',
     icon: 'castle',
     href: '/wayhaven/',
     tags: ['1 player', 'Work in progress'],

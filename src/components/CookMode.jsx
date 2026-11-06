@@ -54,22 +54,58 @@ function beep() {
 export default function CookMode({ recipe, onExit }) {
   const [step, setStep] = useState(0)
   const [ingOpen, setIngOpen] = useState(false)
-  const [remaining, setRemaining] = useState(0)
-  const [running, setRunning] = useState(false)
-  const [finished, setFinished] = useState(false)
-  const intervalRef = useRef(null)
+  // The timer counts down to a stored end time rather than ticking a counter,
+  // so switching apps or the phone locking doesn't stall it: coming back shows
+  // the true time left. Same approach as the workout rest timer.
+  const [endsAt, setEndsAt] = useState(null) // ms timestamp while running
+  const [pausedLeft, setPausedLeft] = useState(null) // seconds left while paused
+  const [, setNow] = useState(Date.now())
+  const beepedRef = useRef(false)
   const wakeLockRef = useRef(null)
   const ingRef = useRef(null)
 
   const stepText = recipe.steps[step]
   const total = detectTimerSeconds(stepText || '')
 
+  const running = endsAt != null
+  const remaining = running
+    ? Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
+    : pausedLeft ?? total
+  const finished = running && remaining <= 0
+
   useEffect(() => {
-    setRemaining(total)
-    setRunning(false)
-    setFinished(false)
-    clearInterval(intervalRef.current)
+    setEndsAt(null)
+    setPausedLeft(null)
   }, [step, total])
+
+  // Re-render while running, and straight away when the page comes back.
+  useEffect(() => {
+    if (!running) return
+    const tick = () => setNow(Date.now())
+    const t = setInterval(tick, 250)
+    document.addEventListener('visibilitychange', tick)
+    return () => {
+      clearInterval(t)
+      document.removeEventListener('visibilitychange', tick)
+    }
+  }, [running])
+
+  // Beep when it runs out, or on returning to the page if it ran out meanwhile.
+  useEffect(() => {
+    if (!finished) {
+      beepedRef.current = false
+      return
+    }
+    const tryBeep = () => {
+      if (!beepedRef.current && document.visibilityState === 'visible') {
+        beepedRef.current = true
+        beep()
+      }
+    }
+    tryBeep()
+    document.addEventListener('visibilitychange', tryBeep)
+    return () => document.removeEventListener('visibilitychange', tryBeep)
+  }, [finished])
 
   // The panel sits below the step and timer, which on a phone is off-screen,
   // so bring it into view when it opens.
@@ -77,19 +113,38 @@ export default function CookMode({ recipe, onExit }) {
     if (ingOpen) ingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [ingOpen])
 
+  // Keep the screen awake. The lock drops whenever the page is hidden, so take
+  // it again on the way back.
   useEffect(() => {
-    try {
-      navigator.wakeLock?.request('screen').then((l) => (wakeLockRef.current = l)).catch(() => {})
-    } catch (e) {
-      /* wake lock not supported, fail silently */
+    let cancelled = false
+    const acquire = async () => {
+      try {
+        if ('wakeLock' in navigator && document.visibilityState === 'visible' && !wakeLockRef.current) {
+          const lock = await navigator.wakeLock.request('screen')
+          if (cancelled) {
+            lock.release()
+            return
+          }
+          wakeLockRef.current = lock
+          lock.addEventListener?.('release', () => {
+            wakeLockRef.current = null
+          })
+        }
+      } catch (e) {
+        /* wake lock not supported, fail silently */
+      }
     }
+    acquire()
+    document.addEventListener('visibilitychange', acquire)
     return () => {
-      clearInterval(intervalRef.current)
+      cancelled = true
+      document.removeEventListener('visibilitychange', acquire)
       try {
         wakeLockRef.current?.release()
       } catch (e) {
-        /* ignore */
+        /* already gone */
       }
+      wakeLockRef.current = null
     }
   }, [])
 
@@ -104,34 +159,19 @@ export default function CookMode({ recipe, onExit }) {
   })
 
   function toggleTimer() {
-    if (running) {
-      clearInterval(intervalRef.current)
-      setRunning(false)
+    if (running && !finished) {
+      setPausedLeft(remaining)
+      setEndsAt(null)
       return
     }
-    const start = remaining <= 0 ? total : remaining
-    setRemaining(start)
-    setFinished(false)
-    setRunning(true)
-    intervalRef.current = setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
-          clearInterval(intervalRef.current)
-          setRunning(false)
-          setFinished(true)
-          beep()
-          return 0
-        }
-        return r - 1
-      })
-    }, 1000)
+    const start = finished || remaining <= 0 ? total : remaining
+    setPausedLeft(null)
+    setEndsAt(Date.now() + start * 1000)
   }
 
   function resetTimer() {
-    clearInterval(intervalRef.current)
-    setRunning(false)
-    setFinished(false)
-    setRemaining(total)
+    setEndsAt(null)
+    setPausedLeft(null)
   }
 
   function handlePrev() {
@@ -176,8 +216,8 @@ export default function CookMode({ recipe, onExit }) {
         {total > 0 && (
           <div className={`fh-cook__timer${finished ? ' fh-cook__timer--finished' : ''}`}>
             <span className="fh-cook__timer-time">{fmtTime(remaining)}</span>
-            <Button variant="secondary" icon={running ? 'pause' : 'play'} onClick={toggleTimer}>
-              {running ? 'Pause' : remaining <= 0 || remaining === total ? 'Start timer' : 'Resume'}
+            <Button variant="secondary" icon={running && !finished ? 'pause' : 'play'} onClick={toggleTimer}>
+              {running && !finished ? 'Pause' : finished || remaining === total ? 'Start timer' : 'Resume'}
             </Button>
             <Button variant="quiet" onClick={resetTimer}>
               Reset

@@ -59,6 +59,7 @@ export default function CookMode({ recipe, onExit }) {
   const [finished, setFinished] = useState(false)
   const intervalRef = useRef(null)
   const wakeLockRef = useRef(null)
+  const ingRef = useRef(null)
 
   const stepText = recipe.steps[step]
   const total = detectTimerSeconds(stepText || '')
@@ -69,6 +70,12 @@ export default function CookMode({ recipe, onExit }) {
     setFinished(false)
     clearInterval(intervalRef.current)
   }, [step, total])
+
+  // The panel sits below the step and timer, which on a phone is off-screen,
+  // so bring it into view when it opens.
+  useEffect(() => {
+    if (ingOpen) ingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [ingOpen])
 
   useEffect(() => {
     try {
@@ -139,7 +146,13 @@ export default function CookMode({ recipe, onExit }) {
     <div className="fh-cook">
       <div className="fh-cook__top">
         <p className="fh-cook__title">{recipe.title}</p>
-        <Button variant="quiet" size="sm" icon="list-checks" onClick={() => setIngOpen((o) => !o)}>
+        <Button
+          variant="quiet"
+          size="sm"
+          icon="list-checks"
+          aria-expanded={ingOpen}
+          onClick={() => setIngOpen((o) => !o)}
+        >
           Ingredients
         </Button>
         <IconButton icon="x" label="Exit Cook Mode" variant="onFeature" onClick={onExit} />
@@ -173,7 +186,7 @@ export default function CookMode({ recipe, onExit }) {
         )}
 
         {ingOpen && (
-          <div className="fh-cook__ingredients">
+          <div className="fh-cook__ingredients" ref={ingRef}>
             <h4>Ingredients</h4>
             <ul>
               {recipe.ingredients.map((i, idx) =>

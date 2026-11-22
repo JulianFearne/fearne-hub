@@ -1,56 +1,117 @@
 {
-  "easy": {
-    "label": "Easy (little kids)",
-    "emoji": "🌟",
-    "words": [
-      "Sun", "Tree", "Fish", "House", "Ball", "Cat", "Dog", "Star",
-      "Boat", "Cake", "Flower", "Rainbow", "Apple", "Moon", "Cloud", "Bird",
-      "Car", "Hat", "Umbrella", "Snowman"
-    ]
-  },
   "animals": {
     "label": "Animals",
     "emoji": "🐾",
-    "words": [
-      "Elephant", "Kangaroo", "Penguin", "Octopus", "Giraffe", "Crocodile",
-      "Hedgehog", "Flamingo", "Squirrel", "Dolphin", "Spider", "Owl",
-      "Butterfly", "Snail", "Camel", "Tortoise", "Peacock", "Bat"
+    "easy": [
+      "Cat", "Dog", "Fish", "Bird", "Cow", "Pig", "Duck", "Horse", "Sheep", "Frog",
+      "Snake", "Mouse", "Lion", "Bee", "Rabbit", "Snail", "Spider", "Bat", "Owl", "Chicken",
+      "Elephant", "Giraffe", "Monkey", "Bear", "Tiger"
+    ],
+    "medium": [
+      "Kangaroo", "Penguin", "Octopus", "Crocodile", "Hedgehog", "Flamingo", "Squirrel", "Dolphin", "Butterfly", "Camel",
+      "Tortoise", "Peacock", "Zebra", "Shark", "Whale", "Crab", "Jellyfish", "Ladybird", "Polar bear", "Parrot",
+      "Fox", "Deer", "Panda", "Gorilla", "Bumblebee"
+    ],
+    "hard": [
+      "Chameleon", "Platypus", "Seahorse", "Sloth", "Armadillo", "Hummingbird", "Woodpecker", "Porcupine", "Stingray", "Scorpion",
+      "Meerkat", "Walrus", "Koala", "Lobster", "Mole", "Badger", "Pelican", "Caterpillar", "Starfish", "Hippo",
+      "Rhino", "Moth", "Toucan", "Beaver", "Anteater"
     ]
   },
-  "actions": {
-    "label": "Actions",
-    "emoji": "🏃",
-    "words": [
-      "Swimming", "Dancing", "Sleeping", "Juggling", "Sneezing", "Climbing",
-      "Skateboarding", "Cooking", "Yawning", "Painting", "Fishing", "Diving",
-      "Skipping", "Surfing", "Snoring", "Whistling", "Cartwheel", "Karate"
+  "food": {
+    "label": "Food & drink",
+    "emoji": "🍕",
+    "easy": [
+      "Apple", "Banana", "Cake", "Pizza", "Egg", "Ice cream", "Carrot", "Bread", "Cheese", "Biscuit",
+      "Lolly", "Orange", "Grapes", "Strawberry", "Cherry", "Milk", "Burger", "Sandwich", "Pear", "Watermelon"
+    ],
+    "medium": [
+      "Spaghetti", "Hot dog", "Pancake", "Doughnut", "Popcorn", "Cupcake", "Sushi", "Pineapple", "Broccoli", "Mushroom",
+      "Fish and chips", "Birthday cake", "Cup of tea", "Corn on the cob", "Lemonade", "Toast", "Sausage", "Croissant", "Chocolate bar", "Taco"
+    ],
+    "hard": [
+      "Full English breakfast", "Sunday roast", "Smoothie", "Fondue", "Gingerbread man", "Candyfloss", "Jelly and ice cream", "Picnic", "Barbecue", "Takeaway",
+      "Milkshake", "Kebab", "Sprouts", "Afternoon tea", "Avocado", "Pie and mash", "Toffee apple", "Trifle", "Baked beans", "Hot chocolate"
     ]
   },
   "objects": {
     "label": "Everyday things",
     "emoji": "🧦",
-    "words": [
-      "Toothbrush", "Backpack", "Umbrella", "Torch", "Kettle", "Scissors",
-      "Ladder", "Pillow", "Sandcastle", "Bicycle", "Telescope", "Wheelbarrow",
-      "Lightbulb", "Envelope", "Trampoline", "Deckchair", "Bathtub", "Kite"
+    "easy": [
+      "Ball", "Car", "Hat", "Book", "Chair", "Door", "Key", "Bed", "Cup", "Shoe",
+      "Sock", "Clock", "Phone", "Kite", "Boat", "Train", "Balloon", "Spoon", "Glasses", "Bus"
+    ],
+    "medium": [
+      "Toothbrush", "Backpack", "Umbrella", "Torch", "Kettle", "Scissors", "Ladder", "Pillow", "Bicycle", "Envelope",
+      "Lightbulb", "Bathtub", "Hairdryer", "Sofa", "Television", "Candle", "Padlock", "Paintbrush", "Wellies", "Fridge"
+    ],
+    "hard": [
+      "Telescope", "Wheelbarrow", "Trampoline", "Deckchair", "Microscope", "Hourglass", "Compass", "Magnifying glass", "Washing machine", "Remote control",
+      "Lawnmower", "Hoover", "Calculator", "Headphones", "Stapler", "Doorbell", "Ironing board", "Coat hanger", "Plug", "Satnav"
     ]
   },
-  "screen": {
-    "label": "Movies & TV",
+  "actions": {
+    "label": "Actions",
+    "emoji": "🏃",
+    "easy": [
+      "Swimming", "Dancing", "Sleeping", "Eating", "Running", "Jumping", "Crying", "Laughing", "Waving", "Clapping",
+      "Reading", "Singing", "Kicking", "Brushing teeth", "Drinking", "Hopping", "Throwing", "Hugging", "Walking", "Sitting"
+    ],
+    "medium": [
+      "Juggling", "Sneezing", "Climbing", "Skateboarding", "Cooking", "Yawning", "Painting", "Fishing", "Diving", "Skipping",
+      "Surfing", "Snoring", "Whistling", "Cartwheel", "Karate", "Knitting", "Ice skating", "Hula hooping", "Rowing", "Bowling"
+    ],
+    "hard": [
+      "Sleepwalking", "Hiccupping", "Tightrope walking", "Changing a nappy", "Walking a dog", "Tidying up", "Taking a selfie", "Building a snowman", "Doing the washing up", "Parachuting",
+      "Ironing", "Hide and seek", "Tug of war", "Blowing bubbles", "Moonwalking", "Weightlifting", "Stargazing", "Waiting for a bus", "Getting a haircut", "Locked out"
+    ]
+  },
+  "places": {
+    "label": "Places",
+    "emoji": "🏰",
+    "easy": [
+      "House", "Beach", "School", "Park", "Farm", "Castle", "Shop", "Zoo", "Garden", "Island",
+      "Forest", "Mountain", "Bridge", "Swing park", "Pond", "Tent", "Kitchen", "Bedroom", "Bathroom", "Road"
+    ],
+    "medium": [
+      "Hospital", "Library", "Airport", "Train station", "Lighthouse", "Volcano", "Desert", "Cave", "Waterfall", "Swimming pool",
+      "Supermarket", "Funfair", "Football pitch", "Igloo", "Treehouse", "Cinema", "Museum", "Church", "Petrol station", "Car park"
+    ],
+    "hard": [
+      "Space station", "North Pole", "Jungle", "Haunted house", "Submarine", "Pyramid", "Eiffel Tower", "Big Ben", "Stonehenge", "Rainforest",
+      "Car wash", "Dentist", "Laundrette", "Prison", "Theme park", "Campsite", "Skyscraper", "Windmill", "Motorway", "Underground"
+    ]
+  },
+  "characters": {
+    "label": "Characters",
     "emoji": "🎬",
-    "words": [
-      "Superhero", "Pirate", "Dinosaur", "Robot", "Wizard", "Astronaut",
-      "Ghost", "Dragon", "Mermaid", "Vampire", "Alien", "Ninja",
-      "Detective", "Zombie", "Fairy", "Knight"
+    "easy": [
+      "Pirate", "Robot", "Ghost", "Dragon", "Princess", "King", "Queen", "Clown", "Witch", "Cowboy",
+      "Monster", "Baby", "Teacher", "Doctor", "Firefighter", "Police officer", "Snowman", "Fairy", "Mermaid", "Alien"
+    ],
+    "medium": [
+      "Superhero", "Dinosaur", "Wizard", "Astronaut", "Vampire", "Ninja", "Detective", "Zombie", "Knight", "Unicorn",
+      "Father Christmas", "Tooth fairy", "Easter bunny", "Chef", "Farmer", "Footballer", "Postman", "Caveman", "Werewolf", "Mummy"
+    ],
+    "hard": [
+      "Magician", "Lifeguard", "Scarecrow", "Referee", "Lollipop lady", "Scuba diver", "Ballerina", "Rock star", "Mad scientist", "Lumberjack",
+      "Beekeeper", "Hairdresser", "Pilot", "Archaeologist", "Grim reaper", "Genie", "Goblin", "Troll", "Puppeteer", "Juggler"
     ]
   },
-  "tricky": {
-    "label": "Tricky",
+  "ideas": {
+    "label": "Feelings & ideas",
     "emoji": "🧠",
-    "words": [
-      "Jealousy", "Democracy", "Nostalgia", "Gravity", "Echo", "Silence",
-      "Freedom", "Time travel", "Recycling", "Homesick", "Imagination",
-      "Friendship", "Invisible", "Allergic", "Exhausted", "Suspicious"
+    "easy": [
+      "Happy", "Sad", "Angry", "Scared", "Tired", "Hot", "Cold", "Hungry", "Love", "Surprised",
+      "Sleepy", "Silly", "Shy", "Poorly", "Brave", "Big", "Small", "Fast", "Slow", "Loud"
+    ],
+    "medium": [
+      "Gravity", "Echo", "Silence", "Invisible", "Allergic", "Exhausted", "Bored", "Nervous", "Proud", "Dizzy",
+      "Upside down", "Backwards", "Birthday", "Holiday", "Night time", "Weekend", "Winning", "Lost", "Heavy", "Itchy"
+    ],
+    "hard": [
+      "Jealousy", "Democracy", "Nostalgia", "Freedom", "Time travel", "Recycling", "Homesick", "Imagination", "Friendship", "Suspicious",
+      "Embarrassed", "Confused", "Déjà vu", "Patience", "Luck", "Secret", "Electricity", "Global warming", "Teamwork", "Daydreaming"
     ]
   }
 }

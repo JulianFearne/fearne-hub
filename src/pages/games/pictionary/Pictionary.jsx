@@ -2,16 +2,34 @@
 // Offline pass-and-play word generator for Pictionary-style drawing games,
 // with a Charades mode (acting instead of drawing) that reuses the exact
 // same categories, timer and scoreboard: only the framing text changes.
-// No Supabase, no props: one phone gets passed round the room. Category
-// picker over JSON words (words.json), same pattern as Hangman's word lists.
+// No Supabase, no props: one phone gets passed round the room. Words live in
+// words.json as category x difficulty. Picks use a shuffle bag (see engine.js)
+// whose history is kept in localStorage, so words don't repeat until the
+// chosen pool has been used up, even across sessions.
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import words from './words.json'
-import { formatClock, randomIndex } from './engine'
+import { DIFFICULTIES, buildPool, formatClock, pickWord, remainingCount } from './engine'
 import './pictionary.css'
 
 const CATEGORY_KEYS = Object.keys(words)
+const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard', mixed: 'Mixed' }
+const STORAGE_KEY = 'fearne-hub.pictionary'
+const HISTORY_LIMIT = 1000
+
+function loadSaved() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    return {
+      categoryKey: raw.categoryKey === 'all' || words[raw.categoryKey] ? raw.categoryKey : 'all',
+      difficulty: DIFFICULTY_LABELS[raw.difficulty] ? raw.difficulty : 'easy',
+      used: Array.isArray(raw.used) ? raw.used : [],
+    }
+  } catch {
+    return { categoryKey: 'all', difficulty: 'easy', used: [] }
+  }
+}
 const TIMER_OPTIONS = [
   { key: 'off', label: 'No timer', seconds: 0 },
   { key: '60', label: '60s', seconds: 60 },
@@ -24,8 +42,11 @@ const MODES = {
 
 export default function Pictionary() {
   const [mode, setMode] = useState('draw')
-  const [categoryKey, setCategoryKey] = useState(CATEGORY_KEYS[0])
-  const [index, setIndex] = useState(() => randomIndex(words[CATEGORY_KEYS[0]].words.length))
+  const [saved] = useState(loadSaved)
+  const [categoryKey, setCategoryKey] = useState(saved.categoryKey)
+  const [difficulty, setDifficulty] = useState(saved.difficulty)
+  const [used, setUsed] = useState(saved.used)
+  const [current, setCurrent] = useState(null)
   const [revealed, setRevealed] = useState(false)
   const [timerKey, setTimerKey] = useState('off')
   const [timeLeft, setTimeLeft] = useState(0)
@@ -34,10 +55,18 @@ export default function Pictionary() {
 
   const tickRef = useRef(null)
 
-  const list = words[categoryKey].words
-  const current = list[index]
+  const pool = useMemo(() => buildPool(words, categoryKey, difficulty), [categoryKey, difficulty])
+  const remaining = remainingCount(pool, used)
   const timerSeconds = TIMER_OPTIONS.find((t) => t.key === timerKey).seconds
   const modeInfo = MODES[mode]
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ categoryKey, difficulty, used }))
+    } catch {
+      // Private mode or storage blocked: history just won't persist.
+    }
+  }, [categoryKey, difficulty, used])
 
   // Countdown while a word is revealed and a timer is selected.
   useEffect(() => {
@@ -51,13 +80,17 @@ export default function Pictionary() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed, timeLeft, timerSeconds])
 
+  // The word is drawn at reveal time, so flicking between filters never
+  // burns words from the bag.
   function reveal() {
+    const next = pickWord(pool, used, current)
+    setCurrent(next.word)
+    setUsed(next.used.slice(-HISTORY_LIMIT))
     setRevealed(true)
     setTimeLeft(timerSeconds)
   }
 
   function nextWord() {
-    setIndex((i) => randomIndex(list.length, i))
     setRevealed(false)
     setTeam((t) => (t === 'a' ? 'b' : 'a'))
   }
@@ -73,8 +106,17 @@ export default function Pictionary() {
 
   function changeCategory(key) {
     setCategoryKey(key)
-    setIndex(randomIndex(words[key].words.length))
     setRevealed(false)
+  }
+
+  function changeDifficulty(key) {
+    setDifficulty(key)
+    setRevealed(false)
+  }
+
+  function resetWords() {
+    const poolSet = new Set(pool)
+    setUsed((u) => u.filter((w) => !poolSet.has(w)))
   }
 
   return (
@@ -100,6 +142,12 @@ export default function Pictionary() {
         </div>
 
         <div className="pic-themes">
+          <button
+            className={`pic-chip ${categoryKey === 'all' ? 'active' : ''}`}
+            onClick={() => changeCategory('all')}
+          >
+            🎲 All
+          </button>
           {CATEGORY_KEYS.map((key) => (
             <button
               key={key}
@@ -107,6 +155,18 @@ export default function Pictionary() {
               onClick={() => changeCategory(key)}
             >
               {words[key].emoji} {words[key].label}
+            </button>
+          ))}
+        </div>
+
+        <div className="pic-themes">
+          {[...DIFFICULTIES, 'mixed'].map((key) => (
+            <button
+              key={key}
+              className={`pic-chip ${difficulty === key ? 'active' : ''}`}
+              onClick={() => changeDifficulty(key)}
+            >
+              {DIFFICULTY_LABELS[key]}
             </button>
           ))}
         </div>
@@ -133,6 +193,18 @@ export default function Pictionary() {
         <button className={`pic-card ${revealed ? 'revealed' : ''}`} onClick={!revealed ? reveal : undefined}>
           {revealed ? current : `Tap to reveal, then pass the phone to the ${modeInfo.performer}`}
         </button>
+
+        <p className="pic-remaining">
+          {remaining} of {pool.length} words left before repeats
+          {remaining < pool.length && (
+            <>
+              {' · '}
+              <button className="pic-link" onClick={resetWords}>
+                Reset
+              </button>
+            </>
+          )}
+        </p>
 
         <div className="pic-scoreboard">
           <span>

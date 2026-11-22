@@ -68,6 +68,21 @@
   color: var(--pic-ink);
   opacity: 0.7;
 }
+.pic-remaining {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--pic-ink);
+  opacity: 0.6;
+}
+.pic-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--pic-forest);
+  text-decoration: underline;
+  cursor: pointer;
+}
 .pic-clock {
   font-variant-numeric: tabular-nums;
   color: var(--pic-forest-dark);

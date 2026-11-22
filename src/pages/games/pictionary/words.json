@@ -5,17 +5,38 @@
     "easy": [
       "Cat", "Dog", "Fish", "Bird", "Cow", "Pig", "Duck", "Horse", "Sheep", "Frog",
       "Snake", "Mouse", "Lion", "Bee", "Rabbit", "Snail", "Spider", "Bat", "Owl", "Chicken",
-      "Elephant", "Giraffe", "Monkey", "Bear", "Tiger"
+      "Elephant", "Giraffe", "Monkey", "Bear", "Tiger", "Zebra", "Shark", "Whale", "Crab", "Penguin",
+      "Dolphin", "Butterfly", "Ladybird", "Worm", "Ant", "Goat", "Donkey", "Puppy", "Kitten", "Goldfish",
+      "Hamster", "Turtle", "Octopus", "Crocodile", "Kangaroo", "Camel", "Squirrel", "Fox", "Panda", "Polar bear",
+      "Parrot", "Swan", "Seal", "Lamb", "Pony", "Jellyfish", "Starfish", "Caterpillar", "Hedgehog", "Wolf",
+      "Rooster", "Hen", "Bull", "Robin", "Eagle", "Seagull", "Fly", "Slug", "Beetle", "Toad",
+      "Chick", "Duckling", "Rat", "Guinea pig", "Pigeon", "Tadpole", "Piglet", "Lobster", "Deer", "Koala",
+      "Hippo", "Rhino", "Gorilla", "Leopard", "Cheetah", "Ostrich", "Flamingo", "Peacock", "Mole", "Crow",
+      "Squid", "Dragonfly", "Bumblebee", "Lizard", "Llama", "Reindeer", "Puffin", "Walrus", "Tortoise", "Goose"
     ],
     "medium": [
-      "Kangaroo", "Penguin", "Octopus", "Crocodile", "Hedgehog", "Flamingo", "Squirrel", "Dolphin", "Butterfly", "Camel",
-      "Tortoise", "Peacock", "Zebra", "Shark", "Whale", "Crab", "Jellyfish", "Ladybird", "Polar bear", "Parrot",
-      "Fox", "Deer", "Panda", "Gorilla", "Bumblebee"
+      "Moose", "Badger", "Otter", "Beaver", "Sloth", "Chameleon", "Seahorse", "Stingray", "Scorpion", "Meerkat",
+      "Pelican", "Toucan", "Woodpecker", "Hummingbird", "Porcupine", "Moth", "Anteater", "Armadillo", "Platypus", "Raccoon",
+      "Skunk", "Lemur", "Orangutan", "Chimpanzee", "Baboon", "Hyena", "Jaguar", "Panther", "Buffalo", "Bison",
+      "Yak", "Alpaca", "Hare", "Ferret", "Weasel", "Vulture", "Hawk", "Falcon", "Kingfisher", "Heron",
+      "Stork", "Turkey", "Pheasant", "Magpie", "Blackbird", "Sparrow", "Swallow", "Budgie", "Cockatoo", "Emu",
+      "Piranha", "Swordfish", "Clownfish", "Pufferfish", "Eel", "Shrimp", "Oyster", "Sea lion", "Killer whale", "Narwhal",
+      "Iguana", "Gecko", "Python", "Cobra", "Rattlesnake", "Alligator", "Newt", "Grasshopper", "Cricket", "Wasp",
+      "Mosquito", "Woodlouse", "Centipede", "Stick insect", "Praying mantis", "Tarantula", "Gerbil", "Warthog", "Gazelle", "Antelope",
+      "Mongoose", "Snow leopard", "Red panda", "Arctic fox", "Bloodhound", "Dachshund", "Poodle", "Dalmatian", "Barn owl", "Grizzly bear",
+      "Hermit crab", "Tree frog", "Bullfrog", "Hornet", "Firefly", "Dung beetle", "Stag beetle", "Leech", "Locust", "Axolotl"
     ],
     "hard": [
-      "Chameleon", "Platypus", "Seahorse", "Sloth", "Armadillo", "Hummingbird", "Woodpecker", "Porcupine", "Stingray", "Scorpion",
-      "Meerkat", "Walrus", "Koala", "Lobster", "Mole", "Badger", "Pelican", "Caterpillar", "Starfish", "Hippo",
-      "Rhino", "Moth", "Toucan", "Beaver", "Anteater"
+      "Pangolin", "Okapi", "Aardvark", "Capybara", "Wombat", "Wallaby", "Tasmanian devil", "Dingo", "Komodo dragon", "Sea urchin",
+      "Hammerhead shark", "Blue whale", "Beluga", "Anglerfish", "Manta ray", "Electric eel", "Flying fish", "Dugong", "Manatee", "Albatross",
+      "Condor", "Dodo", "Roadrunner", "Kookaburra", "Cassowary", "Kiwi bird", "Mandrill", "Gibbon", "Marmoset", "Bushbaby",
+      "Tarsier", "Ocelot", "Lynx", "Puma", "Shrew", "Vole", "Dormouse", "Quokka", "Possum", "Echidna",
+      "Musk ox", "Ibex", "Mountain goat", "Elk", "Caribou", "Water buffalo", "Wildebeest", "Tapir", "Chinchilla", "Cicada",
+      "Silkworm", "Horseshoe crab", "Cuttlefish", "Sea anemone", "Frilled lizard", "Poison dart frog", "Fennec fox", "Jackal", "Salamander", "Termite",
+      "Earwig", "Millipede", "Flea", "Glow-worm", "Prawn", "Mussel", "Koi carp", "Stoat", "Crane", "Kingsnake",
+      "Coral", "Nightingale", "Wren", "Blue tit", "Parakeet", "Secretary bird", "Bird of paradise", "Lyrebird", "Shoebill", "Ibis",
+      "Sun bear", "Thorny devil", "Mudskipper", "Barnacle", "Krill", "Tick", "Gnat", "Humpback whale", "Sea otter", "Bearded dragon",
+      "Boa constrictor", "Siamese cat", "Sheepdog", "Husky", "Chihuahua", "Greyhound", "Pug", "Bulldog", "Sausage dog", "Labrador"
     ]
   },
   "food": {
@@ -23,15 +44,39 @@
     "emoji": "🍕",
     "easy": [
       "Apple", "Banana", "Cake", "Pizza", "Egg", "Ice cream", "Carrot", "Bread", "Cheese", "Biscuit",
-      "Lolly", "Orange", "Grapes", "Strawberry", "Cherry", "Milk", "Burger", "Sandwich", "Pear", "Watermelon"
+      "Ice lolly", "Orange", "Grapes", "Strawberry", "Cherry", "Milk", "Burger", "Sandwich", "Pear", "Watermelon",
+      "Spaghetti", "Hot dog", "Pancake", "Doughnut", "Popcorn", "Cupcake", "Pineapple", "Broccoli", "Mushroom", "Toast",
+      "Sausage", "Chips", "Lemon", "Tomato", "Potato", "Peas", "Sweets", "Chocolate", "Cookie", "Jelly",
+      "Honey", "Juice", "Water", "Tea", "Coffee", "Soup", "Salad", "Peach", "Plum", "Coconut",
+      "Cucumber", "Onion", "Pumpkin", "Lollipop", "Pie", "Pasta", "Rice", "Noodles", "Crisps", "Muffin",
+      "Bagel", "Pretzel", "Waffle", "Fried egg", "Boiled egg", "Jam", "Butter", "Yoghurt", "Cereal", "Porridge",
+      "Peanut", "Raspberry", "Blueberry", "Kiwi", "Mango", "Lime", "Lettuce", "Pepper", "Chilli", "Garlic",
+      "Sweetcorn", "Fish fingers", "Chicken nuggets", "Roast chicken", "Ham", "Bacon", "Jelly beans", "Marshmallow", "Candy cane", "Gummy bear",
+      "Birthday cake", "Cup of tea", "Hot chocolate", "Milkshake", "Smoothie", "Lemonade", "Fizzy drink", "Fish and chips", "Corn on the cob", "Chocolate bar"
     ],
     "medium": [
-      "Spaghetti", "Hot dog", "Pancake", "Doughnut", "Popcorn", "Cupcake", "Sushi", "Pineapple", "Broccoli", "Mushroom",
-      "Fish and chips", "Birthday cake", "Cup of tea", "Corn on the cob", "Lemonade", "Toast", "Sausage", "Croissant", "Chocolate bar", "Taco"
+      "Croissant", "Sushi", "Taco", "Burrito", "Nachos", "Kebab", "Curry", "Lasagne", "Omelette", "Scrambled eggs",
+      "Beans on toast", "Cheese on toast", "Jacket potato", "Mashed potato", "Roast potatoes", "Sausage roll", "Pork pie", "Scotch egg", "Cornish pasty", "Crumpet",
+      "Scone", "Teacake", "Victoria sponge", "Swiss roll", "Brownie", "Flapjack", "Shortbread", "Custard", "Rice pudding", "Trifle",
+      "Cheesecake", "Apple crumble", "Sticky toffee pudding", "Christmas pudding", "Mince pie", "Hot cross bun", "Easter egg", "Gingerbread man", "Candyfloss", "Toffee apple",
+      "Avocado", "Aubergine", "Courgette", "Cauliflower", "Cabbage", "Celery", "Beetroot", "Radish", "Asparagus", "Spinach",
+      "Leek", "Parsnip", "Sprouts", "Baked beans", "Hummus", "Pitta bread", "Wrap", "Dumpling", "Spring roll", "Fortune cookie",
+      "Prawn cocktail", "Steak", "Meatballs", "Chicken drumstick", "Pork chop", "Sundae", "Choc ice", "Banana split", "Knickerbocker glory", "Slushie",
+      "Squash", "Orange juice", "Cappuccino", "Bubble tea", "Fruit salad", "Pomegranate", "Fig", "Apricot", "Raisin", "Melon",
+      "Blackberry", "Cranberry", "Rhubarb", "Gooseberry", "Olive", "Pickle", "Gherkin", "Ketchup", "Mustard", "Mayonnaise",
+      "Salt and pepper", "Vinegar", "Gravy", "Jelly and ice cream", "Picnic", "Barbecue", "Takeaway", "Toffee", "Fudge", "Full English breakfast"
     ],
     "hard": [
-      "Full English breakfast", "Sunday roast", "Smoothie", "Fondue", "Gingerbread man", "Candyfloss", "Jelly and ice cream", "Picnic", "Barbecue", "Takeaway",
-      "Milkshake", "Kebab", "Sprouts", "Afternoon tea", "Avocado", "Pie and mash", "Toffee apple", "Trifle", "Baked beans", "Hot chocolate"
+      "Sunday roast", "Fondue", "Afternoon tea", "Pie and mash", "Paella", "Ramen", "Dim sum", "Pad thai", "Fajitas", "Quesadilla",
+      "Moussaka", "Goulash", "Stew", "Casserole", "Shepherd's pie", "Toad in the hole", "Bangers and mash", "Yorkshire pudding", "Black pudding", "Haggis",
+      "Bubble and squeak", "Ploughman's lunch", "Club sandwich", "Falafel", "Samosa", "Onion bhaji", "Poppadom", "Naan bread", "Tikka masala", "Sweet and sour",
+      "Fried rice", "Prawn crackers", "Caviar", "Crème brûlée", "Macaron", "Éclair", "Profiterole", "Tiramisu", "Baklava", "Churros",
+      "Pavlova", "Baked Alaska", "Eton mess", "Bakewell tart", "Battenberg", "Custard cream", "Jaffa cake", "Bourbon biscuit", "Party rings", "Rocky road",
+      "Liquorice", "Sherbet", "Humbug", "Gobstopper", "Popping candy", "Chewing gum", "Bubblegum", "Pick and mix", "Wedding cake", "Gingerbread house",
+      "S'mores", "Lancashire hotpot", "Ratatouille", "Gazpacho", "Sauerkraut", "Bratwurst", "Crêpe", "Quiche", "Soufflé", "Pâté",
+      "Fish pie", "Kedgeree", "Granola", "Espresso", "Latte", "Iced coffee", "Cola", "Ginger beer", "Fruit punch", "Eggnog",
+      "Coconut water", "Energy drink", "Packed lunch", "School dinner", "Midnight feast", "Food fight", "Leftovers", "Breakfast in bed", "Room service", "Buffet",
+      "Spaghetti bolognese", "Risotto", "Enchilada", "Corn dog", "Lobster thermidor", "Beef Wellington", "Welsh rarebit", "Cream tea", "Cucumber sandwich", "Pancake Day"
     ]
   },
   "objects": {
@@ -39,15 +84,39 @@
     "emoji": "🧦",
     "easy": [
       "Ball", "Car", "Hat", "Book", "Chair", "Door", "Key", "Bed", "Cup", "Shoe",
-      "Sock", "Clock", "Phone", "Kite", "Boat", "Train", "Balloon", "Spoon", "Glasses", "Bus"
+      "Sock", "Clock", "Phone", "Kite", "Boat", "Train", "Balloon", "Spoon", "Glasses", "Bus",
+      "Toothbrush", "Backpack", "Umbrella", "Torch", "Kettle", "Scissors", "Ladder", "Pillow", "Bicycle", "Envelope",
+      "Lightbulb", "Bathtub", "Sofa", "Television", "Candle", "Fridge", "Table", "Lamp", "Window", "Fork",
+      "Knife", "Plate", "Bowl", "Bottle", "Pencil", "Pen", "Crayon", "Rubber", "Ruler", "Teddy bear",
+      "Doll", "Drum", "Guitar", "Piano", "Bell", "Crown", "Ring", "Necklace", "Watch", "Mirror",
+      "Comb", "Hairbrush", "Towel", "Soap", "Toilet", "Sink", "Bucket", "Spade", "Hammer", "Broom",
+      "Basket", "Present", "Flag", "Rocket", "Aeroplane", "Helicopter", "Tractor", "Lorry", "Fire engine", "Ambulance",
+      "Motorbike", "Scooter", "Skateboard", "Roller skates", "Sledge", "Swing", "Slide", "Jumper", "T-shirt", "Trousers",
+      "Dress", "Coat", "Scarf", "Gloves", "Boots", "Wellies", "Pyjamas", "Paintbrush", "Padlock", "Hairdryer"
     ],
     "medium": [
-      "Toothbrush", "Backpack", "Umbrella", "Torch", "Kettle", "Scissors", "Ladder", "Pillow", "Bicycle", "Envelope",
-      "Lightbulb", "Bathtub", "Hairdryer", "Sofa", "Television", "Candle", "Padlock", "Paintbrush", "Wellies", "Fridge"
+      "Telescope", "Wheelbarrow", "Trampoline", "Deckchair", "Microscope", "Hourglass", "Compass", "Magnifying glass", "Washing machine", "Remote control",
+      "Lawnmower", "Hoover", "Calculator", "Headphones", "Doorbell", "Ironing board", "Coat hanger", "Satnav", "Laptop", "Keyboard",
+      "Camera", "Radio", "Microphone", "Battery", "Games console", "Joystick", "Teapot", "Frying pan", "Saucepan", "Rolling pin",
+      "Whisk", "Toaster", "Microwave", "Oven", "Blender", "Cheese grater", "Tin opener", "Corkscrew", "Lunchbox", "Thermometer",
+      "Plaster", "Bandage", "Wheelchair", "Crutches", "Pram", "Highchair", "Cot", "Rattle", "Nappy", "Jigsaw puzzle",
+      "Rubik's cube", "Yo-yo", "Spinning top", "Marbles", "Dice", "Playing cards", "Chess board", "Dominoes", "Frisbee", "Bow and arrow",
+      "Cricket bat", "Tennis racket", "Golf club", "Goggles", "Snorkel", "Flippers", "Rubber ring", "Bucket and spade", "Sandcastle", "Sunglasses",
+      "Sun cream", "Suitcase", "Passport", "Map", "Ticket", "Postcard", "Stamp", "Newspaper", "Paperclip", "Sellotape",
+      "Notebook", "Bookshelf", "Wardrobe", "Curtains", "Rug", "Cushion", "Blanket", "Duvet", "Alarm clock", "Hot water bottle",
+      "Fan", "Radiator", "Fireplace", "Watering can", "Flowerpot", "Hosepipe", "Rake", "Wheelie bin", "Fence", "Gate"
     ],
     "hard": [
-      "Telescope", "Wheelbarrow", "Trampoline", "Deckchair", "Microscope", "Hourglass", "Compass", "Magnifying glass", "Washing machine", "Remote control",
-      "Lawnmower", "Hoover", "Calculator", "Headphones", "Stapler", "Doorbell", "Ironing board", "Coat hanger", "Plug", "Satnav"
+      "Chandelier", "Grandfather clock", "Sundial", "Abacus", "Typewriter", "Gramophone", "Cassette tape", "Vending machine", "Traffic light", "Zebra crossing",
+      "Lamppost", "Postbox", "Phone box", "Bus stop", "Shopping trolley", "Escalator", "Lift", "Revolving door", "Digger", "Steamroller",
+      "Bulldozer", "Cement mixer", "Scaffolding", "Tape measure", "Drill", "Saw", "Spanner", "Screwdriver", "Pliers", "Toolbox",
+      "Dustpan and brush", "Feather duster", "Clothes peg", "Washing line", "Laundry basket", "Iron", "Sewing machine", "Needle and thread", "Zip", "Button",
+      "Bow tie", "Tie", "Handbag", "Briefcase", "Walking stick", "False teeth", "Toothpaste", "Razor", "Lipstick", "Perfume",
+      "Wig", "Snow globe", "Kaleidoscope", "Jack-in-the-box", "Music box", "Disco ball", "Fairy lights", "Christmas cracker", "Piñata", "Party popper",
+      "Whoopee cushion", "Treasure chest", "Message in a bottle", "Anchor", "Life jacket", "Steering wheel", "Hot air balloon", "Parachute", "Canoe", "Pedalo",
+      "Tandem", "Unicycle", "Penny farthing", "Pogo stick", "Stilts", "Space hopper", "Fire extinguisher", "Smoke alarm", "Mousetrap", "Catapult",
+      "Boomerang", "Stethoscope", "Floppy disk", "Shredder", "Barcode", "Parking meter", "Turnstile", "Conveyor belt", "Forklift", "Spirit level",
+      "Paint roller", "Thimble", "Safety pin", "Hearing aid", "Tweezers", "Bubble wrap", "Cardboard box", "Number plate", "Windscreen wiper", "Speed camera"
     ]
   },
   "actions": {
@@ -55,15 +124,39 @@
     "emoji": "🏃",
     "easy": [
       "Swimming", "Dancing", "Sleeping", "Eating", "Running", "Jumping", "Crying", "Laughing", "Waving", "Clapping",
-      "Reading", "Singing", "Kicking", "Brushing teeth", "Drinking", "Hopping", "Throwing", "Hugging", "Walking", "Sitting"
+      "Reading", "Singing", "Kicking", "Brushing teeth", "Drinking", "Hopping", "Throwing", "Hugging", "Walking", "Sitting",
+      "Juggling", "Sneezing", "Climbing", "Skateboarding", "Cooking", "Yawning", "Painting", "Fishing", "Diving", "Skipping",
+      "Surfing", "Snoring", "Whistling", "Cartwheel", "Karate", "Knitting", "Ice skating", "Hula hooping", "Rowing", "Bowling",
+      "Drawing", "Writing", "Catching", "Crawling", "Rolling", "Spinning", "Falling over", "Shouting", "Whispering", "Blowing a kiss",
+      "Pointing", "Tiptoeing", "Marching", "Stomping", "Sliding", "Riding a bike", "Driving", "Flying", "Tickling", "Washing hands",
+      "Having a bath", "Taking a shower", "Getting dressed", "Putting on shoes", "Eating spaghetti", "Licking an ice cream", "Blowing out candles", "Opening a present", "Playing football", "Playing tennis",
+      "Playing the piano", "Playing the guitar", "Playing the drums", "Baking", "Gardening", "Digging", "Sweeping", "Hoovering", "Washing a car", "Shopping",
+      "Phoning", "Texting", "Typing", "Waking up", "Stretching", "Shivering", "Sweating", "Coughing", "Hiccupping", "Burping",
+      "Scratching", "Sniffing", "Tasting", "Listening", "Peeking", "Hiding", "Flying a kite", "Feeding the ducks", "Blowing bubbles", "Hide and seek"
     ],
     "medium": [
-      "Juggling", "Sneezing", "Climbing", "Skateboarding", "Cooking", "Yawning", "Painting", "Fishing", "Diving", "Skipping",
-      "Surfing", "Snoring", "Whistling", "Cartwheel", "Karate", "Knitting", "Ice skating", "Hula hooping", "Rowing", "Bowling"
+      "Sleepwalking", "Tightrope walking", "Changing a nappy", "Walking a dog", "Tidying up", "Taking a selfie", "Building a snowman", "Doing the washing up", "Parachuting", "Ironing",
+      "Tug of war", "Moonwalking", "Weightlifting", "Stargazing", "Waiting for a bus", "Getting a haircut", "Locked out", "Skiing", "Snowboarding", "Sledging",
+      "Horse riding", "Rock climbing", "Abseiling", "Bungee jumping", "Skydiving", "Kayaking", "Sailing", "Snorkelling", "Water skiing", "Trampolining",
+      "Roller skating", "Boxing", "Wrestling", "Fencing", "Archery", "Playing golf", "Playing cricket", "Playing rugby", "Playing basketball", "Playing volleyball",
+      "Badminton", "Table tennis", "Playing darts", "Snooker", "Yoga", "Press-ups", "Sit-ups", "Jogging", "Breakdancing", "Ballet",
+      "Tap dancing", "Doing the conga", "Limbo", "Musical chairs", "Leapfrog", "Hopscotch", "Doing a jigsaw", "Making a sandcastle", "Milking a cow", "Mowing the lawn",
+      "Planting a tree", "Chopping wood", "Hammering a nail", "Painting a wall", "Changing a lightbulb", "Fixing a car", "Pumping up a tyre", "Making the bed", "Folding laundry", "Hanging out washing",
+      "Taking out the bin", "Setting the table", "Pouring a drink", "Making a cup of tea", "Flipping a pancake", "Chopping onions", "Eating with chopsticks", "Peeling a banana", "Brushing a dog", "Walking on ice",
+      "Slipping on a banana skin", "Stubbing a toe", "Getting stung by a bee", "Missing the bus", "Hailing a taxi", "Reading a map", "Packing a suitcase", "Taking a photo", "Conducting an orchestra", "Directing traffic",
+      "Pillow fight", "Snowball fight", "Water fight", "Rock paper scissors", "Thumb war", "Arm wrestling", "Playing dead", "Fainting", "Skimming stones", "Rock pooling"
     ],
     "hard": [
-      "Sleepwalking", "Hiccupping", "Tightrope walking", "Changing a nappy", "Walking a dog", "Tidying up", "Taking a selfie", "Building a snowman", "Doing the washing up", "Parachuting",
-      "Ironing", "Hide and seek", "Tug of war", "Blowing bubbles", "Moonwalking", "Weightlifting", "Stargazing", "Waiting for a bus", "Getting a haircut", "Locked out"
+      "Sword swallowing", "Fire breathing", "Lion taming", "Ventriloquism", "Miming", "Doing a magic trick", "Pulling a rabbit out of a hat", "Sawing someone in half", "Walking on stilts", "Riding a unicycle",
+      "Plate spinning", "Escaping from handcuffs", "Hypnotising someone", "Fortune telling", "Paddling", "Wading", "Treading water", "Doggy paddle", "Belly flop", "Synchronised swimming",
+      "Figure skating", "Curling", "Bobsleigh", "Pole vault", "Long jump", "High jump", "Hurdles", "Relay race", "Egg and spoon race", "Sack race",
+      "Three-legged race", "Penalty shootout", "Scoring a goal", "Bodybuilding", "Sleep talking", "Proposing", "Getting married", "Rocking a baby", "Burping a baby", "Babysitting",
+      "Grooming a horse", "Shearing a sheep", "Herding sheep", "Ploughing a field", "Picking apples", "Making a daisy chain", "Building a fire", "Toasting marshmallows", "Pitching a tent", "Reading a bedtime story",
+      "Counting sheep", "Running late", "Losing your keys", "Finding money", "Winning the lottery", "Popping a balloon", "Blowing up a balloon", "Wrapping a present", "Decorating a tree", "Carving a pumpkin",
+      "Trick or treating", "Pulling a cracker", "Making a wish", "Throwing confetti", "Cutting a ribbon", "Giving a speech", "Taking an exam", "Raising your hand", "Copying homework", "Marking homework",
+      "Getting an injection", "Having your eyes tested", "Learning to drive", "Parallel parking", "Changing a tyre", "Getting a parking ticket", "Landing a plane", "Walking the plank", "Digging for treasure", "Climbing a beanstalk",
+      "Kissing a frog", "Riding a broomstick", "Casting a spell", "Brushing someone's hair", "Doing the splits", "Juggling fire", "Rowing a dragon boat", "Mountain biking", "Hang gliding", "Paragliding",
+      "Windsurfing", "Kitesurfing", "Ice fishing", "Scuba diving", "Spelunking", "Speed dating", "Haggling", "Queue jumping", "Photobombing", "Hitchhiking"
     ]
   },
   "places": {
@@ -71,15 +164,39 @@
     "emoji": "🏰",
     "easy": [
       "House", "Beach", "School", "Park", "Farm", "Castle", "Shop", "Zoo", "Garden", "Island",
-      "Forest", "Mountain", "Bridge", "Swing park", "Pond", "Tent", "Kitchen", "Bedroom", "Bathroom", "Road"
+      "Forest", "Mountain", "Bridge", "Playground", "Pond", "Kitchen", "Bedroom", "Bathroom", "Road", "Hospital",
+      "Library", "Airport", "Train station", "Lighthouse", "Volcano", "Desert", "Cave", "Waterfall", "Swimming pool", "Supermarket",
+      "Funfair", "Football pitch", "Igloo", "Treehouse", "Cinema", "Museum", "Church", "Petrol station", "Car park", "Sea",
+      "River", "Lake", "Hill", "Field", "Jungle", "Moon", "Outer space", "Bakery", "Café", "Restaurant",
+      "Post office", "Bank", "Fire station", "Police station", "Toy shop", "Sweet shop", "Pet shop", "Garage", "Attic", "Cellar",
+      "Living room", "Classroom", "Seaside", "Harbour", "Pier", "Campsite", "Caravan", "Hotel", "Palace", "Tower",
+      "Windmill", "Barn", "Stable", "Kennel", "Fish tank", "Bird's nest", "Beehive", "Spider's web", "Rabbit hole", "Den",
+      "Fort", "Street", "Village", "Town", "City", "Countryside", "Allotment", "Orchard", "Meadow", "Woods",
+      "Cliff", "Sand dunes", "Rock pool", "Coral reef", "North Pole", "Rainforest", "Haunted house", "Space station", "Pyramid", "Theme park"
     ],
     "medium": [
-      "Hospital", "Library", "Airport", "Train station", "Lighthouse", "Volcano", "Desert", "Cave", "Waterfall", "Swimming pool",
-      "Supermarket", "Funfair", "Football pitch", "Igloo", "Treehouse", "Cinema", "Museum", "Church", "Petrol station", "Car park"
+      "Eiffel Tower", "Big Ben", "Stonehenge", "Car wash", "Dentist", "Laundrette", "Prison", "Skyscraper", "Motorway", "Underground",
+      "Barber shop", "Gym", "Leisure centre", "Bowling alley", "Ice rink", "Skate park", "Golf course", "Tennis court", "Stadium", "Racecourse",
+      "Circus", "Theatre", "Art gallery", "Aquarium", "Safari park", "Market", "Shopping centre", "Charity shop", "Chip shop", "Pub",
+      "Ice cream van", "Garden centre", "Vet's", "Doctor's surgery", "Chemist", "Opticians", "Waiting room", "Office", "Factory", "Building site",
+      "Scrapyard", "Rubbish tip", "Power station", "Wind farm", "Oil rig", "Dam", "Canal", "Marina", "Ferry", "Cruise ship",
+      "Bus station", "Roundabout", "Crossroads", "Tunnel", "Level crossing", "Runway", "Control tower", "Beach hut", "Promenade", "Amusement arcade",
+      "Crazy golf", "Water park", "Soft play", "Bouncy castle", "Maze", "Graveyard", "Cathedral", "Mosque", "Temple", "Town hall",
+      "Courtroom", "University", "Nursery", "Changing room", "Staircase", "Balcony", "Rooftop", "Basement", "Conservatory", "Porch",
+      "Driveway", "Patio", "Greenhouse", "Hot tub", "Submarine", "Swamp", "Glacier", "Iceberg", "Oasis", "Canyon",
+      "Valley", "Ski resort", "Log cabin", "Mansion", "Cottage", "Bungalow", "Houseboat", "Bookshop", "Newsagent", "Toll booth"
     ],
     "hard": [
-      "Space station", "North Pole", "Jungle", "Haunted house", "Submarine", "Pyramid", "Eiffel Tower", "Big Ben", "Stonehenge", "Rainforest",
-      "Car wash", "Dentist", "Laundrette", "Prison", "Theme park", "Campsite", "Skyscraper", "Windmill", "Motorway", "Underground"
+      "Service station", "High street", "Moon base", "Mars", "Black hole", "Atlantis", "Loch Ness", "Grand Canyon", "Niagara Falls", "Mount Everest",
+      "Great Wall of China", "Leaning Tower of Pisa", "Statue of Liberty", "Colosseum", "Taj Mahal", "Sydney Opera House", "Buckingham Palace", "Tower Bridge", "London Eye", "Hollywood",
+      "Las Vegas", "Venice", "Antarctica", "Sahara", "Amazon", "Arctic", "Savannah", "Marsh", "Fjord", "Geyser",
+      "Hot spring", "Lagoon", "Tundra", "Bog", "Quarry", "Mine", "Sewer", "Dungeon", "Tower of London", "Moat",
+      "Drawbridge", "Villain's lair", "Hideout", "Secret passage", "Bunker", "Panic room", "Escape room", "Laboratory", "Observatory", "Planetarium",
+      "Mission control", "Weather station", "Lifeboat station", "Chalet", "Mobile home", "Block of flats", "Terraced house", "Hostel", "Bed and breakfast", "Motel",
+      "Holiday camp", "Lost property office", "Customs", "Duty free", "Baggage reclaim", "Departure lounge", "Ticket office", "Lay-by", "Cycle lane", "Speed bump",
+      "Cul-de-sac", "Back alley", "Sauna", "Spa", "Tattoo parlour", "Pawn shop", "Auction house", "Antique shop", "Record shop", "Synagogue",
+      "Parliament", "Embassy", "Boarding school", "Locker room", "Hangar", "Port", "Estuary", "Delta", "Archipelago", "Atoll",
+      "Bermuda Triangle", "Mount Rushmore", "Machu Picchu", "Lake District", "White Cliffs of Dover", "Giant's Causeway", "Edinburgh Castle", "Snowdon", "Ben Nevis", "Notting Hill Carnival"
     ]
   },
   "characters": {
@@ -87,15 +204,39 @@
     "emoji": "🎬",
     "easy": [
       "Pirate", "Robot", "Ghost", "Dragon", "Princess", "King", "Queen", "Clown", "Witch", "Cowboy",
-      "Monster", "Baby", "Teacher", "Doctor", "Firefighter", "Police officer", "Snowman", "Fairy", "Mermaid", "Alien"
+      "Monster", "Baby", "Teacher", "Doctor", "Firefighter", "Police officer", "Fairy", "Mermaid", "Alien", "Superhero",
+      "Wizard", "Astronaut", "Vampire", "Ninja", "Detective", "Zombie", "Knight", "Unicorn", "Father Christmas", "Tooth fairy",
+      "Easter bunny", "Chef", "Farmer", "Footballer", "Postman", "Caveman", "Werewolf", "Mummy", "Prince", "Giant",
+      "Elf", "Troll", "Goblin", "Genie", "Magician", "Lifeguard", "Scarecrow", "Referee", "Ballerina", "Rock star",
+      "Pilot", "Nurse", "Builder", "Vet", "Bus driver", "Train driver", "Taxi driver", "Shopkeeper", "Waiter", "Baker",
+      "Butcher", "Fisherman", "Sailor", "Soldier", "Spy", "Burglar", "Prisoner", "Judge", "Mayor", "President",
+      "Grandma", "Grandad", "Twins", "Toddler", "Teenager", "Bride", "Groom", "Pop star", "Singer", "Dancer",
+      "Artist", "Photographer", "Gardener", "Plumber", "Electrician", "Mechanic", "Cleaner", "Dinner lady", "Lollipop lady", "Hairdresser",
+      "Scientist", "Explorer", "Mountaineer", "Boxer", "Cyclist", "Snowman", "Skeleton", "Angel", "Gnome", "Cowgirl"
     ],
     "medium": [
-      "Superhero", "Dinosaur", "Wizard", "Astronaut", "Vampire", "Ninja", "Detective", "Zombie", "Knight", "Unicorn",
-      "Father Christmas", "Tooth fairy", "Easter bunny", "Chef", "Farmer", "Footballer", "Postman", "Caveman", "Werewolf", "Mummy"
+      "Scuba diver", "Mad scientist", "Lumberjack", "Beekeeper", "Archaeologist", "Grim reaper", "Puppeteer", "Juggler", "Ringmaster", "Strongman",
+      "Acrobat", "Trapeze artist", "Lion tamer", "Fortune teller", "Ventriloquist", "Mime artist", "Busker", "DJ", "Conductor", "Drummer",
+      "Opera singer", "Rapper", "Comedian", "Film director", "Newsreader", "Weather presenter", "Journalist", "Author", "Librarian", "Headteacher",
+      "Professor", "Inventor", "Architect", "Surgeon", "Paramedic", "Optician", "Midwife", "Zookeeper", "Shepherd", "Milkman",
+      "Paperboy", "Delivery driver", "Bin man", "Window cleaner", "Chimney sweep", "Blacksmith", "Carpenter", "Tailor", "Jester", "Viking",
+      "Roman soldier", "Gladiator", "Samurai", "Pharaoh", "Sheriff", "Outlaw", "Robin Hood", "King Arthur", "Merlin", "Cyclops",
+      "Medusa", "Minotaur", "Centaur", "Pegasus", "Phoenix", "Yeti", "Bigfoot", "Loch Ness Monster", "Leprechaun", "Pixie",
+      "Ogre", "Sea monster", "Frankenstein's monster", "Headless horseman", "Sea captain", "Ice queen", "Evil stepmother", "Fairy godmother", "Wicked witch", "Big bad wolf",
+      "Three little pigs", "Humpty Dumpty", "Little Red Riding Hood", "Goldilocks", "Cinderella", "Snow White", "Sleeping Beauty", "Rapunzel", "Pinocchio", "Peter Pan",
+      "Captain Hook", "Dracula", "Sherlock Holmes", "Cupid", "Jack Frost", "Devil", "Butler", "Security guard", "Traffic warden", "Goalkeeper"
     ],
     "hard": [
-      "Magician", "Lifeguard", "Scarecrow", "Referee", "Lollipop lady", "Scuba diver", "Ballerina", "Rock star", "Mad scientist", "Lumberjack",
-      "Beekeeper", "Hairdresser", "Pilot", "Archaeologist", "Grim reaper", "Genie", "Goblin", "Troll", "Puppeteer", "Juggler"
+      "Jack and the beanstalk", "Tinker Bell", "Alice in Wonderland", "Mad Hatter", "White Rabbit", "Cheshire Cat", "Queen of Hearts", "Tin Man", "Cowardly Lion", "Zeus",
+      "Poseidon", "Thor", "Father Time", "Mother Nature", "Sandman", "Bogeyman", "Cherub", "Hermit", "Monk", "Nun",
+      "Vicar", "Pope", "Maid", "Nanny", "Chauffeur", "Bodyguard", "Bouncer", "Estate agent", "Accountant", "Banker",
+      "Lawyer", "Politician", "Royal guard", "Beefeater", "Town crier", "Ice cream man", "Personal trainer", "Yoga teacher", "Football manager", "Cheerleader",
+      "Jockey", "Matador", "Rodeo rider", "Stuntman", "Escape artist", "Tightrope walker", "Fire eater", "Human cannonball", "Sumo wrestler", "Wrestler",
+      "Pirate captain", "Lighthouse keeper", "Astronomer", "Secret agent", "Hacker", "Gamer", "Influencer", "Supervillain", "Sidekick", "Henchman",
+      "Evil genius", "Knight in shining armour", "Time traveller", "Cyborg", "Toy soldier", "Rag doll", "Nutcracker", "Kraken", "Banshee", "Pied Piper",
+      "Rumpelstiltskin", "Old King Cole", "Little Bo Peep", "Mary Poppins", "Oliver Twist", "Scrooge", "Long John Silver", "Count Dracula", "Tarzan", "Hercules",
+      "Achilles", "Cleopatra", "Henry VIII", "Queen Victoria", "Shakespeare", "Napoleon", "Mona Lisa", "Florence Nightingale", "Isaac Newton", "Albert Einstein",
+      "Charlie Chaplin", "Elvis", "Lady Godiva", "Guy Fawkes", "Boudicca", "William the Conqueror", "Medieval peasant", "Court jester", "Chess grandmaster", "Ice hockey player"
     ]
   },
   "ideas": {
@@ -103,15 +244,39 @@
     "emoji": "🧠",
     "easy": [
       "Happy", "Sad", "Angry", "Scared", "Tired", "Hot", "Cold", "Hungry", "Love", "Surprised",
-      "Sleepy", "Silly", "Shy", "Poorly", "Brave", "Big", "Small", "Fast", "Slow", "Loud"
+      "Sleepy", "Silly", "Shy", "Poorly", "Brave", "Big", "Small", "Fast", "Slow", "Loud",
+      "Quiet", "Up", "Down", "Tall", "Short", "Long", "Wet", "Dry", "Old", "New",
+      "Young", "Clean", "Dirty", "Heavy", "Full", "Empty", "Open", "Closed", "Day", "Night",
+      "Morning", "Rain", "Snow", "Wind", "Sunny", "Storm", "Thunder", "Lightning", "Fog", "Hello",
+      "Goodbye", "Yes", "No", "Stop", "Go", "Win", "Lose", "Thirsty", "Excited", "Grumpy",
+      "Giggly", "Cheeky", "Kind", "Friends", "Family", "Birthday", "Holiday", "Christmas", "Halloween", "Easter",
+      "Bonfire night", "Summer", "Winter", "Autumn", "Music", "Noise", "Dream", "Nightmare", "Magic", "Secret",
+      "Party", "Bedtime", "Playtime", "Lunchtime", "Weekend", "Home", "Ouch", "Dizzy", "Itchy", "Stinky",
+      "Sticky", "Soft", "Bumpy", "Spiky", "Fluffy", "Slippery", "Smooth", "Upside down", "Backwards", "Lost"
     ],
     "medium": [
-      "Gravity", "Echo", "Silence", "Invisible", "Allergic", "Exhausted", "Bored", "Nervous", "Proud", "Dizzy",
-      "Upside down", "Backwards", "Birthday", "Holiday", "Night time", "Weekend", "Winning", "Lost", "Heavy", "Itchy"
+      "Gravity", "Echo", "Silence", "Invisible", "Allergic", "Exhausted", "Bored", "Nervous", "Proud", "Night time",
+      "Winning", "Teamwork", "Electricity", "Luck", "Patience", "Confused", "Embarrassed", "Daydreaming", "Shadow", "Reflection",
+      "Balance", "Speed", "Time", "Money", "Danger", "Peace", "Help", "Sorry", "Thank you", "Please",
+      "Late", "Early", "Busy", "Lazy", "Clever", "Famous", "Rich", "Strong", "Weak", "Healthy",
+      "Lonely", "Worried", "Relieved", "Disgusted", "Shocked", "Stressed", "Calm", "Grateful", "Curious", "Stubborn",
+      "Greedy", "Generous", "Honest", "Lying", "Rude", "Polite", "Sunburn", "Flu", "Headache", "Toothache",
+      "Jet lag", "Travel sick", "Fear of heights", "Butterflies in your tummy", "Goosebumps", "Brain freeze", "Pins and needles", "Bad hair day", "Monday morning", "Rush hour",
+      "Traffic jam", "Queue", "Heatwave", "Power cut", "Fire drill", "Snow day", "Sports day", "Bank holiday", "Pay day", "First day at school",
+      "Summer holidays", "Moving house", "New baby", "Wedding", "Retirement", "Graduation", "Anniversary", "Hiccups", "Tickly cough", "Freezing",
+      "Boiling", "Starving", "Grown up", "Surprise party", "Midnight", "Sunrise", "Sunset", "Full moon", "Shooting star", "Democracy"
     ],
     "hard": [
-      "Jealousy", "Democracy", "Nostalgia", "Freedom", "Time travel", "Recycling", "Homesick", "Imagination", "Friendship", "Suspicious",
-      "Embarrassed", "Confused", "Déjà vu", "Patience", "Luck", "Secret", "Electricity", "Global warming", "Teamwork", "Daydreaming"
+      "Nostalgia", "Freedom", "Time travel", "Recycling", "Homesick", "Imagination", "Friendship", "Suspicious", "Déjà vu", "Global warming",
+      "Jealousy", "Evolution", "Infinity", "Karma", "Destiny", "Coincidence", "Irony", "Sarcasm", "Gossip", "Rumour",
+      "Promise", "Trust", "Betrayal", "Revenge", "Forgiveness", "Courage", "Wisdom", "Knowledge", "Ambition", "Success",
+      "Failure", "Hope", "Guilt", "Regret", "Temptation", "Procrastination", "Multitasking", "Overthinking", "Peer pressure", "Writer's block",
+      "Stage fright", "Cabin fever", "Wanderlust", "Midlife crisis", "Sense of humour", "Common sense", "Sixth sense", "Gut feeling", "First impression", "Second thoughts",
+      "Small talk", "Awkward silence", "Inside joke", "White lie", "Fake news", "Conspiracy theory", "Inflation", "Tax", "Election", "Protest",
+      "Equality", "Justice", "Privacy", "Climate change", "Pollution", "Extinction", "Renewable energy", "Artificial intelligence", "Virtual reality", "Internet",
+      "Wi-Fi", "Password", "Spam", "Social media", "Algorithm", "Magnetism", "Photosynthesis", "Friction", "Oxygen", "Atom",
+      "DNA", "Big Bang", "Eclipse", "Solar system", "Telepathy", "Hypnosis", "Superstition", "Urban legend", "Optical illusion", "Mirage",
+      "Paradox", "Clone", "Parallel universe", "Zero", "Fraction", "Alphabet", "Rhyme", "Lullaby", "Applause", "Encore"
     ]
   }
 }

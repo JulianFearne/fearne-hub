@@ -264,19 +264,19 @@
       "Jet lag", "Travel sick", "Fear of heights", "Butterflies in your tummy", "Goosebumps", "Brain freeze", "Pins and needles", "Bad hair day", "Monday morning", "Rush hour",
       "Traffic jam", "Queue", "Heatwave", "Power cut", "Fire drill", "Snow day", "Sports day", "Bank holiday", "Pay day", "First day at school",
       "Summer holidays", "Moving house", "New baby", "Wedding", "Retirement", "Graduation", "Anniversary", "Hiccups", "Tickly cough", "Freezing",
-      "Boiling", "Starving", "Grown up", "Surprise party", "Midnight", "Sunrise", "Sunset", "Full moon", "Shooting star", "Democracy"
+      "Boiling", "Starving", "Grown up", "Surprise party", "Midnight", "Sunrise", "Sunset", "Full moon", "Shooting star", "Fairness"
     ],
     "hard": [
-      "Nostalgia", "Freedom", "Time travel", "Recycling", "Homesick", "Imagination", "Friendship", "Suspicious", "Déjà vu", "Global warming",
-      "Jealousy", "Evolution", "Infinity", "Karma", "Destiny", "Coincidence", "Irony", "Sarcasm", "Gossip", "Rumour",
-      "Promise", "Trust", "Betrayal", "Revenge", "Forgiveness", "Courage", "Wisdom", "Knowledge", "Ambition", "Success",
-      "Failure", "Hope", "Guilt", "Regret", "Temptation", "Procrastination", "Multitasking", "Overthinking", "Peer pressure", "Writer's block",
-      "Stage fright", "Cabin fever", "Wanderlust", "Midlife crisis", "Sense of humour", "Common sense", "Sixth sense", "Gut feeling", "First impression", "Second thoughts",
-      "Small talk", "Awkward silence", "Inside joke", "White lie", "Fake news", "Conspiracy theory", "Inflation", "Tax", "Election", "Protest",
-      "Equality", "Justice", "Privacy", "Climate change", "Pollution", "Extinction", "Renewable energy", "Artificial intelligence", "Virtual reality", "Internet",
-      "Wi-Fi", "Password", "Spam", "Social media", "Algorithm", "Magnetism", "Photosynthesis", "Friction", "Oxygen", "Atom",
-      "DNA", "Big Bang", "Eclipse", "Solar system", "Telepathy", "Hypnosis", "Superstition", "Urban legend", "Optical illusion", "Mirage",
-      "Paradox", "Clone", "Parallel universe", "Zero", "Fraction", "Alphabet", "Rhyme", "Lullaby", "Applause", "Encore"
+      "Sharing", "Freedom", "Time travel", "Recycling", "Homesick", "Imagination", "Friendship", "Suspicious", "Taking turns", "Global warming",
+      "Jealousy", "Showing off", "Infinity", "Telling tales", "Sore loser", "Coincidence", "Butterfingers", "Wobbly tooth", "Gossip", "Rumour",
+      "Promise", "Trust", "Growing up", "Forgetting", "Forgiveness", "Courage", "Wisdom", "Knowledge", "Ambition", "Success",
+      "Failure", "Hope", "Guilt", "Regret", "Guessing", "Pretending", "Missing someone", "Bossy", "Clumsy", "Fidgety",
+      "Stage fright", "Impatient", "Disappointed", "Frustrated", "Sense of humour", "Common sense", "Sixth sense", "Gut feeling", "First impression", "Second thoughts",
+      "Cosy", "Awkward silence", "Inside joke", "White lie", "Mischief", "Adventure", "Mystery", "Discovery", "Messy", "Protest",
+      "Equality", "Manners", "Weather", "Climate change", "Pollution", "Extinction", "Opposites", "Pattern", "Virtual reality", "Internet",
+      "Wi-Fi", "Password", "Favourite", "Social media", "Counting", "Seasons", "Sound", "Colour", "Oxygen", "Show and tell",
+      "Happy ever after", "Once upon a time", "Eclipse", "Solar system", "Telepathy", "The end", "Superstition", "Halfway", "Optical illusion", "Mirage",
+      "Too much", "Clone", "Nearly", "Zero", "Fraction", "Alphabet", "Rhyme", "Lullaby", "Applause", "Encore"
     ]
   }
 }

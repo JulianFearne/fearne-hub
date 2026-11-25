@@ -1,0 +1,396 @@
+/* src/pages/games/emberdelve/emberdelve.css
+   Scoped under .ed, never leaks into the hub shell. The route is a `fill`
+   route (see .fh-app--fill in hub.css), so .ed stretches to exactly the space
+   between the header and the bottom of the screen. The dungeon is always dark,
+   whatever the hub theme; only the HUD above it uses the theme tokens. */
+
+.ed {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ed-hud {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ed-hearts {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 9.5rem;
+  font-size: 1.15rem;
+  line-height: 1.05;
+  color: var(--border);
+  margin-right: auto;
+}
+.ed-hearts .on {
+  color: var(--danger);
+}
+.ed-hearts-count {
+  font-weight: 700;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.ed-stat {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+  text-align: right;
+}
+.ed-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.ed-stat-value {
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.1;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.ed-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-1);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ed-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ed-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f0c14;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  color: #f4ead2;
+}
+.ed-canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.ed-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(220, 30, 40, 0.9) 100%);
+}
+
+/* The floating thumb stick. */
+.ed-stick {
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  margin: -56px 0 0 -56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 220, 170, 0.35);
+  background: rgba(255, 200, 140, 0.08);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.ed-stick.on {
+  opacity: 1;
+}
+.ed-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 200, 140, 0.45);
+  box-shadow: 0 0 16px rgba(255, 160, 70, 0.6);
+  transform: translate(-50%, -50%);
+}
+
+.ed-dash {
+  position: absolute;
+  right: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 200, 120, 0.7);
+  background: radial-gradient(circle at 40% 35%, rgba(255, 170, 80, 0.55), rgba(120, 50, 10, 0.55));
+  color: #fff4dc;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 0 18px rgba(255, 140, 50, 0.45);
+  touch-action: none;
+  cursor: pointer;
+}
+.ed-dash:active {
+  transform: scale(0.94);
+}
+
+.ed-bossbar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(80%, 320px);
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  pointer-events: none;
+}
+.ed-bossbar-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffb0a0;
+  text-shadow: 0 1px 4px #000;
+}
+.ed-bossbar-track {
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 120, 100, 0.5);
+  overflow: hidden;
+}
+.ed-bossbar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff5040, #ffa040);
+  transition: width 120ms;
+}
+
+.ed-banner {
+  position: absolute;
+  top: 18%;
+  left: 0;
+  right: 0;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  pointer-events: none;
+  animation: ed-banner 2.4s ease forwards;
+  text-shadow: 0 2px 8px #000;
+}
+.ed-banner-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+}
+.ed-banner-sub {
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffc98a;
+}
+@keyframes ed-banner {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  15%,
+  70% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.ed-hint {
+  position: absolute;
+  left: 12px;
+  right: 100px;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  background: rgba(10, 8, 14, 0.72);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.ed-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgba(10, 8, 14, 0.78);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+/* Centred when it fits, scrollable from the top when it doesn't. */
+.ed-overlay > :first-child {
+  margin-top: auto;
+}
+.ed-overlay > :last-child {
+  margin-bottom: auto;
+}
+.ed-overlay--choice {
+  background: rgba(10, 8, 14, 0.6);
+}
+.ed-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff1d6;
+  text-shadow: 0 0 18px rgba(255, 150, 60, 0.6);
+}
+.ed-title.small {
+  font-size: 1.5rem;
+}
+.ed-sub {
+  margin: 0;
+  max-width: 24rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #e6dccb;
+}
+.ed-score {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffc870;
+  font-variant-numeric: tabular-nums;
+}
+.ed-howto {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  max-width: 22rem;
+  text-align: left;
+  font-size: 0.88rem;
+  color: #d8cebd;
+}
+.ed-howto b {
+  display: inline-block;
+  min-width: 3.4rem;
+  color: #ffc870;
+}
+.ed-taken {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 1.3rem;
+}
+.ed-taken small {
+  font-size: 0.7rem;
+  color: #d8cebd;
+}
+
+.ed-cards {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 22rem;
+}
+.ed-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 200, 140, 0.35);
+  background: linear-gradient(160deg, rgba(60, 40, 30, 0.95), rgba(26, 18, 22, 0.95));
+  color: #f4ead2;
+  text-align: left;
+  cursor: pointer;
+  animation: ed-card-in 260ms ease both;
+}
+.ed-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+.ed-card:nth-child(3) {
+  animation-delay: 120ms;
+}
+.ed-card:active {
+  transform: scale(0.97);
+}
+.ed-card.rare {
+  border-color: rgba(140, 200, 255, 0.7);
+  box-shadow: 0 0 16px rgba(110, 180, 255, 0.35);
+}
+.ed-card-icon {
+  font-size: 1.8rem;
+  flex: none;
+  width: 2.4rem;
+  text-align: center;
+}
+.ed-card-text {
+  display: grid;
+  gap: 0.1rem;
+}
+.ed-card-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+.ed-card-have {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #ffc870;
+}
+.ed-card-desc {
+  font-size: 0.85rem;
+  color: #d8cebd;
+}
+@keyframes ed-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.ed-btn {
+  min-height: 48px;
+  padding: 0 1.6rem;
+  border-radius: 12px;
+  border: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.ed-btn.primary {
+  background: linear-gradient(180deg, #ffb24a, #e0701c);
+  color: #2a1406;
+  box-shadow: 0 4px 18px rgba(255, 140, 40, 0.4);
+}
+.ed-board {
+  width: 100%;
+  max-width: 22rem;
+  color: var(--ink-1);
+}

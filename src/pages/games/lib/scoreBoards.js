@@ -66,6 +66,13 @@ export const SCORE_GAMES = {
       wizard: { label: 'Wizard', order: 'low', format: formatTime },
     },
   },
+  emberdelve: {
+    title: 'Emberdelve',
+    to: '/games/emberdelve',
+    boards: {
+      run: { label: 'Best delve', order: 'high', format: points },
+    },
+  },
   'gravity-well': {
     title: 'Gravity Well',
     to: '/games/gravity-well',

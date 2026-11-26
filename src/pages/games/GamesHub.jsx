@@ -205,6 +205,15 @@ const GAMES = [
     live: true,
   },
   {
+    key: 'emberdelve',
+    title: 'Emberdelve',
+    blurb: 'A 3D roguelike for one thumb. Guide a little candle down through a dark keep, take a new power after every room, pick your door and face the Warden every fifth floor. One life, a fresh delve every time.',
+    icon: 'flame',
+    to: '/games/emberdelve',
+    tags: ['1 player, offline'],
+    live: true,
+  },
+  {
     key: 'gravity-well',
     title: 'Gravity Well',
     blurb: 'Fly a wireframe fighter through the pull of the stars, land on planets to claim them and drive up to three rival empires out of the sector. Rockets, homing missiles, and a Brake button in Easy mode.',

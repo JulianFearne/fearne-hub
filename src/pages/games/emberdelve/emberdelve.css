@@ -130,27 +130,6 @@
   transform: translate(-50%, -50%);
 }
 
-.ed-dash {
-  position: absolute;
-  right: 14px;
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 200, 120, 0.7);
-  background: radial-gradient(circle at 40% 35%, rgba(255, 170, 80, 0.55), rgba(120, 50, 10, 0.55));
-  color: #fff4dc;
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  box-shadow: 0 0 18px rgba(255, 140, 50, 0.45);
-  touch-action: none;
-  cursor: pointer;
-}
-.ed-dash:active {
-  transform: scale(0.94);
-}
 
 .ed-bossbar {
   position: absolute;
@@ -226,7 +205,7 @@
 .ed-hint {
   position: absolute;
   left: 12px;
-  right: 100px;
+  right: 12px;
   bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   padding: 0.45rem 0.7rem;
   border-radius: 10px;
@@ -341,9 +320,90 @@
 .ed-card:active {
   transform: scale(0.97);
 }
-.ed-card.rare {
-  border-color: rgba(140, 200, 255, 0.7);
-  box-shadow: 0 0 16px rgba(110, 180, 255, 0.35);
+.ed-card.tier-rare {
+  border-color: rgba(120, 190, 255, 0.75);
+  box-shadow: 0 0 14px rgba(110, 180, 255, 0.3);
+}
+.ed-card.tier-epic {
+  border-color: rgba(200, 130, 255, 0.85);
+  box-shadow: 0 0 18px rgba(180, 110, 255, 0.4);
+  background: linear-gradient(160deg, rgba(60, 30, 80, 0.95), rgba(26, 14, 34, 0.95));
+}
+.ed-card.tier-duo {
+  border-color: rgba(255, 210, 110, 0.95);
+  box-shadow: 0 0 22px rgba(255, 190, 70, 0.5);
+  background: linear-gradient(160deg, rgba(90, 60, 14, 0.96), rgba(40, 22, 8, 0.96));
+}
+.ed-card:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ed-card.sold .ed-price {
+  text-decoration: line-through;
+}
+.ed-card-tier {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b8ab98;
+}
+.tier-rare .ed-card-tier {
+  color: #8ccaff;
+}
+.tier-epic .ed-card-tier {
+  color: #d6a4ff;
+}
+.tier-duo .ed-card-tier {
+  color: #ffd27f;
+}
+.ed-price {
+  margin-left: auto;
+  flex: none;
+  font-weight: 700;
+  color: #ffd27f;
+  font-variant-numeric: tabular-nums;
+}
+.ed-embers {
+  color: #e0a030;
+}
+.ed-owned {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 22rem;
+  text-align: left;
+}
+.ed-owned li {
+  display: grid;
+  grid-template-columns: 1.8rem 1fr;
+  column-gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.ed-owned li > span {
+  grid-row: span 2;
+  font-size: 1.3rem;
+  text-align: center;
+}
+.ed-owned b {
+  color: #f4ead2;
+}
+.tier-rare b {
+  color: #8ccaff;
+}
+.tier-epic b {
+  color: #d6a4ff;
+}
+.tier-duo b {
+  color: #ffd27f;
+}
+.ed-owned small {
+  color: #b8ab98;
+  font-size: 0.75rem;
 }
 .ed-card-icon {
   font-size: 1.8rem;
@@ -388,6 +448,16 @@
   background: linear-gradient(180deg, #ffb24a, #e0701c);
   color: #2a1406;
   box-shadow: 0 4px 18px rgba(255, 140, 40, 0.4);
+}
+.ed-btn.ghost {
+  min-height: 42px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 200, 140, 0.45);
+  color: #ffd9a8;
+}
+.ed-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .ed-board {
   width: 100%;

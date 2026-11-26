@@ -14,12 +14,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useHighScores } from '../lib/scores'
 import Leaderboard from '../lib/Leaderboard'
 import { boardInfo } from '../lib/scoreBoards'
-import { BOONS, REWARDS, STEP, THEME_NAMES, WORLD, choose, createGame, dash, startGame, step, takeEvents } from './engine'
+import { BOONS, REWARDS, STEP, THEME_NAMES, TIERS, WORLD, boonAvailable, buy, choose, createGame, dash, leaveShop, reroll, startGame, step, takeEvents } from './engine'
 import './emberdelve.css'
 
 const GAME_KEY = 'emberdelve'
 const BOARD = 'run'
 const STICK_R = 56 // px of thumb travel for full speed
+const FLICK_MS = 220 // a thumb lifted this soon after a quick swipe dashes
+const FLICK_PX = 34
 
 function buzz(pattern) {
   try {
@@ -39,6 +41,7 @@ export default function Emberdelve() {
   const [hud, setHud] = useState({ status: 'ready', score: 0, hp: 5, maxHp: 5, depth: 1, boss: null })
   const [paused, setPaused] = useState(false)
   const [choice, setChoice] = useState(null)
+  const [shop, setShop] = useState(null)
   const [result, setResult] = useState(null)
   const [banner, setBanner] = useState(null) // { key, title, sub }
   const [round, setRound] = useState(0)
@@ -126,13 +129,16 @@ export default function Emberdelve() {
           depth: game.depth,
           boss: boss ? Math.max(0, boss.hp / boss.maxHp) : null,
           doors: game.room.doors.length,
+          embers: game.embers,
+          rerolls: game.rerolls,
         }
-        const key = `${next.status}|${next.score}|${next.hp}|${next.maxHp}|${next.depth}|${next.boss?.toFixed(2)}|${next.doors}`
+        const key = `${next.status}|${next.score}|${next.hp}|${next.maxHp}|${next.depth}|${next.boss?.toFixed(2)}|${next.doors}|${next.embers}|${next.rerolls}`
         if (key !== lastHud) {
           lastHud = key
           setHud(next)
         }
         if (game.status === 'choosing' && game.choice) setChoice((c) => (c === game.choice ? c : game.choice))
+        setShop((sh) => (sh === game.shop ? sh : game.shop))
         if (game.status === 'over' && ended !== game) {
           ended = game
           finish(game)
@@ -171,6 +177,8 @@ export default function Emberdelve() {
       else if (e.type === 'room' && game.status === 'playing') showBanner(e.depth)
       else if (e.type === 'clear') buzz(25)
       else if (e.type === 'kill' && e.kind === 'boss') buzz([40, 30, 40, 30, 120])
+      else if (e.type === 'relight') buzz([30, 30, 30, 30, 200])
+      else if (e.type === 'ward') buzz(30)
     }
   }
 
@@ -239,8 +247,9 @@ export default function Emberdelve() {
     }
   }, [])
 
-  // The floating stick: put a thumb down anywhere and drag. A second finger
-  // tapping anywhere dashes, as does the dash button.
+  // The floating stick: put a thumb down anywhere and drag. Dash by flicking
+  // (a quick swipe and lift, in the direction of the swipe) or by tapping
+  // with a second finger.
   function onPointerDown(e) {
     const game = gameRef.current
     if (!game || game.status !== 'playing' || pausedRef.current) return
@@ -248,7 +257,7 @@ export default function Emberdelve() {
       dash(game, input.current)
       return
     }
-    stick.current = { id: e.pointerId, x: e.clientX, y: e.clientY }
+    stick.current = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now() }
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {
@@ -289,13 +298,12 @@ export default function Emberdelve() {
     stick.current = null
     input.current = { x: 0, z: 0 }
     stickRef.current.classList.remove('on')
-  }
-
-  function onDash(e) {
-    e.preventDefault()
-    e.stopPropagation()
+    const fx = e.clientX - s.x0
+    const fy = e.clientY - s.y0
     const game = gameRef.current
-    if (game && !pausedRef.current) dash(game, input.current)
+    if (e.type === 'pointerup' && game && performance.now() - s.t0 < FLICK_MS && Math.hypot(fx, fy) > FLICK_PX) {
+      dash(game, { x: fx, z: fy })
+    }
   }
 
   function play() {
@@ -311,12 +319,49 @@ export default function Emberdelve() {
     }
   }
 
+  function doReroll() {
+    const game = gameRef.current
+    if (!game) return
+    reroll(game)
+    setChoice(game.choice)
+    buzz(15)
+  }
+
+  function doBuy(i) {
+    const game = gameRef.current
+    if (!game) return
+    buy(game, i)
+    setShop(game.shop)
+  }
+
   function pick(key) {
     const game = gameRef.current
     if (!game) return
     choose(game, key)
     setChoice(null)
     buzz(20)
+  }
+
+  const taken = gameRef.current?.player.taken ?? {}
+  const boonCard = (k, extra) => {
+    const b = BOONS[k]
+    const have = taken[k] || 0
+    return (
+      <>
+        <span className="ed-card-icon" aria-hidden="true">
+          {b.icon}
+        </span>
+        <span className="ed-card-text">
+          <span className="ed-card-tier">{TIERS[b.tier].label}{b.needs && `: ${b.needs.map((n) => BOONS[n].name).join(' + ')}`}</span>
+          <span className="ed-card-name">
+            {b.name}
+            {have > 0 && <span className="ed-card-have"> ×{have + 1}</span>}
+          </span>
+          <span className="ed-card-desc">{b.text}</span>
+        </span>
+        {extra}
+      </>
+    )
   }
 
   const status = hud.status
@@ -341,10 +386,10 @@ export default function Emberdelve() {
             <b>Move</b> put a thumb down anywhere and drag
           </li>
           <li>
-            <b>Dash</b> tap the dash button or a second finger to zip through danger
+            <b>Dash</b> flick your thumb, or tap a second finger, to zip through danger
           </li>
           <li>
-            <b>Grow</b> clear a room, take a boon, then pick your next door
+            <b>Grow</b> clear a room, take a boon, then pick your next door. Some boons team up into rare duo powers
           </li>
         </ul>
         <button type="button" className="ed-btn primary" onClick={play}>
@@ -359,25 +404,66 @@ export default function Emberdelve() {
         <p className="ed-title small">{choice.title}</p>
         <p className="ed-sub">Choose a boon</p>
         <div className="ed-cards">
-          {choice.boons.map((k) => {
-            const b = BOONS[k]
-            const have = gameRef.current?.player.taken[k] || 0
-            return (
-              <button key={k} type="button" className={`ed-card ${b.rare ? 'rare' : ''}`} onClick={() => pick(k)}>
-                <span className="ed-card-icon" aria-hidden="true">
-                  {b.icon}
-                </span>
-                <span className="ed-card-text">
-                  <span className="ed-card-name">
-                    {b.name}
-                    {have > 0 && <span className="ed-card-have"> ×{have + 1}</span>}
+          {choice.boons.map((k) => (
+            <button key={k} type="button" className={`ed-card tier-${BOONS[k].tier}`} onClick={() => pick(k)}>
+              {boonCard(k)}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="ed-btn ghost" onClick={doReroll} disabled={hud.rerolls <= 0}>
+          ↻ Reroll ({hud.rerolls} left)
+        </button>
+      </div>
+    )
+  } else if (status === 'shopping' && shop) {
+    const game = gameRef.current
+    const p = game?.player
+    overlay = (
+      <div className="ed-overlay ed-overlay--choice">
+        <p className="ed-title small">The Tallow Trader</p>
+        <p className="ed-sub">
+          You have <b className="ed-embers">◆ {hud.embers}</b> embers to spend
+        </p>
+        <div className="ed-cards">
+          {shop.items.map((item, i) => {
+            const price = <span className="ed-price">◆ {item.price}</span>
+            let body
+            let blocked = item.sold || hud.embers < item.price
+            if (item.kind === 'boon') {
+              blocked ||= !boonAvailable(game, item.key)
+              body = boonCard(item.key, price)
+            } else {
+              const heart = item.kind === 'heart'
+              if (heart) blocked ||= p.hp >= p.maxHp
+              body = (
+                <>
+                  <span className="ed-card-icon" aria-hidden="true">
+                    {heart ? '❤️' : '🎲'}
                   </span>
-                  <span className="ed-card-desc">{b.text}</span>
-                </span>
+                  <span className="ed-card-text">
+                    <span className="ed-card-name">{heart ? 'Heart' : 'Reroll'}</span>
+                    <span className="ed-card-desc">{heart ? 'Heal 1 heart (buy as many as you like)' : 'One more reroll for a later boon choice'}</span>
+                  </span>
+                  {price}
+                </>
+              )
+            }
+            return (
+              <button
+                key={i}
+                type="button"
+                className={`ed-card ${item.kind === 'boon' ? `tier-${BOONS[item.key].tier}` : ''} ${item.sold ? 'sold' : ''}`}
+                disabled={blocked}
+                onClick={() => doBuy(i)}
+              >
+                {body}
               </button>
             )
           })}
         </div>
+        <button type="button" className="ed-btn primary" onClick={() => leaveShop(gameRef.current)}>
+          Leave the shop
+        </button>
       </div>
     )
   } else if (status === 'over' && result) {
@@ -411,6 +497,20 @@ export default function Emberdelve() {
         <button type="button" className="ed-btn primary" onClick={() => setPaused(false)}>
           Resume
         </button>
+        {Object.keys(taken).length > 0 && (
+          <ul className="ed-owned" aria-label="Your boons">
+            {Object.entries(taken).map(([k, n]) => (
+              <li key={k} className={`tier-${BOONS[k].tier}`}>
+                <span aria-hidden="true">{BOONS[k].icon}</span>
+                <b>
+                  {BOONS[k].name}
+                  {n > 1 && ` ×${n}`}
+                </b>
+                <small>{BOONS[k].text}</small>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     )
   }
@@ -437,6 +537,10 @@ export default function Emberdelve() {
         <div className="ed-stat">
           <span className="ed-stat-label">Room</span>
           <span className="ed-stat-value">{hud.depth}</span>
+        </div>
+        <div className="ed-stat">
+          <span className="ed-stat-label">Embers</span>
+          <span className="ed-stat-value ed-embers">◆{hud.embers ?? 0}</span>
         </div>
         <div className="ed-stat">
           <span className="ed-stat-label">Score</span>
@@ -487,17 +591,6 @@ export default function Emberdelve() {
             <br />
             Walk through a door to go deeper
           </div>
-        )}
-        {(playing || paused) && (
-          <button
-            type="button"
-            className="ed-dash"
-            aria-label="Dash"
-            onPointerDown={onDash}
-            onContextMenu={(e) => e.preventDefault()}
-          >
-            Dash
-          </button>
         )}
         {overlay}
       </div>

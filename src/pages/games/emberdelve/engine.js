@@ -37,37 +37,87 @@ const dist2 = (a, b) => (a.x - b.x) ** 2 + (a.z - b.z) ** 2
 
 // ---------------------------------------------------------------- upgrades
 
-// Each boon can be taken more than once unless it has a `max`. `rare` boons
-// only turn up in elite and boss rewards, or one time in six otherwise.
-export const BOONS = {
-  damage: { name: 'Hotter Flame', text: '+25% damage', icon: '🔥', apply: (p) => (p.damage *= 1.25) },
-  rate: { name: 'Quick Wick', text: '+20% fire rate', icon: '⚡', apply: (p) => (p.fireDelay *= 0.83) },
-  multi: { name: 'Twin Spark', text: '+1 ember per shot', icon: '✨', max: 4, apply: (p) => (p.shots += 1) },
-  pierce: { name: 'Needle Ember', text: 'Shots pass through +1 foe', icon: '📌', max: 3, apply: (p) => (p.pierce += 1) },
-  heart: { name: 'Stout Heart', text: '+1 max heart, heal 2', icon: '❤️', apply: (p) => { p.maxHp += 1; p.hp = Math.min(p.maxHp, p.hp + 2) } },
-  speed: { name: 'Light Feet', text: '+12% move speed', icon: '👟', max: 4, apply: (p) => (p.speed *= 1.12) },
-  range: { name: 'Long Burn', text: '+25% range and shot speed', icon: '🏹', max: 3, apply: (p) => { p.range *= 1.25; p.shotSpeed *= 1.2 } },
-  bounce: { name: 'Ricochet', text: 'Shots bounce off walls', icon: '↩️', max: 2, apply: (p) => (p.bounce += 1) },
-  dash: { name: 'Quickstep', text: 'Dash recharges 30% faster', icon: '💨', max: 3, apply: (p) => (p.dashCd *= 0.7) },
-  nova: { name: 'Ember Nova', text: 'Dashing bursts out a ring of embers', icon: '💥', rare: true, apply: (p) => (p.nova += 6) },
-  orbit: { name: 'Wisp', text: 'A wisp circles you, burning foes', icon: '🌀', rare: true, max: 4, apply: (p) => (p.orbs += 1) },
-  crit: { name: 'Keen Eye', text: '+12% chance of a double-damage hit', icon: '🎯', max: 4, apply: (p) => (p.crit += 0.12) },
-  burn: { name: 'Kindling', text: 'Hits set foes alight', icon: '♨️', rare: true, max: 3, apply: (p) => (p.burn += 1) },
-  leech: { name: 'Hearthfire', text: 'Kills sometimes drop a heart', icon: '💗', rare: true, max: 2, apply: (p) => (p.leech += 0.05) },
-  magnet: { name: 'Lodestone', text: 'Pull embers from further away', icon: '🧲', max: 2, apply: (p) => (p.magnet += 2) },
+// Boons, in four tiers. Common ones are steady stat bumps; rare ones change
+// how your flame behaves; epic ones bend the run around them. Duo boons need
+// two others first and are the reward for building towards something, the
+// way Hades pairs two gods' gifts. Each can be taken until its `max`.
+export const TIERS = {
+  common: { label: 'Common', price: 25 },
+  rare: { label: 'Rare', price: 40 },
+  epic: { label: 'Epic', price: 60 },
+  duo: { label: 'Duo', price: 60 },
 }
 
-function rollBoons(game, count, rareBoost) {
+export const BOONS = {
+  // Common
+  damage: { tier: 'common', name: 'Hotter Flame', text: '+20% damage', icon: '🔥', apply: (p) => (p.damage *= 1.2) },
+  rate: { tier: 'common', name: 'Quick Wick', text: '+18% fire rate', icon: '⚡', max: 6, apply: (p) => (p.fireDelay *= 0.85) },
+  speed: { tier: 'common', name: 'Light Feet', text: '+12% move speed', icon: '👟', max: 4, apply: (p) => (p.speed *= 1.12) },
+  range: { tier: 'common', name: 'Long Burn', text: '+25% range and shot speed', icon: '🏹', max: 3, apply: (p) => { p.range *= 1.25; p.shotSpeed *= 1.2 } },
+  heart: { tier: 'common', name: 'Stout Heart', text: '+1 max heart, heal 2', icon: '❤️', apply: (p) => { p.maxHp += 1; p.hp = Math.min(p.maxHp, p.hp + 2) } },
+  crit: { tier: 'common', name: 'Keen Eye', text: '+12% chance of a double-damage hit', icon: '🎯', max: 4, apply: (p) => (p.crit += 0.12) },
+  dash: { tier: 'common', name: 'Quickstep', text: 'Dash recharges 30% faster', icon: '💨', max: 3, apply: (p) => (p.dashCd *= 0.7) },
+  magnet: { tier: 'common', name: 'Lodestone', text: 'Pull embers in from much further away', icon: '🧲', max: 2, apply: (p) => (p.magnet += 2.5) },
+  steady: { tier: 'common', name: 'Still Flame', text: 'Fire 35% faster while standing still', icon: '🕯️', max: 3, apply: (p) => (p.steady += 1) },
+  hearth: { tier: 'common', name: 'Hearthside', text: 'Heal 1 heart after every room', icon: '🏠', max: 2, apply: (p) => (p.hearth += 1) },
+  ward: { tier: 'common', name: 'Wax Ward', text: 'A shield soaks up the first hit in each room', icon: '🛡️', max: 2, apply: (p) => { p.wardMax += 1; p.ward += 1 } },
+  greed: { tier: 'common', name: 'Magpie', text: 'Embers are worth 50% more', icon: '🪙', max: 2, apply: (p) => (p.greed += 0.5) },
+  // Rare
+  multi: { tier: 'rare', name: 'Twin Spark', text: '+1 ember in every volley', icon: '✨', max: 3, apply: (p) => (p.shots += 1) },
+  side: { tier: 'rare', name: 'Side Sparks', text: 'Also fire diagonally', icon: '↔️', max: 2, apply: (p) => (p.side += 1) },
+  rear: { tier: 'rare', name: 'Backfire', text: 'Also fire behind you', icon: '🔙', max: 2, apply: (p) => (p.rear += 1) },
+  pierce: { tier: 'rare', name: 'Needle Ember', text: 'Shots pass through +1 foe', icon: '📌', max: 3, apply: (p) => (p.pierce += 1) },
+  bounce: { tier: 'rare', name: 'Ricochet', text: 'Shots bounce off walls', icon: '↩️', max: 2, apply: (p) => (p.bounce += 1) },
+  homing: { tier: 'rare', name: 'Seeker', text: 'Embers curve towards foes', icon: '🧭', max: 2, apply: (p) => (p.homing += 1) },
+  giant: { tier: 'rare', name: 'Bonfire Shot', text: 'Bigger embers, +40% damage, a little slower', icon: '🌕', max: 2, apply: (p) => { p.giant += 1; p.shotSpeed *= 0.88 } },
+  burn: { tier: 'rare', name: 'Kindling', text: 'Hits set foes alight', icon: '♨️', max: 3, apply: (p) => (p.burn += 1) },
+  frost: { tier: 'rare', name: 'Rimeflame', text: 'Hits chill foes, slowing them down', icon: '❄️', max: 2, apply: (p) => (p.frost += 1) },
+  chain: { tier: 'rare', name: 'Arc Spark', text: 'Hits leap to a nearby foe', icon: '🌩️', max: 3, apply: (p) => (p.chain += 1) },
+  boom: { tier: 'rare', name: 'Cinderburst', text: 'Foes explode when they fall', icon: '💣', max: 3, apply: (p) => (p.boom += 1) },
+  spite: { tier: 'rare', name: 'Spitfire', text: 'Getting hurt bursts out a ring of embers', icon: '🌋', max: 2, apply: (p) => (p.spite += 1) },
+  leech: { tier: 'rare', name: 'Hearthfire', text: 'Kills sometimes drop a heart', icon: '💗', max: 2, apply: (p) => (p.leech += 0.05) },
+  // Epic
+  nova: { tier: 'epic', name: 'Ember Nova', text: 'Dashing bursts out a ring of embers', icon: '💥', max: 2, apply: (p) => (p.nova += 8) },
+  orbit: { tier: 'epic', name: 'Wisp', text: 'A wisp circles you, burning foes', icon: '🌀', max: 4, apply: (p) => (p.orbs += 1) },
+  trail: { tier: 'epic', name: 'Firewalk', text: 'Dashing leaves burning ground behind', icon: '👣', max: 2, apply: (p) => (p.trail += 1) },
+  glass: { tier: 'epic', name: 'Glass Wick', text: '+60% damage, but -1 max heart', icon: '🥂', max: 1, apply: (p) => { p.damage *= 1.6; p.maxHp = Math.max(1, p.maxHp - 1); p.hp = Math.min(p.hp, p.maxHp) } },
+  second: { tier: 'epic', name: 'Second Wick', text: 'Relight once with 3 hearts when snuffed out', icon: '🔁', max: 1, apply: (p) => (p.lives += 1) },
+  fury: { tier: 'epic', name: 'Fury', text: 'Kills fire you up: faster shots for a few seconds, stacking', icon: '😤', max: 1, apply: (p) => (p.fury += 1) },
+  // Duo: need both boons in `needs` first
+  wildfire: { tier: 'duo', needs: ['burn', 'boom'], name: 'Wildfire', text: 'Explosions are bigger and set everything they touch alight', icon: '☄️', max: 1, apply: (p) => (p.wildfire = 1) },
+  shatter: { tier: 'duo', needs: ['frost', 'crit'], name: 'Shatter', text: 'Critical hits on chilled foes deal triple damage', icon: '🧊', max: 1, apply: (p) => (p.shatter = 1) },
+  storm: { tier: 'duo', needs: ['orbit', 'chain'], name: 'Stormwisp', text: 'Wisps throw lightning at everything they touch', icon: '⛈️', max: 1, apply: (p) => (p.storm = 1) },
+  supernova: { tier: 'duo', needs: ['nova', 'dash'], name: 'Supernova', text: 'Dash rings double up and pierce everything', icon: '☀️', max: 1, apply: (p) => (p.supernova = 1) },
+  hail: { tier: 'duo', needs: ['multi', 'side'], name: 'Hailstorm', text: 'Every fourth volley fires a full ring', icon: '🌨️', max: 1, apply: (p) => (p.hail = 1) },
+  sear: { tier: 'duo', needs: ['giant', 'pierce'], name: 'Searing Lance', text: 'Big embers pierce every foe in a line', icon: '🗡️', max: 1, apply: (p) => (p.pierce += 99) },
+}
+
+export function boonAvailable(game, key) {
+  const b = BOONS[key]
   const p = game.player
-  const pool = Object.keys(BOONS).filter((k) => {
-    const b = BOONS[k]
-    if (b.max && (p.taken[k] || 0) >= b.max) return false
-    if (b.rare && !rareBoost && game.rand() > 1 / 6) return false
-    return true
-  })
+  if (b.max && (p.taken[key] || 0) >= b.max) return false
+  if (b.needs && !b.needs.every((k) => p.taken[k])) return false
+  return true
+}
+
+// Weighted by tier; better rooms tilt towards rarer boons. A duo you have
+// earned is likely (certain in elite and boss rewards) to be offered.
+function rollBoons(game, count, rich, exclude = []) {
+  const weights = rich ? { common: 35, rare: 45, epic: 20 } : { common: 62, rare: 31, epic: 7 }
+  const keys = Object.keys(BOONS).filter((k) => !exclude.includes(k) && boonAvailable(game, k))
   const picks = []
+  const duos = keys.filter((k) => BOONS[k].tier === 'duo')
+  if (duos.length && (rich || game.rand() < 0.5)) picks.push(duos[Math.floor(game.rand() * duos.length)])
+  const pool = keys.filter((k) => BOONS[k].tier !== 'duo' && !picks.includes(k))
   while (picks.length < count && pool.length) {
-    picks.push(pool.splice(Math.floor(game.rand() * pool.length), 1)[0])
+    const total = pool.reduce((a, k) => a + weights[BOONS[k].tier], 0)
+    let r = game.rand() * total
+    let i = 0
+    for (; i < pool.length - 1; i++) {
+      r -= weights[BOONS[pool[i]].tier]
+      if (r <= 0) break
+    }
+    picks.push(pool.splice(i, 1)[0])
   }
   return picks
 }
@@ -157,7 +207,7 @@ function buildRoom(game, reward) {
   const boss = depth % BOSS_EVERY === 0
   const pillars = []
   if (!boss) {
-    const count = 2 + Math.floor(game.rand() * 4)
+    const count = reward === 'shop' ? 0 : 2 + Math.floor(game.rand() * 4)
     for (let i = 0; i < count; i++) {
       for (let tries = 0; tries < 20; tries++) {
         const p = {
@@ -180,7 +230,7 @@ function buildRoom(game, reward) {
     reward: boss ? 'boss' : reward,
     pillars,
     wave: 0,
-    waves: boss ? 1 : 2 + (depth >= 6 ? 1 : 0) + (reward === 'elite' ? 1 : 0),
+    waves: reward === 'shop' ? 0 : boss ? 1 : 2 + (depth >= 6 ? 1 : 0) + (reward === 'elite' ? 1 : 0),
     cleared: false,
     doors: [], // filled in once the room is cleared
     theme: Math.floor((depth - 1) / BOSS_EVERY) % 4, // palette, changes after each boss
@@ -190,6 +240,9 @@ function buildRoom(game, reward) {
   game.bolts = []
   game.pickups = []
   game.spawns = []
+  game.hazards = []
+  game.rings = []
+  game.player.ward = game.player.wardMax
   game.player.x = 0
   game.player.z = HALF_D - 1.5
   game.player.vx = 0
@@ -209,6 +262,7 @@ function openDoors(game) {
   }
   const options = ['boon', 'boon', 'rest', 'elite']
   if (game.player.hp >= game.player.maxHp) options.splice(2, 1) // no point resting
+  if (game.depth >= 2 && game.room.reward !== 'shop' && game.embers >= 20) options.push('shop', 'shop')
   const a = options.splice(Math.floor(game.rand() * options.length), 1)[0]
   const rest = options.filter((o) => o !== a)
   const b = rest[Math.floor(game.rand() * rest.length)] ?? (a === 'boon' ? 'elite' : 'boon')
@@ -223,6 +277,7 @@ export const REWARDS = {
   rest: { label: 'Rest', note: 'Heal 3 hearts' },
   elite: { label: 'Elite', note: 'Tougher foes, rare powers, double score' },
   boss: { label: 'Boss', note: 'Beat the Warden' },
+  shop: { label: 'Shop', note: 'Spend your embers' },
 }
 
 // ---------------------------------------------------------------- public API
@@ -240,7 +295,13 @@ export function createGame(seed = Date.now()) {
     shake: 0,
     flash: 0, // red screen flash when hurt
     events: [],
-    choice: null, // { boons: [keys], title }
+    choice: null, // { boons: [keys], title, rich }
+    shop: null, // { items: [{ kind, key, price, sold }] }
+    embers: 0, // currency for the shop; every ember also scores
+    emberFrac: 0,
+    rerolls: 1,
+    hazards: [], // burning ground from Firewalk
+    rings: [], // explosion flashes, for the renderer
     player: {
       x: 0,
       z: HALF_D - 1.5,
@@ -266,6 +327,26 @@ export function createGame(seed = Date.now()) {
       orbs: 0,
       orbAngle: 0,
       magnet: 2,
+      steady: 0,
+      hearth: 0,
+      ward: 0,
+      wardMax: 0,
+      greed: 0,
+      side: 0,
+      rear: 0,
+      homing: 0,
+      giant: 0,
+      frost: 0,
+      chain: 0,
+      boom: 0,
+      spite: 0,
+      trail: 0,
+      trailT: 0,
+      lives: 0,
+      fury: 0,
+      furyStacks: 0,
+      furyT: 0,
+      volleys: 0,
       dashCd: 1.4,
       dashT: 0, // cooldown left
       dashing: 0, // dash time left
@@ -305,6 +386,51 @@ export function choose(game, key) {
   game.events.push({ type: 'boon', key })
 }
 
+export function reroll(game) {
+  if (game.status !== 'choosing' || game.rerolls <= 0) return
+  game.rerolls -= 1
+  game.choice = { ...game.choice, boons: rollBoons(game, 3, game.choice.rich, game.choice.boons) }
+  if (game.choice.boons.length === 0) game.choice.boons = rollBoons(game, 3, game.choice.rich)
+  game.events.push({ type: 'reroll' })
+}
+
+function openShop(game) {
+  const keys = rollBoons(game, 3, true)
+  const items = keys.map((key) => ({ kind: 'boon', key, price: TIERS[BOONS[key].tier].price, sold: false }))
+  items.push({ kind: 'heart', price: 15, sold: false })
+  items.push({ kind: 'reroll', price: 20, sold: false })
+  game.shop = { items }
+  game.status = 'shopping'
+}
+
+export function buy(game, index) {
+  const item = game.shop?.items[index]
+  if (game.status !== 'shopping' || !item || item.sold || game.embers < item.price) return
+  const p = game.player
+  if (item.kind === 'heart') {
+    if (p.hp >= p.maxHp) return
+    p.hp += 1
+  } else if (item.kind === 'reroll') {
+    game.rerolls += 1
+  } else {
+    if (!boonAvailable(game, item.key)) return
+    BOONS[item.key].apply(p)
+    p.taken[item.key] = (p.taken[item.key] || 0) + 1
+  }
+  game.embers -= item.price
+  // Hearts can be bought again and again; everything else once.
+  if (item.kind !== 'heart') item.sold = true
+  game.shop = { items: [...game.shop.items] }
+  game.events.push({ type: 'buy', kind: item.kind })
+}
+
+export function leaveShop(game) {
+  if (game.status !== 'shopping') return
+  game.shop = null
+  game.status = 'playing'
+  openDoors(game)
+}
+
 export function dash(game, input) {
   const p = game.player
   if (game.status !== 'playing' || p.dashT > 0) return
@@ -326,9 +452,10 @@ export function dash(game, input) {
   game.events.push({ type: 'dash' })
   burst(game, p.x, p.z, 8, 0xffb347, 3)
   if (p.nova) {
-    for (let i = 0; i < p.nova; i++) {
-      const a = (i / p.nova) * Math.PI * 2
-      fireShot(game, Math.cos(a), Math.sin(a), 0.8)
+    const n = p.nova * (p.supernova ? 2 : 1)
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2
+      fireShot(game, Math.cos(a), Math.sin(a), 0.8, p.supernova ? { pierce: 99 } : null)
     }
   }
 }
@@ -336,7 +463,7 @@ export function dash(game, input) {
 // ---------------------------------------------------------------- the step
 
 export function step(game, input) {
-  if (game.status === 'ready' || game.status === 'over' || game.status === 'choosing') {
+  if (game.status === 'ready' || game.status === 'over' || game.status === 'choosing' || game.status === 'shopping') {
     stepParticles(game, STEP)
     return
   }
@@ -363,6 +490,7 @@ export function step(game, input) {
   sweepDead(game)
   stepBolts(game, dt)
   stepPickups(game, dt)
+  stepHazards(game, dt)
   stepParticles(game, dt)
   stepRoom(game, dt)
 }
@@ -372,9 +500,18 @@ function stepPlayer(game, input, dt) {
   p.dashT = Math.max(0, p.dashT - dt)
   p.inv = Math.max(0, p.inv - dt)
 
+  p.furyT = Math.max(0, p.furyT - dt)
+  if (p.furyT <= 0) p.furyStacks = 0
   if (p.dashing > 0) {
     p.dashing -= dt
     if (game.rand() < 0.6) particle(game, p.x, p.z, 0xffb347, 0.4, 0, 0)
+    if (p.trail) {
+      p.trailT -= dt
+      if (p.trailT <= 0) {
+        p.trailT = 0.03
+        game.hazards.push({ x: p.x, z: p.z, r: 0.7 + p.trail * 0.15, t: 2.2 + p.trail * 0.8, max: 2.2 + p.trail * 0.8, tick: 0 })
+      }
+    }
   } else {
     let ix = input.x
     let iz = input.z
@@ -432,16 +569,23 @@ function stepPlayer(game, input, dt) {
       const ax = best.x + best.vx * t * 0.6 - p.x
       const az = best.z + best.vz * t * 0.6 - p.z
       const al = Math.hypot(ax, az) || 1
-      const spread = 0.16
-      for (let i = 0; i < p.shots; i++) {
-        const off = (i - (p.shots - 1) / 2) * spread
+      const aim = (off) => {
         const c = Math.cos(off)
         const s = Math.sin(off)
-        const dx = (ax / al) * c - (az / al) * s
-        const dz = (ax / al) * s + (az / al) * c
-        fireShot(game, dx, dz, 1)
+        fireShot(game, (ax / al) * c - (az / al) * s, (ax / al) * s + (az / al) * c, 1)
       }
-      p.fireT = p.fireDelay
+      const spread = 0.16
+      for (let i = 0; i < p.shots; i++) aim((i - (p.shots - 1) / 2) * spread)
+      if (p.side >= 1) [-0.78, 0.78].forEach(aim)
+      if (p.side >= 2) [-1.57, 1.57].forEach(aim)
+      if (p.rear === 1) aim(Math.PI)
+      if (p.rear >= 2) [Math.PI - 0.2, Math.PI + 0.2].forEach(aim)
+      p.volleys += 1
+      if (p.hail && p.volleys % 4 === 0) for (let i = 0; i < 16; i++) aim((i / 16) * Math.PI * 2)
+      let delay = p.fireDelay
+      if (p.steady && Math.hypot(p.vx, p.vz) < 0.6) delay /= 1 + 0.35 * p.steady
+      if (p.furyStacks) delay /= 1 + 0.12 * p.furyStacks
+      p.fireT = delay
       game.events.push({ type: 'shoot' })
     } else {
       p.fireT = 0.05
@@ -460,14 +604,16 @@ function stepPlayer(game, input, dt) {
         if ((e.x - ox) ** 2 + (e.z - oz) ** 2 < (e.r + 0.3) ** 2) {
           e.orbHit = game.time + 0.35
           hurtEnemy(game, e, p.damage * 0.8, false)
+          if (p.storm) arc(game, e, p.damage * 0.7, 2 + p.chain)
         }
       }
     }
   }
 }
 
-function fireShot(game, dx, dz, scale) {
+function fireShot(game, dx, dz, scale, opts) {
   const p = game.player
+  if (game.shots.length > 280) return
   const crit = game.rand() < p.crit
   game.shots.push({
     x: p.x + dx * 0.4,
@@ -475,12 +621,77 @@ function fireShot(game, dx, dz, scale) {
     vx: dx * p.shotSpeed,
     vz: dz * p.shotSpeed,
     life: p.range / p.shotSpeed + 0.05,
-    damage: p.damage * scale * (crit ? 2 : 1),
+    damage: p.damage * scale * (crit ? 2 : 1) * (1 + 0.4 * p.giant),
+    size: 1 + 0.45 * p.giant,
     crit,
-    pierce: p.pierce,
+    pierce: opts?.pierce ?? p.pierce,
     bounce: p.bounce,
     hits: [],
   })
+}
+
+// Lightning that leaps from foe to foe, never hitting the same one twice.
+function arc(game, from, damage, jumps) {
+  const seen = new Set([from.id])
+  let cur = from
+  for (let j = 0; j < jumps; j++) {
+    let next = null
+    let best = 3.8 * 3.8
+    for (const e of game.enemies) {
+      if (seen.has(e.id) || e.hp <= 0) continue
+      const d = dist2(cur, e)
+      if (d < best) {
+        best = d
+        next = e
+      }
+    }
+    if (!next) break
+    seen.add(next.id)
+    for (let k = 1; k < 6; k++) {
+      const f = k / 6
+      particle(game, cur.x + (next.x - cur.x) * f, cur.z + (next.z - cur.z) * f, 0x9fe8ff, 0.22, 0, 0)
+    }
+    hurtEnemy(game, next, damage, false, true)
+    cur = next
+  }
+}
+
+function explode(game, x, z, radius, damage, ignite) {
+  game.rings.push({ x, z, r: radius, t: 0.35, max: 0.35, color: ignite ? 0xff6a20 : 0xffb050 })
+  burst(game, x, z, 14, ignite ? 0xff5a10 : 0xffa040, radius * 3)
+  for (const e of game.enemies) {
+    if (e.hp <= 0) continue
+    if (dist2(e, { x, z }) < (radius + e.r) ** 2) {
+      hurtEnemy(game, e, damage, false, true)
+      if (ignite) {
+        e.burn = 3
+        if (e.burnTick <= 0) e.burnTick = 0.4
+      }
+    }
+  }
+  game.shake = Math.min(1, game.shake + 0.12)
+  game.events.push({ type: 'boom' })
+}
+
+function stepHazards(game, dt) {
+  const p = game.player
+  for (let i = game.hazards.length - 1; i >= 0; i--) {
+    const h = game.hazards[i]
+    h.t -= dt
+    if (h.t <= 0) {
+      game.hazards.splice(i, 1)
+      continue
+    }
+    h.tick -= dt
+    if (h.tick <= 0) {
+      h.tick = 0.4
+      for (const e of game.enemies) {
+        if (dist2(e, h) < (h.r + e.r) ** 2) hurtEnemy(game, e, p.damage * 0.35 * p.trail, false, true)
+      }
+    }
+  }
+  game.rings = game.rings.filter((r) => (r.t -= dt) > 0)
+  sweepDead(game)
 }
 
 function stepSpawns(game, dt) {
@@ -499,7 +710,9 @@ function stepEnemies(game, dt) {
   const p = game.player
   const list = game.enemies
   for (const e of list) {
-    e.t += dt
+    e.chill = Math.max(0, (e.chill || 0) - dt)
+    const slow = e.chill > 0 ? 1 - Math.min(0.6, 0.3 + 0.15 * p.frost) : 1
+    e.t += dt * slow
     e.hit = Math.max(0, e.hit - dt)
     const dx = p.x - e.x
     const dz = p.z - e.z
@@ -588,14 +801,15 @@ function stepEnemies(game, dt) {
 
     if (e.kind !== 'brute' || e.state === 'move') {
       const k = 1 - Math.exp(-dt * 6)
-      e.vx += (tx * e.speed - e.vx) * k
-      e.vz += (tz * e.speed - e.vz) * k
+      e.vx += (tx * e.speed * slow - e.vx) * k
+      e.vz += (tz * e.speed * slow - e.vz) * k
     } else if (e.state === 'wind') {
       e.vx *= 0.8
       e.vz *= 0.8
     }
-    e.x += e.vx * dt
-    e.z += e.vz * dt
+    const chargeSlow = e.state === 'charge' ? slow : 1
+    e.x += e.vx * dt * chargeSlow
+    e.z += e.vz * dt * chargeSlow
   }
 
   // Keep foes from stacking into one blob.
@@ -678,6 +892,7 @@ function stepShots(game, dt) {
   const shots = game.shots
   for (let i = shots.length - 1; i >= 0; i--) {
     const s = shots[i]
+    if (game.player.homing) steerShot(game, s, dt)
     s.x += s.vx * dt
     s.z += s.vz * dt
     s.life -= dt
@@ -705,9 +920,10 @@ function stepShots(game, dt) {
     if (!dead) {
       for (const e of game.enemies) {
         if (e.hp <= 0 || s.hits.includes(e.id)) continue
-        if (dist2(s, e) < (e.r + 0.15) ** 2) {
+        if (dist2(s, e) < (e.r + 0.15 * s.size) ** 2) {
           s.hits.push(e.id)
           hurtEnemy(game, e, s.damage, s.crit)
+          if (game.player.chain) arc(game, e, s.damage * 0.55, game.player.chain)
           e.vx += s.vx * 0.08
           e.vz += s.vz * 0.08
           if (s.pierce > 0) s.pierce -= 1
@@ -723,6 +939,30 @@ function stepShots(game, dt) {
       shots.splice(i, 1)
     }
   }
+}
+
+// Seeker: turn towards the nearest foe this shot hasn't hit yet.
+function steerShot(game, s, dt) {
+  let best = null
+  let bestD = 4 * 4
+  for (const e of game.enemies) {
+    if (e.hp <= 0 || s.hits.includes(e.id)) continue
+    const d = dist2(s, e)
+    if (d < bestD) {
+      bestD = d
+      best = e
+    }
+  }
+  if (!best) return
+  const speed = Math.hypot(s.vx, s.vz)
+  const cur = Math.atan2(s.vz, s.vx)
+  const want = Math.atan2(best.z - s.z, best.x - s.x)
+  let diff = want - cur
+  while (diff > Math.PI) diff -= Math.PI * 2
+  while (diff < -Math.PI) diff += Math.PI * 2
+  const turn = clamp(diff, -dt * 5 * game.player.homing, dt * 5 * game.player.homing)
+  s.vx = Math.cos(cur + turn) * speed
+  s.vz = Math.sin(cur + turn) * speed
 }
 
 function stepBolts(game, dt) {
@@ -752,8 +992,11 @@ function stepBolts(game, dt) {
 
 function hurtEnemy(game, e, amount, crit, quiet) {
   if (e.hp <= 0) return
+  const p = game.player
+  if (p.shatter && crit && e.chill > 0) amount *= 1.5
   e.hp -= amount
   e.hit = 0.08
+  if (p.frost && !quiet) e.chill = 1.2 + 0.6 * p.frost
   if (game.player.burn && !quiet) {
     e.burn = 2
     if (e.burnTick <= 0) e.burnTick = 0.5
@@ -766,9 +1009,18 @@ function hurtEnemy(game, e, amount, crit, quiet) {
   // loop ever has its list changed under it.
 }
 
+// Explosions can kill more foes, which can explode in turn, so keep sweeping
+// until nothing else falls.
 function sweepDead(game) {
-  for (let i = game.enemies.length - 1; i >= 0; i--) {
-    if (game.enemies[i].hp <= 0) killEnemy(game, i)
+  for (let pass = 0; pass < 20; pass++) {
+    let any = false
+    for (let i = game.enemies.length - 1; i >= 0; i--) {
+      if (i < game.enemies.length && game.enemies[i].hp <= 0) {
+        killEnemy(game, i)
+        any = true
+      }
+    }
+    if (!any) break
   }
 }
 
@@ -782,6 +1034,15 @@ function killEnemy(game, i) {
   burst(game, e.x, e.z, e.kind === 'boss' ? 40 : 10, e.kind === 'boss' ? 0xff5f5f : 0xb38bff, e.kind === 'boss' ? 7 : 4)
   game.shake = Math.min(1, game.shake + (e.kind === 'boss' ? 1 : 0.15))
   game.events.push({ type: 'kill', kind: e.kind })
+  const p = game.player
+  if (p.boom) {
+    const big = p.wildfire ? 1.6 : 1
+    explode(game, e.x, e.z, (1.4 + 0.3 * p.boom) * big, p.damage * (0.7 + 0.4 * p.boom), !!p.wildfire)
+  }
+  if (p.fury) {
+    p.furyStacks = Math.min(6, p.furyStacks + 1)
+    p.furyT = 3
+  }
 
   // Embers to collect; each is worth a couple of points.
   const embers = e.kind === 'boss' ? 30 : e.kind === 'brute' ? 4 : 2
@@ -805,7 +1066,21 @@ function killEnemy(game, i) {
 function hurtPlayer(game, amount, from) {
   const p = game.player
   if (p.inv > 0 || game.status !== 'playing') return false
+  if (p.ward > 0) {
+    p.ward -= 1
+    p.inv = 0.8
+    burst(game, p.x, p.z, 16, 0xa8e0ff, 4)
+    game.events.push({ type: 'ward' })
+    return true
+  }
   p.hp -= amount
+  if (p.spite) {
+    const n = 8 + 4 * p.spite
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2
+      fireShot(game, Math.cos(a), Math.sin(a), 1)
+    }
+  }
   p.inv = 1
   game.shake = Math.min(1, game.shake + 0.6)
   game.flash = 1
@@ -816,6 +1091,24 @@ function hurtPlayer(game, amount, from) {
   p.vz += (dz / d) * 8
   burst(game, p.x, p.z, 12, 0xff4d4d, 4)
   game.events.push({ type: 'hurt' })
+  if (p.hp <= 0 && p.lives > 0) {
+    // Second Wick: relight, clear the air and shove everything back.
+    p.lives -= 1
+    p.hp = Math.min(3, p.maxHp)
+    p.inv = 2.5
+    game.bolts = []
+    for (const e of game.enemies) {
+      const dx = e.x - p.x
+      const dz = e.z - p.z
+      const d = Math.hypot(dx, dz) || 1
+      e.vx = (dx / d) * 12
+      e.vz = (dz / d) * 12
+    }
+    burst(game, p.x, p.z, 50, 0xfff0a0, 7)
+    game.rings.push({ x: p.x, z: p.z, r: 5, t: 0.6, max: 0.6, color: 0xfff0a0 })
+    game.events.push({ type: 'relight' })
+    return true
+  }
   if (p.hp <= 0) {
     p.hp = 0
     game.status = 'dying'
@@ -847,6 +1140,10 @@ function stepPickups(game, dt) {
     if (d < PLAYER_R + 0.35 && k.t > 0.2) {
       if (k.kind === 'ember') {
         game.score += game.room.elite ? 4 : 2
+        game.emberFrac += 1 + p.greed
+        const whole = Math.floor(game.emberFrac)
+        game.embers += whole
+        game.emberFrac -= whole
         game.events.push({ type: 'ember' })
       } else {
         p.hp = Math.min(p.maxHp, p.hp + 1)
@@ -872,17 +1169,26 @@ function stepRoom(game) {
     }
     room.cleared = true
     game.bolts = []
+    const p = game.player
+    if (room.reward === 'shop') {
+      openShop(game)
+      return
+    }
     game.score += 50 * game.depth * (room.elite ? 2 : 1)
     game.events.push({ type: 'clear' })
-    const p = game.player
+    if (p.hearth) p.hp = Math.min(p.maxHp, p.hp + p.hearth)
     if (room.reward === 'rest') {
       p.hp = Math.min(p.maxHp, p.hp + 3)
       game.events.push({ type: 'heal' })
       openDoors(game)
     } else {
-      if (room.reward === 'boss') p.hp = p.maxHp
+      if (room.reward === 'boss') {
+        p.hp = p.maxHp
+        game.rerolls += 1
+      }
       const rare = room.reward === 'elite' || room.reward === 'boss'
       game.choice = {
+        rich: rare,
         boons: rollBoons(game, 3, rare),
         title: room.reward === 'boss' ? 'The Warden falls!' : room.elite ? 'Elite cleared!' : 'Room cleared!',
       }

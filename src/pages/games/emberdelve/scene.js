@@ -26,6 +26,7 @@ const REWARD_STYLE = {
   rest: { color: 0x7dff9a, glyph: '♥' },
   elite: { color: 0xffc94a, glyph: '☠' },
   boss: { color: 0xff5a5a, glyph: '♛' },
+  shop: { color: 0xffd27f, glyph: '◆' },
 }
 
 // ---------------------------------------------------------------- textures
@@ -429,6 +430,19 @@ export function createScene(canvas) {
   const orbGlow = pool(glowGeo, additive(0x60c8ff), 8)
   const sparks = pool(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshBasicMaterial({ color: 0xffffff }), 300)
   sparks.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(300 * 3), 3)
+  // Burning ground (Firewalk) and explosion rings. Additive, so fading a
+  // ring's colour to black fades it out.
+  const floorGlowGeo = new THREE.PlaneGeometry(1, 1)
+  floorGlowGeo.rotateX(-Math.PI / 2)
+  const hazardMesh = pool(floorGlowGeo, additive(0xff6a1a, 0.85), 200)
+  const ringGeo = new THREE.RingGeometry(0.85, 1, 40)
+  ringGeo.rotateX(-Math.PI / 2)
+  const ringMesh = pool(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), 40)
+  ringMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(40 * 3), 3)
+  // Wax Ward: a soft bubble while a shield charge is up.
+  const wardMat = new THREE.MeshBasicMaterial({ color: 0x9ad8ff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })
+  const wardBubble = new THREE.Mesh(new THREE.IcosahedronGeometry(0.75, 2), wardMat)
+  scene.add(wardBubble)
   const spawnRings = pool(new THREE.RingGeometry(0.4, 0.55, 24), new THREE.MeshBasicMaterial({ color: 0xb080ff, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }), 40)
 
   const foeMeshes = new Map() // enemy id -> { group, blob }
@@ -523,7 +537,12 @@ export function createScene(canvas) {
     player.position.set(p.x, Math.abs(Math.sin(t * 9)) * Math.min(1, Math.hypot(p.vx, p.vz) / 3) * 0.08, p.z)
     player.rotation.y = Math.atan2(p.fx, p.fz)
     const flick = 1 + Math.sin(t * 23) * 0.06 + Math.sin(t * 37) * 0.04
-    flameOuter.scale.set(1, flick * (p.dashing > 0 ? 1.4 : 1), 1)
+    const fury = 1 + (p.furyStacks || 0) * 0.08
+    flameOuter.scale.set(fury, flick * fury * (p.dashing > 0 ? 1.4 : 1), fury)
+    flameOuter.material.color.setHex(p.furyStacks ? 0xff5a20 : 0xff9a2a)
+    wardBubble.visible = alive && p.ward > 0
+    wardBubble.position.set(p.x, 0.55, p.z)
+    wardMat.opacity = 0.18 + Math.sin(t * 5) * 0.05
     flameInner.scale.set(1, flick, 1)
     lamp.intensity = alive ? 40 * flick : 0
     halo.material.opacity = 0.65 * flick
@@ -577,9 +596,11 @@ export function createScene(canvas) {
       }
       const mats = g.userData.mats
       const burning = e.burn > 0
+      const chilled = e.chill > 0
       for (let i = 0; i < mats.length; i++) {
         if (e.hit > 0) mats[i].emissive.setHex(0xffffff)
         else if (burning) mats[i].emissive.setHex(0x6a2000)
+        else if (chilled) mats[i].emissive.setHex(0x1a4a80)
         else mats[i].emissive.copy(g.userData.baseEmissive[i])
       }
       m.blob.position.set(e.x, 0.015, e.z)
@@ -611,8 +632,8 @@ export function createScene(canvas) {
     const n = Math.min(game.shots.length, 300)
     for (let i = 0; i < n; i++) {
       const s = game.shots[i]
-      put(shotCore, i, s.x, 0.55, s.z, s.crit ? 1.5 : 1)
-      face(shotGlow, i, s.x, 0.55, s.z, s.crit ? 1.3 : 0.85)
+      put(shotCore, i, s.x, 0.55, s.z, (s.crit ? 1.5 : 1) * s.size)
+      face(shotGlow, i, s.x, 0.55, s.z, (s.crit ? 1.3 : 0.85) * s.size)
     }
     shotCore.count = shotGlow.count = n
     const nb = Math.min(game.bolts.length, 400)
@@ -661,7 +682,23 @@ export function createScene(canvas) {
       spawnRings.setMatrixAt(i, dummy.matrix)
     }
     spawnRings.count = ns
-    for (const mesh of [shotCore, shotGlow, boltCore, boltGlow, emberMesh, heartMesh, orbCore, orbGlow, sparks, spawnRings]) {
+    const nh2 = Math.min(game.hazards.length, 200)
+    for (let i = 0; i < nh2; i++) {
+      const h = game.hazards[i]
+      const k = Math.min(1, h.t / 0.5)
+      put(hazardMesh, i, h.x, 0.03, h.z, h.r * 2.4 * (0.85 + Math.sin(t * 9 + i) * 0.1) * k)
+    }
+    hazardMesh.count = nh2
+    const nr = Math.min(game.rings.length, 40)
+    for (let i = 0; i < nr; i++) {
+      const r = game.rings[i]
+      const f = r.t / r.max
+      put(ringMesh, i, r.x, 0.06, r.z, r.r * (1.15 - f * 0.55))
+      ringMesh.setColorAt(i, tmpColor.setHex(r.color).multiplyScalar(f))
+    }
+    ringMesh.count = nr
+    if (nr) ringMesh.instanceColor.needsUpdate = true
+    for (const mesh of [shotCore, shotGlow, boltCore, boltGlow, emberMesh, heartMesh, orbCore, orbGlow, sparks, spawnRings, hazardMesh, ringMesh]) {
       mesh.instanceMatrix.needsUpdate = true
     }
 

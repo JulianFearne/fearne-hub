@@ -2,7 +2,9 @@
 // Emberdelve: a pocket roguelike in 3D. You are a candle delving room by room
 // into a dark keep. Your flame fires on its own at the nearest foe; you steer
 // with a thumb and dash through danger. Clear a room, take a boon, choose the
-// next door. Every fifth room is the Warden. One life, so every run is new.
+// next door. Every fifth room holds a boss, a different one in each zone.
+// One life per run, but Wax earned in every run buys lasting upgrades in the
+// Chandlery (meta.js).
 //
 // The rules live in engine.js and the three.js drawing in scene.js; this page
 // runs the frame loop, the touch stick, the HUD and the overlays.
@@ -14,7 +16,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useHighScores } from '../lib/scores'
 import Leaderboard from '../lib/Leaderboard'
 import { boardInfo } from '../lib/scoreBoards'
-import { BOONS, REWARDS, STEP, THEME_NAMES, TIERS, WORLD, boonAvailable, buy, choose, createGame, dash, leaveShop, reroll, startGame, step, takeEvents } from './engine'
+import { BOONS, BOSSES, REWARDS, STEP, THEME_NAMES, TIERS, WORLD, bossFor, isBoss, boonAvailable, buy, choose, createGame, dash, leaveShop, reroll, startGame, step, takeEvents } from './engine'
+import { META, applyMeta, buyMeta, loadMeta, nextCost, saveMeta, waxFor } from './meta'
 import './emberdelve.css'
 
 const GAME_KEY = 'emberdelve'
@@ -33,7 +36,7 @@ function buzz(pattern) {
 
 function roomName(depth) {
   const theme = THEME_NAMES[Math.floor((depth - 1) / WORLD.BOSS_EVERY) % THEME_NAMES.length]
-  return depth % WORLD.BOSS_EVERY === 0 ? `${theme} · The Warden` : theme
+  return depth % WORLD.BOSS_EVERY === 0 ? `${theme} · ${BOSSES[bossFor(depth)].name}` : theme
 }
 
 export default function Emberdelve() {
@@ -46,6 +49,8 @@ export default function Emberdelve() {
   const [banner, setBanner] = useState(null) // { key, title, sub }
   const [round, setRound] = useState(0)
   const [webgl, setWebgl] = useState(true)
+  const [meta, setMeta] = useState(loadMeta)
+  const [chandlery, setChandlery] = useState(false)
 
   const stageRef = useRef(null)
   const canvasRef = useRef(null)
@@ -59,7 +64,7 @@ export default function Emberdelve() {
   const keys = useRef(new Set())
   const stick = useRef(null) // { id, x, y }
   const live = useRef({})
-  live.current = { submit: scores.submit }
+  live.current = { submit: scores.submit, meta }
   pausedRef.current = paused
 
   // One three.js scene for the life of the page, one game per round.
@@ -119,7 +124,9 @@ export default function Emberdelve() {
         sceneApi.render(game, now)
         if (flashRef.current) flashRef.current.style.opacity = String(game.flash * 0.55)
 
-        const boss = game.enemies.find((e) => e.kind === 'boss')
+        const bosses = game.enemies.filter((e) => isBoss(e.kind))
+        const bossHp = bosses.reduce((a, e) => a + Math.max(0, e.hp), 0)
+        const bossMax = game.room.boss === 'twin' ? bosses.reduce((a, e) => a + e.maxHp, 0) + (2 - bosses.length) * (bosses[0]?.maxHp ?? 0) : bosses.reduce((a, e) => a + e.maxHp, 0)
         const p = game.player
         const next = {
           status: game.status,
@@ -127,7 +134,8 @@ export default function Emberdelve() {
           hp: p.hp,
           maxHp: p.maxHp,
           depth: game.depth,
-          boss: boss ? Math.max(0, boss.hp / boss.maxHp) : null,
+          boss: bosses.length ? bossHp / bossMax : null,
+          bossName: game.room.boss ? BOSSES[game.room.boss].name : null,
           doors: game.room.doors.length,
           embers: game.embers,
           rerolls: game.rerolls,
@@ -162,6 +170,7 @@ export default function Emberdelve() {
     setChoice(null)
     if (autoStartRef.current) {
       autoStartRef.current = false
+      applyMeta(game, live.current.meta.levels)
       startGame(game)
       showBanner(game.depth)
     }
@@ -176,7 +185,7 @@ export default function Emberdelve() {
       if (e.type === 'hurt') buzz(game.player.hp > 0 ? 60 : [80, 50, 160])
       else if (e.type === 'room' && game.status === 'playing') showBanner(e.depth)
       else if (e.type === 'clear') buzz(25)
-      else if (e.type === 'kill' && e.kind === 'boss') buzz([40, 30, 40, 30, 120])
+      else if (e.type === 'kill' && isBoss(e.kind)) buzz([40, 30, 40, 30, 120])
       else if (e.type === 'relight') buzz([30, 30, 30, 30, 200])
       else if (e.type === 'ward') buzz(30)
     }
@@ -185,7 +194,13 @@ export default function Emberdelve() {
   async function finish(game) {
     const { score, depth, kills } = game
     const taken = Object.entries(game.player.taken)
-    setResult({ score, depth, kills, taken, line: score > 0 ? 'Saving your score…' : 'Have another go!' })
+    // Pay out Wax for the Chandlery, whatever the score.
+    const wax = waxFor(game)
+    const before = live.current.meta
+    const after = { ...before, wax: before.wax + wax, best: Math.max(before.best, depth), runs: before.runs + 1 }
+    saveMeta(after)
+    setMeta(after)
+    setResult({ score, depth, kills, taken, wax, deepest: depth > before.best && before.runs > 0, line: score > 0 ? 'Saving your score…' : 'Have another go!' })
     if (score <= 0) return
     try {
       const { best, rank } = await live.current.submit(score)
@@ -311,12 +326,21 @@ export default function Emberdelve() {
     setPaused(false)
     const game = gameRef.current
     if (game?.status === 'ready') {
+      applyMeta(game, meta.levels)
       startGame(game)
       showBanner(game.depth)
     } else {
       autoStartRef.current = true
       setRound((r) => r + 1)
     }
+  }
+
+  function upgrade(key) {
+    const next = buyMeta(meta, key)
+    if (next === meta) return
+    saveMeta(next)
+    setMeta(next)
+    buzz(20)
   }
 
   function doReroll() {
@@ -368,8 +392,55 @@ export default function Emberdelve() {
   const playing = status === 'playing'
   const info = boardInfo(GAME_KEY, BOARD)
 
+  const metaBar = (
+    <div className="ed-meta-bar">
+      <span>
+        <b className="ed-wax">🕯 {meta.wax}</b> wax
+        {meta.best > 0 && <> · deepest room {meta.best}</>}
+      </span>
+      <button type="button" className="ed-btn ghost" onClick={() => setChandlery(true)}>
+        The Chandlery
+      </button>
+    </div>
+  )
+
   let overlay = null
-  if (!webgl) {
+  if (chandlery && (status === 'ready' || status === 'over')) {
+    overlay = (
+      <div className="ed-overlay ed-overlay--choice">
+        <p className="ed-title small">The Chandlery</p>
+        <p className="ed-sub">
+          Spend wax on upgrades that last for every delve. You have <b className="ed-wax">🕯 {meta.wax}</b>
+        </p>
+        <div className="ed-cards">
+          {META.map((u) => {
+            const lvl = meta.levels[u.key] || 0
+            const cost = nextCost(meta, u.key)
+            return (
+              <button key={u.key} type="button" className={`ed-card ${cost == null ? 'maxed' : ''}`} disabled={cost == null || meta.wax < cost} onClick={() => upgrade(u.key)}>
+                <span className="ed-card-icon" aria-hidden="true">
+                  {u.icon}
+                </span>
+                <span className="ed-card-text">
+                  <span className="ed-pips" aria-label={`Level ${lvl} of ${u.costs.length}`}>
+                    {u.costs.map((_, i) => (
+                      <span key={i} className={i < lvl ? 'on' : ''} />
+                    ))}
+                  </span>
+                  <span className="ed-card-name">{u.name}</span>
+                  <span className="ed-card-desc">{u.text}</span>
+                </span>
+                <span className="ed-price">{cost == null ? 'Max' : `🕯 ${cost}`}</span>
+              </button>
+            )
+          })}
+        </div>
+        <button type="button" className="ed-btn primary" onClick={() => setChandlery(false)}>
+          Done
+        </button>
+      </div>
+    )
+  } else if (!webgl) {
     overlay = (
       <div className="ed-overlay">
         <p className="ed-title">Emberdelve</p>
@@ -395,6 +466,7 @@ export default function Emberdelve() {
         <button type="button" className="ed-btn primary" onClick={play}>
           Begin the delve
         </button>
+        {metaBar}
         <Leaderboard scores={scores} className="ed-board" />
       </div>
     )
@@ -474,6 +546,10 @@ export default function Emberdelve() {
         <p className="ed-sub">
           Reached room {result.depth}, {result.kills} {result.kills === 1 ? 'foe' : 'foes'} burnt. {result.line}
         </p>
+        <p className="ed-sub">
+          <b className="ed-wax">+{result.wax} wax</b> for the Chandlery
+          {result.deepest && <> · your deepest delve yet!</>}
+        </p>
         {result.taken.length > 0 && (
           <p className="ed-taken" aria-label="Boons this run">
             {result.taken.map(([k, n]) => (
@@ -487,6 +563,7 @@ export default function Emberdelve() {
         <button type="button" className="ed-btn primary" onClick={play}>
           Delve again
         </button>
+        {metaBar}
         <Leaderboard scores={scores} className="ed-board" />
       </div>
     )
@@ -572,8 +649,8 @@ export default function Emberdelve() {
           <div ref={knobRef} className="ed-knob" />
         </div>
         {hud.boss != null && (
-          <div className="ed-bossbar" aria-label="The Warden's health">
-            <span className="ed-bossbar-name">The Warden</span>
+          <div className="ed-bossbar" aria-label={`${hud.bossName}'s health`}>
+            <span className="ed-bossbar-name">{hud.bossName}</span>
             <span className="ed-bossbar-track">
               <span className="ed-bossbar-fill" style={{ width: `${hud.boss * 100}%` }} />
             </span>

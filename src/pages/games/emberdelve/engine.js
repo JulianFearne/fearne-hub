@@ -131,14 +131,31 @@ export const FOES = {
   spitter: { r: 0.45, hp: 5, speed: 1.6, score: 20, touch: 1 },
   brute: { r: 0.7, hp: 16, speed: 1.4, score: 40, touch: 1 },
   splitter: { r: 0.55, hp: 8, speed: 1.9, score: 25, touch: 1 },
-  boss: { r: 1.3, hp: 220, speed: 1.6, score: 500, touch: 1 },
+  // Bosses, one per stretch of five rooms, in this order, then round again
+  // tougher. `boss` is the Warden (its key predates the others).
+  boss: { r: 1.3, hp: 220, speed: 1.6, score: 500, touch: 1, boss: true },
+  bloom: { r: 1.4, hp: 260, speed: 0.6, score: 600, touch: 1, boss: true },
+  stag: { r: 1.1, hp: 240, speed: 2.4, score: 700, touch: 1, boss: true },
+  twin: { r: 1, hp: 150, speed: 2, score: 450, touch: 1, boss: true },
+}
+
+export const BOSS_ORDER = ['boss', 'bloom', 'stag', 'twin']
+export const BOSSES = {
+  boss: { name: 'The Warden', falls: 'The Warden falls!' },
+  bloom: { name: 'The Bloomhusk', falls: 'The Bloomhusk withers!' },
+  stag: { name: 'The Rime Stag', falls: 'The Rime Stag shatters!' },
+  twin: { name: 'The Cinder Twins', falls: 'The Cinder Twins gutter out!' },
+}
+export const isBoss = (kind) => !!FOES[kind]?.boss
+export function bossFor(depth) {
+  return BOSS_ORDER[(Math.floor(depth / BOSS_EVERY) - 1) % BOSS_ORDER.length]
 }
 
 function spawnEnemy(game, kind, x, z) {
   const f = FOES[kind]
   const depth = game.depth
   const tough = 1 + (depth - 1) * 0.12 + (game.room.elite ? 0.4 : 0)
-  const hp = Math.round(f.hp * (kind === 'boss' ? 1 + (depth / BOSS_EVERY - 1) * 0.6 : tough))
+  const hp = Math.round(f.hp * (f.boss ? 1 + (depth / BOSS_EVERY - 1) * 0.3 : tough))
   game.enemies.push({
     id: game.nextId++,
     kind,
@@ -156,7 +173,8 @@ function spawnEnemy(game, kind, x, z) {
     hit: 0, // white flash timer
     burn: 0,
     burnTick: 0,
-    elite: !!game.room.elite && kind !== 'boss',
+    elite: !!game.room.elite && !f.boss,
+    twinIdx: kind === 'twin' ? game.enemies.filter((o) => o.kind === 'twin').length : 0,
   })
 }
 
@@ -180,23 +198,25 @@ function waveFor(game, waveIndex) {
 // Telegraphs: a glowing ring on the floor that becomes a foe a second later,
 // so nothing ever appears on top of the player without warning.
 function queueWave(game) {
-  const kinds = game.room.boss ? ['boss'] : waveFor(game, game.room.wave)
-  for (const kind of kinds) {
+  const boss = game.room.boss
+  const kinds = boss ? (boss === 'twin' ? ['twin', 'twin'] : [boss]) : waveFor(game, game.room.wave)
+  kinds.forEach((kind, idx) => {
     let x = 0
     let z = 0
     for (let tries = 0; tries < 30; tries++) {
       x = (game.rand() * 2 - 1) * (HALF_W - 1)
       z = (game.rand() * 2 - 1) * (HALF_D - 2)
-      if (kind === 'boss') {
-        x = 0
+      if (boss) {
+        x = kind === 'twin' ? (idx ? 3 : -3) : 0
         z = -3
+        break
       }
       const clearOfPlayer = dist2({ x, z }, game.player) > 16
       const clearOfPillars = game.room.pillars.every((p) => dist2({ x, z }, p) > (p.r + 1) ** 2)
-      if ((clearOfPlayer && clearOfPillars) || kind === 'boss') break
+      if (clearOfPlayer && clearOfPillars) break
     }
-    game.spawns.push({ kind, x, z, t: kind === 'boss' ? 1.6 : 1 })
-  }
+    game.spawns.push({ kind, x, z, t: boss ? 1.6 : 1 })
+  })
   game.room.wave += 1
 }
 
@@ -204,7 +224,7 @@ function queueWave(game) {
 
 function buildRoom(game, reward) {
   const depth = game.depth
-  const boss = depth % BOSS_EVERY === 0
+  const boss = depth % BOSS_EVERY === 0 ? bossFor(depth) : null
   const pillars = []
   if (!boss) {
     const count = reward === 'shop' ? 0 : 2 + Math.floor(game.rand() * 4)
@@ -242,6 +262,7 @@ function buildRoom(game, reward) {
   game.spawns = []
   game.hazards = []
   game.rings = []
+  game.mines = []
   game.player.ward = game.player.wardMax
   game.player.x = 0
   game.player.z = HALF_D - 1.5
@@ -276,7 +297,7 @@ export const REWARDS = {
   boon: { label: 'Boon', note: 'Choose a new power' },
   rest: { label: 'Rest', note: 'Heal 3 hearts' },
   elite: { label: 'Elite', note: 'Tougher foes, rare powers, double score' },
-  boss: { label: 'Boss', note: 'Beat the Warden' },
+  boss: { label: 'Boss', note: 'Face the guardian of this depth' },
   shop: { label: 'Shop', note: 'Spend your embers' },
 }
 
@@ -302,6 +323,9 @@ export function createGame(seed = Date.now()) {
     rerolls: 1,
     hazards: [], // burning ground from Firewalk
     rings: [], // explosion flashes, for the renderer
+    mines: [], // boss seeds that burst into rings of orbs
+    bossKills: 0,
+    priceMult: 1,
     player: {
       x: 0,
       z: HALF_D - 1.5,
@@ -343,6 +367,7 @@ export function createGame(seed = Date.now()) {
       trail: 0,
       trailT: 0,
       lives: 0,
+      lastLight: 0,
       fury: 0,
       furyStacks: 0,
       furyT: 0,
@@ -396,9 +421,10 @@ export function reroll(game) {
 
 function openShop(game) {
   const keys = rollBoons(game, 3, true)
-  const items = keys.map((key) => ({ kind: 'boon', key, price: TIERS[BOONS[key].tier].price, sold: false }))
-  items.push({ kind: 'heart', price: 15, sold: false })
-  items.push({ kind: 'reroll', price: 20, sold: false })
+  const cost = (n) => Math.max(1, Math.round(n * game.priceMult))
+  const items = keys.map((key) => ({ kind: 'boon', key, price: cost(TIERS[BOONS[key].tier].price), sold: false }))
+  items.push({ kind: 'heart', price: cost(15), sold: false })
+  items.push({ kind: 'reroll', price: cost(20), sold: false })
   game.shop = { items }
   game.status = 'shopping'
 }
@@ -691,6 +717,15 @@ function stepHazards(game, dt) {
     }
   }
   game.rings = game.rings.filter((r) => (r.t -= dt) > 0)
+  for (let i = game.mines.length - 1; i >= 0; i--) {
+    const m = game.mines[i]
+    m.t -= dt
+    if (m.t <= 0) {
+      ring(game, m.x, m.z, m.n, 3, game.rand())
+      burst(game, m.x, m.z, 10, 0xff70d0, 3)
+      game.mines.splice(i, 1)
+    }
+  }
   sweepDead(game)
 }
 
@@ -797,13 +832,29 @@ function stepEnemies(game, dt) {
         tx = e.tx ?? 0
         tz = e.tz ?? 0
         break
+      case 'bloom':
+        stepBloom(game, e, ux, uz, d, dt)
+        tx = e.tx ?? 0
+        tz = e.tz ?? 0
+        break
+      case 'stag':
+        stepStag(game, e, ux, uz, d, dt)
+        tx = e.tx ?? 0
+        tz = e.tz ?? 0
+        break
+      case 'twin':
+        stepTwin(game, e, ux, uz, d, dt)
+        tx = e.tx ?? 0
+        tz = e.tz ?? 0
+        break
     }
 
-    if (e.kind !== 'brute' || e.state === 'move') {
+    if (e.state === 'move') {
       const k = 1 - Math.exp(-dt * 6)
       e.vx += (tx * e.speed * slow - e.vx) * k
       e.vz += (tz * e.speed * slow - e.vz) * k
-    } else if (e.state === 'wind') {
+    } else if (e.state !== 'charge') {
+      // Winding up, aiming or burrowing: brake to a stop.
       e.vx *= 0.8
       e.vz *= 0.8
     }
@@ -826,8 +877,8 @@ function stepEnemies(game, dt) {
         const push = (rr - d) / 2
         const nx = ddx / d
         const nz = ddz / d
-        const wa = a.kind === 'boss' ? 0.1 : 1
-        const wb = b.kind === 'boss' ? 0.1 : 1
+        const wa = isBoss(a.kind) ? 0.1 : 1
+        const wb = isBoss(b.kind) ? 0.1 : 1
         a.x -= nx * push * wa
         a.z -= nz * push * wa
         b.x += nx * push * wb
@@ -837,7 +888,12 @@ function stepEnemies(game, dt) {
   }
 
   for (const e of list) {
+    const wasCharging = e.state === 'charge'
     collideWorld(game, e, e.r, false)
+    if (e.kind === 'stag' && wasCharging && e.state === 'charge') {
+      const atWall = Math.abs(e.x) >= HALF_W - e.r - 0.02 || Math.abs(e.z) >= HALF_D - e.r - 0.02
+      if (atWall) stagImpact(game, e)
+    }
     // Touching the player hurts.
     if (dist2(e, p) < (e.r + PLAYER_R - 0.08) ** 2) hurtPlayer(game, FOES[e.kind].touch, e)
   }
@@ -884,8 +940,211 @@ function stepBoss(game, e, ux, uz, d, dt) {
   game.events.push({ type: 'boss-attack' })
 }
 
-function bolt(game, x, z, dx, dz, speed) {
-  game.bolts.push({ x, z, vx: dx * speed, vz: dz * speed, life: 6 })
+const bossTier = (game) => Math.floor(game.depth / BOSS_EVERY)
+
+function ring(game, x, z, n, speed, off = 0, acc = 0) {
+  for (let i = 0; i < n; i++) {
+    const a = off + (i / n) * Math.PI * 2
+    bolt(game, x, z, Math.cos(a), Math.sin(a), speed, acc)
+  }
+}
+
+function fan(game, x, z, ux, uz, n, step, speed) {
+  for (let i = 0; i < n; i++) {
+    const off = (i - (n - 1) / 2) * step
+    const c = Math.cos(off)
+    const s = Math.sin(off)
+    bolt(game, x, z, ux * c - uz * s, ux * s + uz * c, speed)
+  }
+}
+
+// The Bloomhusk: a rooted flower. It sprays spiralling spores, sows seeds
+// around you that burst a moment later, and uproots itself to pop up
+// somewhere else in a ring of spores.
+function stepBloom(game, e, ux, uz, d, dt) {
+  const angry = e.hp < e.maxHp / 2
+  const tier = bossTier(game)
+  e.tx = -e.x * 0.15
+  e.tz = (-3 - e.z) * 0.15
+  if (e.state === 'burrow') {
+    e.stateT -= dt
+    if (e.stateT <= 0) {
+      e.x = e.digX
+      e.z = e.digZ
+      e.state = 'emerge'
+      e.stateT = 0.5
+      ring(game, e.x, e.z, 14 + tier * 2, 3.4, game.rand())
+      burst(game, e.x, e.z, 20, 0x8fd06a, 5)
+      game.shake = Math.min(1, game.shake + 0.4)
+    }
+    return
+  }
+  if (e.state === 'emerge') {
+    e.stateT -= dt
+    if (e.stateT <= 0) {
+      e.state = 'move'
+      e.stateT = 1.2
+    }
+    return
+  }
+  if (e.spiralT > 0) {
+    e.spiralT -= dt
+    e.emitT = (e.emitT ?? 0) - dt
+    if (e.emitT <= 0) {
+      e.emitT = angry ? 0.07 : 0.1
+      e.spin = (e.spin ?? 0) + 0.32
+      const arms = angry ? 3 : 2
+      for (let k = 0; k < arms; k++) {
+        const a = e.spin + (k / arms) * Math.PI * 2
+        bolt(game, e.x, e.z, Math.cos(a), Math.sin(a), 3.3)
+      }
+    }
+    return
+  }
+  e.stateT -= dt
+  if (e.stateT > 0) return
+  e.attack = ((e.attack ?? -1) + 1) % 3
+  const p = game.player
+  if (e.attack === 0) {
+    e.spiralT = 2.6
+    e.stateT = 0.8
+  } else if (e.attack === 1) {
+    const n = 4 + tier + (angry ? 2 : 0)
+    for (let i = 0; i < n; i++) {
+      const a = game.rand() * Math.PI * 2
+      const r = 0.8 + game.rand() * 2.8
+      game.mines.push({
+        x: clamp(p.x + Math.cos(a) * r, -HALF_W + 0.5, HALF_W - 0.5),
+        z: clamp(p.z + Math.sin(a) * r, -HALF_D + 0.5, HALF_D - 0.5),
+        t: 1.3 + i * 0.12,
+        max: 1.3 + i * 0.12,
+        n: 8,
+      })
+    }
+    e.stateT = 2
+  } else {
+    // Dig to a spot well away from the candle.
+    let bx = 0
+    let bz = 0
+    for (let tries = 0; tries < 20; tries++) {
+      bx = (game.rand() * 2 - 1) * (HALF_W - 2)
+      bz = (game.rand() * 2 - 1) * (HALF_D - 3)
+      if (dist2({ x: bx, z: bz }, p) > 25) break
+    }
+    e.digX = bx
+    e.digZ = bz
+    e.state = 'burrow'
+    e.stateT = 0.9
+    game.spawns.push({ kind: 'mite', x: clamp(e.x + 1, -HALF_W + 1, HALF_W - 1), z: e.z, t: 0.9 })
+  }
+  game.events.push({ type: 'boss-attack' })
+}
+
+// The Rime Stag: lowers its antlers, shows you its line, then charges. A
+// wall stops it in a burst of ice shards; a pillar stuns it.
+function stepStag(game, e, ux, uz, d, dt) {
+  const angry = e.hp < e.maxHp / 2
+  const tier = bossTier(game)
+  if (e.state === 'aim') {
+    e.stateT -= dt
+    // Tracks you until the last moment, then commits.
+    if (e.stateT > 0.25) {
+      e.cx = ux
+      e.cz = uz
+    }
+    if (e.stateT <= 0) {
+      e.state = 'charge'
+      e.stateT = 1.4
+    }
+    return
+  }
+  if (e.state === 'charge') {
+    e.stateT -= dt
+    e.vx = e.cx * 13
+    e.vz = e.cz * 13
+    if (game.rand() < 0.5) particle(game, e.x, e.z, 0xbfe8ff, 0.4, 0, 0)
+    if (e.stateT <= 0) {
+      e.state = 'move'
+      e.stateT = 0.6
+    }
+    return
+  }
+  // Circle the candle at a wary distance.
+  const want = 4.5
+  const sign = d > want + 0.5 ? 1 : d < want - 0.5 ? -1 : 0
+  e.tx = ux * sign - uz * 0.7
+  e.tz = uz * sign + ux * 0.7
+  e.stateT -= dt
+  if (e.stateT > 0) return
+  if (e.charges > 0) {
+    e.charges -= 1
+    e.state = 'aim'
+    e.stateT = angry ? 0.65 : 0.85
+    return
+  }
+  e.attack = ((e.attack ?? -1) + 1) % 3
+  if (e.attack === 0) {
+    e.charges = angry ? 3 : 2
+    e.stateT = 0.3
+  } else if (e.attack === 1) {
+    // A slow ring that speeds up as it spreads.
+    ring(game, e.x, e.z, 16 + tier * 2, 1.2, game.rand(), 0.9)
+    if (angry) ring(game, e.x, e.z, 16 + tier * 2, 1.2, game.rand() + 0.2, 0.9)
+    e.stateT = 1.8
+  } else {
+    fan(game, e.x, e.z, ux, uz, 7 + (angry ? 2 : 0), 0.14, 6.5)
+    e.stateT = 1.4
+  }
+  game.events.push({ type: 'boss-attack' })
+}
+
+function stagImpact(game, e) {
+  e.state = 'move'
+  e.stateT = 0.9
+  e.vx = 0
+  e.vz = 0
+  fan(game, e.x, e.z, -e.cx, -e.cz, 9, 0.22, 4.5)
+  burst(game, e.x, e.z, 18, 0xbfe8ff, 5)
+  game.shake = Math.min(1, game.shake + 0.5)
+  game.events.push({ type: 'boom' })
+}
+
+// The Cinder Twins: two flames circling the room's heart, taking turns. Put
+// one out and the other burns twice as hot.
+function stepTwin(game, e, ux, uz, d, dt) {
+  const tier = bossTier(game)
+  const alone = !game.enemies.some((o) => o !== e && o.kind === 'twin' && o.hp > 0)
+  e.orbit = (e.orbit ?? (e.twinIdx ? Math.PI : 0)) + dt * (alone ? 0.9 : 0.5)
+  const r = alone ? 4 : 3.5
+  const gx = Math.cos(e.orbit) * r
+  const gz = -2 + Math.sin(e.orbit) * r * 1.3
+  e.tx = clamp((gx - e.x) * 0.8, -1.5, 1.5)
+  e.tz = clamp((gz - e.z) * 0.8, -1.5, 1.5)
+  e.stateT -= dt
+  if (e.stateT > 0) return
+  e.attack = ((e.attack ?? (e.twinIdx ? 0 : 1)) + 1) % 3
+  if (alone) {
+    // Enraged: everything at once, faster.
+    fan(game, e.x, e.z, ux, uz, 5, 0.2, 6)
+    if (e.attack !== 1) ring(game, e.x, e.z, 12 + tier * 2, 3.4, game.rand())
+    e.stateT = 0.9
+  } else if (e.attack === 0) {
+    fan(game, e.x, e.z, ux, uz, 5, 0.18, 5.5)
+    e.stateT = 1.6
+  } else if (e.attack === 1) {
+    ring(game, e.x, e.z, 10 + tier * 2, 3.2, game.rand())
+    e.stateT = 1.9
+  } else {
+    // Lob a cinder seed at the candle.
+    const p = game.player
+    game.mines.push({ x: p.x, z: p.z, t: 1.1, max: 1.1, n: 10 })
+    e.stateT = 1.4
+  }
+  game.events.push({ type: 'boss-attack' })
+}
+
+function bolt(game, x, z, dx, dz, speed, acc = 0) {
+  game.bolts.push({ x, z, vx: dx * speed, vz: dz * speed, life: 7, acc })
 }
 
 function stepShots(game, dt) {
@@ -970,6 +1229,10 @@ function stepBolts(game, dt) {
   const bolts = game.bolts
   for (let i = bolts.length - 1; i >= 0; i--) {
     const b = bolts[i]
+    if (b.acc && Math.hypot(b.vx, b.vz) < 7.5) {
+      b.vx *= 1 + b.acc * dt
+      b.vz *= 1 + b.acc * dt
+    }
     b.x += b.vx * dt
     b.z += b.vz * dt
     b.life -= dt
@@ -1031,8 +1294,10 @@ function killEnemy(game, i) {
   const mult = game.room.elite ? 2 : 1
   game.score += f.score * mult
   game.kills += 1
-  burst(game, e.x, e.z, e.kind === 'boss' ? 40 : 10, e.kind === 'boss' ? 0xff5f5f : 0xb38bff, e.kind === 'boss' ? 7 : 4)
-  game.shake = Math.min(1, game.shake + (e.kind === 'boss' ? 1 : 0.15))
+  const boss = !!f.boss
+  if (boss) game.bossKills += 1
+  burst(game, e.x, e.z, boss ? 40 : 10, boss ? 0xff5f5f : 0xb38bff, boss ? 7 : 4)
+  game.shake = Math.min(1, game.shake + (boss ? 1 : 0.15))
   game.events.push({ type: 'kill', kind: e.kind })
   const p = game.player
   if (p.boom) {
@@ -1045,7 +1310,7 @@ function killEnemy(game, i) {
   }
 
   // Embers to collect; each is worth a couple of points.
-  const embers = e.kind === 'boss' ? 30 : e.kind === 'brute' ? 4 : 2
+  const embers = boss ? (e.kind === 'twin' ? 18 : 30) : e.kind === 'brute' ? 4 : 2
   for (let k = 0; k < embers; k++) {
     const a = game.rand() * Math.PI * 2
     const s = 1 + game.rand() * 3
@@ -1091,6 +1356,16 @@ function hurtPlayer(game, amount, from) {
   p.vz += (dz / d) * 8
   burst(game, p.x, p.z, 12, 0xff4d4d, 4)
   game.events.push({ type: 'hurt' })
+  if (p.hp <= 0 && p.lastLight > 0 && p.lives <= 0) {
+    // Last Light (from the Chandlery): cling on with one heart, once a run.
+    p.lastLight = 0
+    p.hp = 1
+    p.inv = 2
+    game.bolts = []
+    burst(game, p.x, p.z, 30, 0xfff0a0, 5)
+    game.events.push({ type: 'relight' })
+    return true
+  }
   if (p.hp <= 0 && p.lives > 0) {
     // Second Wick: relight, clear the air and shove everything back.
     p.lives -= 1
@@ -1190,7 +1465,7 @@ function stepRoom(game) {
       game.choice = {
         rich: rare,
         boons: rollBoons(game, 3, rare),
-        title: room.reward === 'boss' ? 'The Warden falls!' : room.elite ? 'Elite cleared!' : 'Room cleared!',
+        title: room.reward === 'boss' ? BOSSES[room.boss].falls : room.elite ? 'Elite cleared!' : 'Room cleared!',
       }
       if (!game.choice.boons.length) {
         game.choice = null

@@ -67,7 +67,8 @@ the client in `src/supabaseClient.js`.
   lab upgrades and a saved game to carry on later), IQ Puzzler Pro (fit the
   pieces into the board: 120 challenges in five levels, with hints), Emberdelve (a three.js roguelike for one
   thumb: a candle delves room by room, auto-firing, picking a boon after each
-  room and a door to the next, with a boss every fifth room), Wobbly Towers (an endless physics tower
+  room and a door to the next, four bosses one per zone, and Wax earned
+  every run for permanent upgrades in the Chandlery), Wobbly Towers (an endless physics tower
   stacker built on matter-js, with Classic and Power-ups modes and medals,
   plus online races where Power-ups can be thrown at the leader), and
   several with a computer opponent, pass-and-play and/or online play via a

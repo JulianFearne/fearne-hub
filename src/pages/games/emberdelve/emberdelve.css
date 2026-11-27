@@ -459,6 +459,34 @@
   opacity: 0.4;
   cursor: default;
 }
+.ed-wax {
+  color: #ffe2a8;
+}
+.ed-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  color: #d8cebd;
+}
+.ed-pips {
+  display: flex;
+  gap: 3px;
+}
+.ed-pips span {
+  width: 14px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 220, 170, 0.2);
+}
+.ed-pips .on {
+  background: #ffc870;
+}
+.ed-card.maxed {
+  opacity: 0.75;
+}
 .ed-board {
   width: 100%;
   max-width: 22rem;

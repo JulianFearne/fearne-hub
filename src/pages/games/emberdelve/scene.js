@@ -6,7 +6,7 @@
 // anything there are lots of, and a pixel ratio capped at 2.
 
 import * as THREE from 'three'
-import { REWARDS, THEME_NAMES, WORLD } from './engine'
+import { REWARDS, THEME_NAMES, WORLD, isBoss } from './engine'
 
 const { ROOM_W, ROOM_D, HALF_W, HALF_D, DOOR_W } = WORLD
 const DOOR_XS = [-3, 0, 3]
@@ -127,7 +127,7 @@ function heartGeometry() {
   return g
 }
 
-function makeFoe(kind, elite) {
+function makeFoe(kind, elite, twinIdx = 0) {
   const group = new THREE.Group()
   const mats = []
   const mat = (color, opts = {}) => {
@@ -209,6 +209,93 @@ function makeFoe(kind, elite) {
         e.position.set(s * 0.4, 1.6, 1.12)
         group.add(e)
       }
+      break
+    }
+    case 'bloom': {
+      // A swollen bud on a stalk, ringed by petals that open as it fights.
+      const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 1.2, 7), mat(0x3d7a2e))
+      stalk.position.y = 0.6
+      group.add(stalk)
+      body = new THREE.Group()
+      const bud = new THREE.Mesh(new THREE.IcosahedronGeometry(0.95, 1), mat(0x6abf45, { emissive: 0x0c2a06 }))
+      body.add(bud)
+      const petals = new THREE.Group()
+      const petalMat = mat(0xe06aa8, { emissive: 0x30081c })
+      for (let i = 0; i < 8; i++) {
+        const petal = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.2, 4), petalMat)
+        const a = (i / 8) * Math.PI * 2
+        petal.position.set(Math.cos(a) * 0.95, -0.1, Math.sin(a) * 0.95)
+        petal.rotation.set(Math.sin(a) * 1.2, 0, -Math.cos(a) * 1.2)
+        petals.add(petal)
+      }
+      body.add(petals)
+      const maw = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.1, 6, 12), new THREE.MeshBasicMaterial({ color: 0xffe060 }))
+      maw.position.set(0, 0.1, 0.85)
+      body.add(maw)
+      body.position.y = 1.9
+      group.add(body)
+      group.userData.petals = petals
+      break
+    }
+    case 'stag': {
+      const ice = mat(0xa8d8f0, { emissive: 0x10283a })
+      const dark = mat(0x34506a)
+      body = new THREE.Group()
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 1.7), ice)
+      torso.position.y = 1.1
+      body.add(torso)
+      for (const [x, z] of [[-0.3, -0.6], [0.3, -0.6], [-0.3, 0.6], [0.3, 0.6]]) {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.8, 0.18), dark)
+        leg.position.set(x, 0.4, z)
+        body.add(leg)
+      }
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.7), ice)
+      head.position.set(0, 1.7, 0.95)
+      body.add(head)
+      const antlerMat = mat(0xe8f6ff, { emissive: 0x2a5a7a })
+      for (const sd of [-1, 1]) {
+        const main = new THREE.Mesh(new THREE.ConeGeometry(0.07, 1.1, 4), antlerMat)
+        main.position.set(sd * 0.35, 2.3, 0.85)
+        main.rotation.z = -sd * 0.6
+        body.add(main)
+        for (let k = 0; k < 2; k++) {
+          const tine = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.5, 4), antlerMat)
+          tine.position.set(sd * (0.5 + k * 0.18), 2.35 + k * 0.2, 0.75 + k * 0.05)
+          tine.rotation.z = -sd * 0.2
+          body.add(tine)
+        }
+      }
+      for (const sd of [-1, 1]) {
+        const e = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), new THREE.MeshBasicMaterial({ color: 0x80f0ff }))
+        e.position.set(sd * 0.2, 1.8, 1.31)
+        body.add(e)
+      }
+      group.add(body)
+      break
+    }
+    case 'twin': {
+      // Two flames; the second burns blue so you can tell them apart.
+      const blue = twinIdx === 1
+      body = new THREE.Group()
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.75, 1), mat(blue ? 0x3a6aff : 0xff6a1a, { emissive: blue ? 0x0a1a60 : 0x602000 }))
+      body.add(core)
+      const flames = new THREE.Group()
+      const flameMat = new THREE.MeshBasicMaterial({ color: blue ? 0x9ad0ff : 0xffd060 })
+      for (let i = 0; i < 5; i++) {
+        const f = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.8, 5), flameMat)
+        const a = (i / 5) * Math.PI * 2
+        f.position.set(Math.cos(a) * 0.4, 0.75, Math.sin(a) * 0.4)
+        flames.add(f)
+      }
+      body.add(flames)
+      for (const sd of [-1, 1]) {
+        const e = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }))
+        e.position.set(sd * 0.22, 0.1, 0.68)
+        body.add(e)
+      }
+      body.position.y = 1.3
+      group.add(body)
+      group.userData.flames = flames
       break
     }
   }
@@ -437,6 +524,13 @@ export function createScene(canvas) {
   const hazardMesh = pool(floorGlowGeo, additive(0xff6a1a, 0.85), 200)
   const ringGeo = new THREE.RingGeometry(0.85, 1, 40)
   ringGeo.rotateX(-Math.PI / 2)
+  const stagLineMat = new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false })
+  const stagLineGeo = new THREE.PlaneGeometry(1.6, 14)
+  stagLineGeo.rotateX(-Math.PI / 2)
+  const stagLine = new THREE.Mesh(stagLineGeo, stagLineMat)
+  stagLine.visible = false
+  scene.add(stagLine)
+  const mineMesh = pool(new THREE.CircleGeometry(0.5, 20).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff50c0, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }), 40)
   const ringMesh = pool(ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), 40)
   ringMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(40 * 3), 3)
   // Wax Ward: a soft bubble while a shield charge is up.
@@ -558,13 +652,15 @@ export function createScene(canvas) {
     dashRing.position.set(p.x, 0.03, p.z)
     dashRingMat.opacity = dashRingFrac >= 1 ? 0.75 : 0.35
 
+    stagLine.visible = false
+
     // Foes: add new ones, update, drop the dead.
     const seen = new Set()
     for (const e of game.enemies) {
       seen.add(e.id)
       let m = foeMeshes.get(e.id)
       if (!m) {
-        m = { group: makeFoe(e.kind, e.elite), blob: blob(e.r * 2.6) }
+        m = { group: makeFoe(e.kind, e.elite, e.twinIdx), blob: blob(e.r * 2.6) }
         scene.add(m.group)
         scene.add(m.blob)
         foeMeshes.set(e.id, m)
@@ -593,6 +689,38 @@ export function createScene(canvas) {
         body.position.y = 1.4 + Math.sin(t * 2) * 0.15
         g.userData.crown.rotation.y = -t * 0.8
         g.userData.crown.position.y = Math.sin(t * 2) * 0.15
+      } else if (e.kind === 'bloom') {
+        // Sinks into the ground to burrow, rises again to emerge.
+        let s = 1
+        if (e.state === 'burrow') s = Math.max(0.05, e.stateT / 0.9)
+        else if (e.state === 'emerge') s = 1 - e.stateT / 0.5
+        g.scale.set(1, Math.max(0.05, s), 1)
+        g.rotation.y = 0
+        body.rotation.y = t * 0.4
+        const open = e.spiralT > 0 ? 0.35 : 0
+        g.userData.petals.rotation.y = -t * (e.spiralT > 0 ? 3 : 0.5)
+        g.userData.petals.scale.setScalar(1 + open + Math.sin(t * 3) * 0.05)
+      } else if (e.kind === 'stag') {
+        if (e.state === 'aim' || e.state === 'charge') g.rotation.y = Math.atan2(e.cx, e.cz)
+        g.rotation.x = e.state === 'charge' ? 0.12 : e.state === 'aim' ? -0.1 : 0
+        if (e.state === 'aim') g.position.x += Math.sin(t * 50) * 0.04
+      } else if (e.kind === 'twin') {
+        body.position.y = 1.3 + Math.sin(t * 3 + e.twinIdx * 2) * 0.2
+        body.rotation.y = t * 1.5
+        const hot = game.enemies.filter((o) => o.kind === 'twin').length === 1 ? 1.35 : 1
+        g.userData.flames.scale.set(1, hot + Math.sin(t * 20) * 0.1, 1)
+      }
+      // The Rime Stag's charge line.
+      if (e.kind === 'stag' && e.state === 'aim') {
+        stagLine.visible = true
+        // Only as long as the charge can run before it meets a wall.
+        const tx = e.cx > 0 ? (HALF_W - e.x) / e.cx : e.cx < 0 ? (-HALF_W - e.x) / e.cx : Infinity
+        const tz = e.cz > 0 ? (HALF_D - e.z) / e.cz : e.cz < 0 ? (-HALF_D - e.z) / e.cz : Infinity
+        const len = Math.max(0.5, Math.min(tx, tz, 14))
+        stagLine.scale.set(1, 1, len / 14)
+        stagLine.position.set(e.x + (e.cx * len) / 2, 0.035, e.z + (e.cz * len) / 2)
+        stagLine.rotation.y = Math.atan2(e.cx, e.cz)
+        stagLineMat.opacity = 0.25 + (1 - e.stateT) * 0.4
       }
       const mats = g.userData.mats
       const burning = e.burn > 0
@@ -676,7 +804,7 @@ export function createScene(canvas) {
       const s = game.spawns[i]
       dummy.position.set(s.x, 0.04, s.z)
       dummy.rotation.set(-Math.PI / 2, 0, t * 3)
-      const big = s.kind === 'boss' ? 3 : s.kind === 'brute' ? 1.6 : 1
+      const big = isBoss(s.kind) ? 3 : s.kind === 'brute' ? 1.6 : 1
       dummy.scale.setScalar(big * (0.6 + (1 - s.t) * 0.7 + Math.sin(t * 14) * 0.05))
       dummy.updateMatrix()
       spawnRings.setMatrixAt(i, dummy.matrix)
@@ -697,8 +825,16 @@ export function createScene(canvas) {
       ringMesh.setColorAt(i, tmpColor.setHex(r.color).multiplyScalar(f))
     }
     ringMesh.count = nr
+    const nm = Math.min(game.mines.length, 40)
+    for (let i = 0; i < nm; i++) {
+      const m = game.mines[i]
+      const f = 1 - m.t / m.max
+      // Grows and pulses faster as it is about to burst.
+      put(mineMesh, i, m.x, 0.04, m.z, 0.6 + f * 1.4 + Math.sin(t * (8 + f * 20)) * 0.12)
+    }
+    mineMesh.count = nm
     if (nr) ringMesh.instanceColor.needsUpdate = true
-    for (const mesh of [shotCore, shotGlow, boltCore, boltGlow, emberMesh, heartMesh, orbCore, orbGlow, sparks, spawnRings, hazardMesh, ringMesh]) {
+    for (const mesh of [shotCore, shotGlow, boltCore, boltGlow, emberMesh, heartMesh, orbCore, orbGlow, sparks, spawnRings, hazardMesh, ringMesh, mineMesh]) {
       mesh.instanceMatrix.needsUpdate = true
     }
 
